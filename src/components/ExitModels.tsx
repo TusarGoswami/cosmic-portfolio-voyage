@@ -69,7 +69,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
   });
 
   return (
-    <group scale={1.6}>
+    <group scale={1.25}>
       {/* Platform */}
       <mesh position={[0, -2.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[8, 64]} />
