@@ -90,14 +90,12 @@ const Planet = ({ position, size, color }: { position: [number, number, number];
         <sphereGeometry args={[size, 32, 32]} />
         <meshStandardMaterial color={color} roughness={0.7} metalness={0.3} />
       </mesh>
-      {/* Planet ring */}
       {size > 4 && (
         <mesh rotation={[Math.PI / 3, 0, 0]}>
           <ringGeometry args={[size * 1.3, size * 1.8, 64]} />
           <meshBasicMaterial color={color} transparent opacity={0.4} side={THREE.DoubleSide} />
         </mesh>
       )}
-      {/* Atmosphere glow */}
       <mesh>
         <sphereGeometry args={[size * 1.05, 32, 32]} />
         <meshBasicMaterial color={color} transparent opacity={0.2} />
@@ -106,33 +104,229 @@ const Planet = ({ position, size, color }: { position: [number, number, number];
   );
 };
 
-// Player vehicle
+// Animated Astronaut with walking animation
+const AnimatedAstronaut = ({ 
+  isMoving,
+  moveDirection 
+}: { 
+  isMoving: boolean;
+  moveDirection: { x: number; z: number };
+}) => {
+  const leftLegRef = useRef<THREE.Group>(null);
+  const rightLegRef = useRef<THREE.Group>(null);
+  const leftArmRef = useRef<THREE.Group>(null);
+  const rightArmRef = useRef<THREE.Group>(null);
+  const bodyRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    const walkSpeed = 8;
+    const walkAmplitude = isMoving ? 0.4 : 0;
+    const bobAmplitude = isMoving ? 0.05 : 0;
+
+    // Walking animation
+    if (leftLegRef.current && rightLegRef.current) {
+      leftLegRef.current.rotation.x = Math.sin(time * walkSpeed) * walkAmplitude;
+      rightLegRef.current.rotation.x = Math.sin(time * walkSpeed + Math.PI) * walkAmplitude;
+    }
+
+    if (leftArmRef.current && rightArmRef.current) {
+      leftArmRef.current.rotation.x = Math.sin(time * walkSpeed + Math.PI) * walkAmplitude * 0.7;
+      rightArmRef.current.rotation.x = Math.sin(time * walkSpeed) * walkAmplitude * 0.7;
+    }
+
+    // Body bobbing
+    if (bodyRef.current) {
+      bodyRef.current.position.y = Math.abs(Math.sin(time * walkSpeed * 2)) * bobAmplitude;
+    }
+  });
+
+  return (
+    <group ref={bodyRef}>
+      {/* Helmet */}
+      <mesh position={[0, 0.9, 0]}>
+        <sphereGeometry args={[0.4, 32, 32]} />
+        <meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.5} />
+      </mesh>
+      {/* Visor */}
+      <mesh position={[0, 0.95, 0.3]}>
+        <sphereGeometry args={[0.28, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="#ffaa00" metalness={1} roughness={0.05} />
+      </mesh>
+      {/* Helmet rim */}
+      <mesh position={[0, 0.55, 0]}>
+        <torusGeometry args={[0.35, 0.05, 8, 32]} />
+        <meshStandardMaterial color="#aaaaaa" metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Body/Torso */}
+      <mesh position={[0, 0.2, 0]}>
+        <capsuleGeometry args={[0.3, 0.4, 8, 16]} />
+        <meshStandardMaterial color="#f0f0f0" metalness={0.2} roughness={0.6} />
+      </mesh>
+
+      {/* Chest panel */}
+      <mesh position={[0, 0.3, 0.28]}>
+        <boxGeometry args={[0.25, 0.3, 0.06]} />
+        <meshStandardMaterial color="#222222" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh position={[-0.06, 0.38, 0.32]}>
+        <sphereGeometry args={[0.025, 8, 8]} />
+        <meshBasicMaterial color="#00ff00" />
+      </mesh>
+      <mesh position={[0.06, 0.38, 0.32]}>
+        <sphereGeometry args={[0.025, 8, 8]} />
+        <meshBasicMaterial color="#ff0000" />
+      </mesh>
+
+      {/* Backpack */}
+      <mesh position={[0, 0.15, -0.35]}>
+        <boxGeometry args={[0.4, 0.5, 0.2]} />
+        <meshStandardMaterial color="#555555" metalness={0.6} roughness={0.4} />
+      </mesh>
+
+      {/* Jetpack thrusters */}
+      <mesh position={[-0.12, -0.15, -0.42]}>
+        <cylinderGeometry args={[0.05, 0.07, 0.12, 8]} />
+        <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh position={[0.12, -0.15, -0.42]}>
+        <cylinderGeometry args={[0.05, 0.07, 0.12, 8]} />
+        <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.1} />
+      </mesh>
+
+      {/* Jetpack flames when moving */}
+      {isMoving && (
+        <>
+          <mesh position={[-0.12, -0.28, -0.42]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.04, 0.25, 8]} />
+            <meshBasicMaterial color="#66ddff" transparent opacity={0.8} />
+          </mesh>
+          <mesh position={[0.12, -0.28, -0.42]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.04, 0.25, 8]} />
+            <meshBasicMaterial color="#66ddff" transparent opacity={0.8} />
+          </mesh>
+          <pointLight position={[0, -0.3, -0.42]} color="#66ddff" intensity={2} distance={3} />
+        </>
+      )}
+
+      {/* Left Arm */}
+      <group ref={leftArmRef} position={[-0.42, 0.3, 0]}>
+        <mesh rotation={[0, 0, Math.PI / 6]}>
+          <capsuleGeometry args={[0.1, 0.25, 8, 8]} />
+          <meshStandardMaterial color="#f0f0f0" metalness={0.2} roughness={0.6} />
+        </mesh>
+        <mesh position={[-0.18, -0.15, 0]}>
+          <sphereGeometry args={[0.1, 16, 16]} />
+          <meshStandardMaterial color="#ff6600" metalness={0.4} roughness={0.5} />
+        </mesh>
+      </group>
+
+      {/* Right Arm */}
+      <group ref={rightArmRef} position={[0.42, 0.3, 0]}>
+        <mesh rotation={[0, 0, -Math.PI / 6]}>
+          <capsuleGeometry args={[0.1, 0.25, 8, 8]} />
+          <meshStandardMaterial color="#f0f0f0" metalness={0.2} roughness={0.6} />
+        </mesh>
+        <mesh position={[0.18, -0.15, 0]}>
+          <sphereGeometry args={[0.1, 16, 16]} />
+          <meshStandardMaterial color="#ff6600" metalness={0.4} roughness={0.5} />
+        </mesh>
+      </group>
+
+      {/* Left Leg */}
+      <group ref={leftLegRef} position={[-0.12, -0.25, 0]}>
+        <mesh>
+          <capsuleGeometry args={[0.1, 0.35, 8, 8]} />
+          <meshStandardMaterial color="#f0f0f0" metalness={0.2} roughness={0.6} />
+        </mesh>
+        <mesh position={[0, -0.35, 0.03]}>
+          <boxGeometry args={[0.12, 0.12, 0.2]} />
+          <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.3} />
+        </mesh>
+      </group>
+
+      {/* Right Leg */}
+      <group ref={rightLegRef} position={[0.12, -0.25, 0]}>
+        <mesh>
+          <capsuleGeometry args={[0.1, 0.35, 8, 8]} />
+          <meshStandardMaterial color="#f0f0f0" metalness={0.2} roughness={0.6} />
+        </mesh>
+        <mesh position={[0, -0.35, 0.03]}>
+          <boxGeometry args={[0.12, 0.12, 0.2]} />
+          <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.3} />
+        </mesh>
+      </group>
+    </group>
+  );
+};
+
+// Player vehicle with WASD controls
 const PlayerVehicle = ({ 
   vehicle, 
-  targetPosition 
+  keys,
 }: { 
   vehicle: "rocket" | "astronaut";
-  targetPosition: React.MutableRefObject<{ x: number; y: number }>;
+  keys: React.MutableRefObject<{ w: boolean; a: boolean; s: boolean; d: boolean }>;
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
+  const velocity = useRef({ x: 0, y: 0 });
+  const position = useRef({ x: 0, y: 0 });
+  const [isMoving, setIsMoving] = useState(false);
+  const [moveDirection, setMoveDirection] = useState({ x: 0, z: 0 });
 
   useFrame(() => {
     if (groupRef.current) {
-      // Smooth follow mouse
-      const targetX = targetPosition.current.x * 8;
-      const targetY = targetPosition.current.y * 5;
-      
-      groupRef.current.position.x += (targetX - groupRef.current.position.x) * 0.08;
-      groupRef.current.position.y += (targetY - groupRef.current.position.y) * 0.08;
-      
-      // Tilt based on movement
-      groupRef.current.rotation.z = -targetPosition.current.x * 0.3;
-      groupRef.current.rotation.x = targetPosition.current.y * 0.2;
+      const acceleration = 0.015;
+      const friction = 0.92;
+      const maxSpeed = 0.25;
 
-      // Camera follows slightly
-      camera.position.x += (targetX * 0.3 - camera.position.x) * 0.05;
-      camera.position.y += (targetY * 0.3 + 2 - camera.position.y) * 0.05;
+      // Apply acceleration based on keys
+      if (keys.current.w) velocity.current.y += acceleration;
+      if (keys.current.s) velocity.current.y -= acceleration;
+      if (keys.current.a) velocity.current.x -= acceleration;
+      if (keys.current.d) velocity.current.x += acceleration;
+
+      // Apply friction
+      velocity.current.x *= friction;
+      velocity.current.y *= friction;
+
+      // Clamp velocity
+      velocity.current.x = Math.max(-maxSpeed, Math.min(maxSpeed, velocity.current.x));
+      velocity.current.y = Math.max(-maxSpeed, Math.min(maxSpeed, velocity.current.y));
+
+      // Update position
+      position.current.x += velocity.current.x;
+      position.current.y += velocity.current.y;
+
+      // Clamp position
+      position.current.x = Math.max(-10, Math.min(10, position.current.x));
+      position.current.y = Math.max(-6, Math.min(6, position.current.y));
+
+      // Apply to group
+      groupRef.current.position.x = position.current.x;
+      groupRef.current.position.y = position.current.y;
+
+      // Tilt based on velocity
+      const tiltAmount = vehicle === "rocket" ? 0.5 : 0.2;
+      groupRef.current.rotation.z = -velocity.current.x * tiltAmount * 5;
+      groupRef.current.rotation.x = velocity.current.y * tiltAmount * 3;
+
+      // Face movement direction for astronaut
+      if (vehicle === "astronaut" && (Math.abs(velocity.current.x) > 0.01 || Math.abs(velocity.current.y) > 0.01)) {
+        const targetRotation = Math.atan2(-velocity.current.x, 0);
+        groupRef.current.rotation.y += (targetRotation - groupRef.current.rotation.y) * 0.1;
+      }
+
+      // Update movement state
+      const moving = Math.abs(velocity.current.x) > 0.01 || Math.abs(velocity.current.y) > 0.01;
+      setIsMoving(moving);
+      setMoveDirection({ x: velocity.current.x, z: velocity.current.y });
+
+      // Camera follows
+      camera.position.x += (position.current.x * 0.3 - camera.position.x) * 0.05;
+      camera.position.y += (position.current.y * 0.3 + 2 - camera.position.y) * 0.05;
       camera.lookAt(groupRef.current.position.x, groupRef.current.position.y, groupRef.current.position.z - 5);
     }
   });
@@ -140,17 +334,14 @@ const PlayerVehicle = ({
   if (vehicle === "rocket") {
     return (
       <group ref={groupRef} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        {/* Rocket body */}
         <mesh>
           <cylinderGeometry args={[0.3, 0.4, 1.5, 16]} />
           <meshStandardMaterial color="#e0e0e0" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Nose */}
         <mesh position={[0, 1, 0]}>
           <coneGeometry args={[0.3, 0.6, 16]} />
           <meshStandardMaterial color="#ff3333" metalness={0.7} roughness={0.3} />
         </mesh>
-        {/* Fins */}
         {[0, 90, 180, 270].map((angle, i) => (
           <mesh
             key={i}
@@ -165,48 +356,22 @@ const PlayerVehicle = ({
             <meshStandardMaterial color="#3366cc" metalness={0.7} roughness={0.3} />
           </mesh>
         ))}
-        {/* Engine flame */}
         <mesh position={[0, -1, 0]}>
-          <coneGeometry args={[0.2, 0.8, 16]} />
+          <coneGeometry args={[0.2, isMoving ? 1 : 0.6, 16]} />
           <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
         </mesh>
-        <pointLight position={[0, -1, 0]} color="#ff6600" intensity={3} distance={5} />
+        <mesh position={[0, -1.2, 0]}>
+          <coneGeometry args={[0.1, isMoving ? 0.6 : 0.3, 16]} />
+          <meshBasicMaterial color="#ffff66" transparent opacity={0.9} />
+        </mesh>
+        <pointLight position={[0, -1, 0]} color="#ff6600" intensity={isMoving ? 5 : 3} distance={5} />
       </group>
     );
   }
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      {/* Astronaut helmet */}
-      <mesh position={[0, 0.4, 0]}>
-        <sphereGeometry args={[0.35, 32, 32]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.5} />
-      </mesh>
-      {/* Visor */}
-      <mesh position={[0, 0.45, 0.25]}>
-        <sphereGeometry args={[0.25, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#ffaa00" metalness={1} roughness={0.05} />
-      </mesh>
-      {/* Body */}
-      <mesh position={[0, -0.2, 0]}>
-        <capsuleGeometry args={[0.25, 0.4, 8, 16]} />
-        <meshStandardMaterial color="#f0f0f0" metalness={0.2} roughness={0.6} />
-      </mesh>
-      {/* Jetpack */}
-      <mesh position={[0, -0.1, -0.3]}>
-        <boxGeometry args={[0.35, 0.5, 0.2]} />
-        <meshStandardMaterial color="#555555" metalness={0.7} roughness={0.3} />
-      </mesh>
-      {/* Jetpack flames */}
-      <mesh position={[-0.1, -0.45, -0.35]} rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[0.05, 0.3, 8]} />
-        <meshBasicMaterial color="#66ddff" transparent opacity={0.8} />
-      </mesh>
-      <mesh position={[0.1, -0.45, -0.35]} rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[0.05, 0.3, 8]} />
-        <meshBasicMaterial color="#66ddff" transparent opacity={0.8} />
-      </mesh>
-      <pointLight position={[0, -0.5, -0.35]} color="#66ddff" intensity={2} distance={4} />
+      <AnimatedAstronaut isMoving={isMoving} moveDirection={moveDirection} />
     </group>
   );
 };
@@ -215,7 +380,6 @@ const PlayerVehicle = ({
 const SpaceEnvironment = ({ speed }: { speed: number }) => {
   const asteroidsRef = useRef<THREE.Group>(null);
   
-  // Generate random asteroids
   const asteroids = useRef(
     Array.from({ length: 50 }, (_, i) => ({
       id: i,
@@ -228,22 +392,9 @@ const SpaceEnvironment = ({ speed }: { speed: number }) => {
     }))
   ).current;
 
-  const collectibles = useRef(
-    Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      position: [
-        (Math.random() - 0.5) * 30,
-        (Math.random() - 0.5) * 15,
-        -Math.random() * 150 - 30,
-      ] as [number, number, number],
-    }))
-  ).current;
-
   useFrame(() => {
     if (asteroidsRef.current) {
       asteroidsRef.current.position.z += speed;
-      
-      // Reset position when asteroids pass
       if (asteroidsRef.current.position.z > 50) {
         asteroidsRef.current.position.z = 0;
       }
@@ -263,15 +414,15 @@ const SpaceEnvironment = ({ speed }: { speed: number }) => {
 const Scene = ({ 
   vehicle, 
   onCollect,
-  speed 
+  speed,
+  keys 
 }: { 
   vehicle: "rocket" | "astronaut";
   onCollect: () => void;
   speed: number;
+  keys: React.MutableRefObject<{ w: boolean; a: boolean; s: boolean; d: boolean }>;
 }) => {
-  const targetPosition = useRef({ x: 0, y: 0 });
   const collectiblesGroupRef = useRef<THREE.Group>(null);
-
   const [collectedIds, setCollectedIds] = useState<number[]>([]);
 
   const collectibles = useRef(
@@ -284,15 +435,6 @@ const Scene = ({
       ] as [number, number, number],
     }))
   ).current;
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      targetPosition.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
-      targetPosition.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   useFrame(() => {
     if (collectiblesGroupRef.current) {
@@ -318,7 +460,6 @@ const Scene = ({
 
       <Stars radius={200} depth={100} count={8000} factor={4} saturation={0} fade speed={2} />
 
-      {/* Distant planets */}
       <Planet position={[-50, 20, -150]} size={8} color="#ff6644" />
       <Planet position={[60, -15, -200]} size={12} color="#4488ff" />
       <Planet position={[0, 40, -180]} size={5} color="#44ff88" />
@@ -338,9 +479,8 @@ const Scene = ({
         ))}
       </group>
 
-      <PlayerVehicle vehicle={vehicle} targetPosition={targetPosition} />
+      <PlayerVehicle vehicle={vehicle} keys={keys} />
 
-      {/* Nebula fog effect */}
       <fog attach="fog" args={["#0a0a1a", 50, 200]} />
     </>
   );
@@ -349,6 +489,33 @@ const Scene = ({
 const SpaceExploration = ({ vehicle }: SpaceExplorationProps) => {
   const [score, setScore] = useState(0);
   const [speed] = useState(0.15);
+  const keys = useRef({ w: false, a: false, s: false, d: false });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (key === "w") keys.current.w = true;
+      if (key === "a") keys.current.a = true;
+      if (key === "s") keys.current.s = true;
+      if (key === "d") keys.current.d = true;
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (key === "w") keys.current.w = false;
+      if (key === "a") keys.current.a = false;
+      if (key === "s") keys.current.s = false;
+      if (key === "d") keys.current.d = false;
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   const handleCollect = useCallback(() => {
     setScore(prev => prev + 100);
@@ -358,7 +525,7 @@ const SpaceExploration = ({ vehicle }: SpaceExplorationProps) => {
     <div className="w-full h-full absolute inset-0">
       <Canvas camera={{ position: [0, 2, 10], fov: 70 }}>
         <Suspense fallback={null}>
-          <Scene vehicle={vehicle} onCollect={handleCollect} speed={speed} />
+          <Scene vehicle={vehicle} onCollect={handleCollect} speed={speed} keys={keys} />
         </Suspense>
       </Canvas>
 
@@ -381,9 +548,19 @@ const SpaceExploration = ({ vehicle }: SpaceExplorationProps) => {
 
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
         <div className="bg-background/60 backdrop-blur-sm rounded-lg px-6 py-3 border border-border/30">
-          <p className="text-muted-foreground text-sm text-center">
-            Move your mouse to navigate • Collect ⭐ stars for points
-          </p>
+          <div className="flex items-center gap-4 text-muted-foreground text-sm">
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex gap-1">
+                <span className="bg-background/80 px-2 py-1 rounded text-xs font-mono">W</span>
+              </div>
+              <div className="flex gap-1">
+                <span className="bg-background/80 px-2 py-1 rounded text-xs font-mono">A</span>
+                <span className="bg-background/80 px-2 py-1 rounded text-xs font-mono">S</span>
+                <span className="bg-background/80 px-2 py-1 rounded text-xs font-mono">D</span>
+              </div>
+            </div>
+            <span>to move • Collect ⭐ stars for points</span>
+          </div>
         </div>
       </div>
     </div>
