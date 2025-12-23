@@ -52,19 +52,6 @@ const SpaceStationScene = ({ onExit }: SpaceStationSceneProps) => {
         </Suspense>
       </Canvas>
 
-      {/* Crosshair overlay */}
-      {controlsEnabled && (
-        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50">
-          <div className="relative w-8 h-8">
-            {/* Horizontal line */}
-            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-cyan-400/70 -translate-y-1/2" />
-            {/* Vertical line */}
-            <div className="absolute left-1/2 top-0 h-full w-0.5 bg-cyan-400/70 -translate-x-1/2" />
-            {/* Center dot */}
-            <div className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full -translate-x-1/2 -translate-y-1/2" />
-          </div>
-        </div>
-      )}
 
       {/* UI Overlay */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center pointer-events-none">
