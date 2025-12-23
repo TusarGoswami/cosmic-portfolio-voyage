@@ -119,38 +119,6 @@ const GalaxyCore = () => {
   const sunRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   const glow2Ref = useRef<THREE.Mesh>(null);
-  const coronaRef = useRef<THREE.Points>(null);
-  const flareRef = useRef<THREE.Points>(null);
-
-  const coronaParticles = useMemo(() => {
-    const count = 1500;
-    const positions = new Float32Array(count * 3);
-    
-    for (let i = 0; i < count; i++) {
-      const radius = 10 + Math.random() * 8;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      
-      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = radius * Math.cos(phi);
-    }
-    return positions;
-  }, []);
-
-  const flareParticles = useMemo(() => {
-    const count = 500;
-    const positions = new Float32Array(count * 3);
-    
-    for (let i = 0; i < count; i++) {
-      const radius = 8 + Math.random() * 15;
-      const theta = Math.random() * Math.PI * 2;
-      positions[i * 3] = Math.cos(theta) * radius;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 3;
-      positions[i * 3 + 2] = Math.sin(theta) * radius;
-    }
-    return positions;
-  }, []);
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
@@ -164,13 +132,6 @@ const GalaxyCore = () => {
     if (glow2Ref.current) {
       glow2Ref.current.scale.setScalar(1 + Math.sin(time * 2 + 1) * 0.05);
       glow2Ref.current.rotation.y = time * 0.02;
-    }
-    if (coronaRef.current) {
-      coronaRef.current.rotation.y = time * 0.03;
-      coronaRef.current.rotation.x = time * 0.02;
-    }
-    if (flareRef.current) {
-      flareRef.current.rotation.y = time * 0.05;
     }
   });
 
@@ -205,22 +166,6 @@ const GalaxyCore = () => {
         <sphereGeometry args={[18, 32, 32]} />
         <meshBasicMaterial color="#ff4400" transparent opacity={0.08} />
       </mesh>
-      
-      {/* Corona particles */}
-      <points ref={coronaRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={1500} array={coronaParticles} itemSize={3} />
-        </bufferGeometry>
-        <pointsMaterial size={0.3} color="#ffdd44" transparent opacity={0.7} blending={THREE.AdditiveBlending} />
-      </points>
-      
-      {/* Solar flare ring */}
-      <points ref={flareRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={500} array={flareParticles} itemSize={3} />
-        </bufferGeometry>
-        <pointsMaterial size={0.2} color="#ffaa00" transparent opacity={0.4} blending={THREE.AdditiveBlending} />
-      </points>
       
       {/* Sun light - stronger */}
       <pointLight color="#ffdd44" intensity={5} distance={200} />
