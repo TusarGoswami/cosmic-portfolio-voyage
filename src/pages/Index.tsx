@@ -5,6 +5,7 @@ import CustomCursor from "@/components/CustomCursor";
 import IsometricFrame from "@/components/IsometricFrame";
 import { useParallax } from "@/hooks/useParallax";
 import ExitChoices from "@/components/ExitChoices";
+import SpaceExploration from "@/components/SpaceExploration";
 
 type GamePhase = "loading" | "start" | "choose" | "space";
 
@@ -121,41 +122,15 @@ const Index = () => {
           </motion.div>
         )}
 
-        {phase === "space" && (
+        {phase === "space" && selectedVehicle && (
           <motion.div
             key="space"
-            className="relative z-10 flex min-h-screen items-center justify-center"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
+            className="relative z-10 w-full h-screen"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
           >
-            <StarField />
-            <div className="relative z-10 text-center">
-              <motion.h1
-                className="text-4xl md:text-6xl font-bold text-foreground mb-4"
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                Welcome to Space
-              </motion.h1>
-              <motion.p
-                className="text-xl text-muted-foreground"
-                initial={{ y: 30, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                Exploring as {selectedVehicle === "rocket" ? "🚀 Rocket" : "👨‍🚀 Astronaut"}
-              </motion.p>
-              <motion.p
-                className="text-lg text-accent mt-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-              >
-                Phase 3: Galaxy exploration coming soon...
-              </motion.p>
-            </div>
+            <SpaceExploration vehicle={selectedVehicle} />
           </motion.div>
         )}
       </AnimatePresence>
