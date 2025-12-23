@@ -1,6 +1,6 @@
 import { Suspense, useState, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Stars, Environment } from "@react-three/drei";
+import { Stars } from "@react-three/drei";
 import Corridor from "./Corridor";
 import HexagonalWindow from "./HexagonalWindow";
 import ExitOptions from "./ExitOptions";
@@ -29,10 +29,11 @@ const SpaceStationScene = ({ onExit }: SpaceStationSceneProps) => {
       >
         <Suspense fallback={null}>
           {/* Ambient lighting */}
-          <ambientLight intensity={0.3} />
+          <ambientLight intensity={0.4} />
           
           {/* Main directional light */}
-          <directionalLight position={[5, 5, 5]} intensity={0.5} />
+          <directionalLight position={[5, 5, 5]} intensity={0.6} />
+          <pointLight position={[0, 2, 0]} intensity={0.5} color="#4fc3f7" />
           
           {/* Background stars visible through window */}
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
@@ -48,9 +49,6 @@ const SpaceStationScene = ({ onExit }: SpaceStationSceneProps) => {
 
           {/* Player WASD + mouse controls */}
           <PlayerControls enabled={controlsEnabled} />
-
-          {/* Environment for reflections */}
-          <Environment preset="night" />
         </Suspense>
       </Canvas>
 
