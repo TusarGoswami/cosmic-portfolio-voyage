@@ -5,7 +5,7 @@ import CustomCursor from "@/components/CustomCursor";
 import IsometricFrame from "@/components/IsometricFrame";
 import { useParallax } from "@/hooks/useParallax";
 import ExitChoices from "@/components/ExitChoices";
-import SpaceExploration from "@/components/SpaceExploration";
+import GalaxyExploration from "@/components/GalaxyExploration";
 
 type GamePhase = "loading" | "start" | "choose" | "space";
 
@@ -130,7 +130,7 @@ const Index = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 1 }}
           >
-            <SpaceExploration vehicle={selectedVehicle} />
+            <GalaxyExploration vehicle={selectedVehicle} />
           </motion.div>
         )}
       </AnimatePresence>
