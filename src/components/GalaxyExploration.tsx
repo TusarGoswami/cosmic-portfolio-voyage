@@ -501,10 +501,6 @@ const GalaxyScene = () => {
       
       <BlinkingStars count={5000} />
       
-      {/* Nebula clouds for atmosphere */}
-      <NebulaCloud position={[-80, 20, -100]} color="#ff6688" size={40} />
-      <NebulaCloud position={[100, -30, -80]} color="#6688ff" size={50} />
-      <NebulaCloud position={[50, 40, -150]} color="#88ff66" size={35} />
       
       <GalaxyCore />
       
@@ -573,28 +569,6 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
         </div>
       </div>
 
-      {/* Planet legend */}
-      <div className="absolute bottom-6 left-6 pointer-events-none">
-        <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-md rounded-xl px-4 py-3 border border-border/30 shadow-lg">
-          <p className="text-foreground text-xs font-semibold mb-3 uppercase tracking-wider">Solar System</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-            {[
-              { color: "#ff7755", name: "Mercury" },
-              { color: "#55aaff", name: "Venus" },
-              { color: "#66ff88", name: "Earth" },
-              { color: "#ffbb55", name: "Mars" },
-              { color: "#bb77ff", name: "Jupiter" },
-              { color: "#ff77aa", name: "Saturn" },
-              { color: "#77ffff", name: "Neptune" },
-            ].map((planet, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full shadow-lg" style={{ backgroundColor: planet.color, boxShadow: `0 0 8px ${planet.color}` }} />
-                <span className="text-muted-foreground text-xs">{planet.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
