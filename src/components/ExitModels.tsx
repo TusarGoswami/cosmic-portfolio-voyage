@@ -15,18 +15,18 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
 
   // Create realistic metal textures
   const rocketBodyMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#d4d4d4"),
-    metalness: 0.95,
-    roughness: 0.15,
+    color: new THREE.Color("#e0e0e0"),
+    metalness: 0.8,
+    roughness: 0.2,
     clearcoat: 0.3,
     clearcoatRoughness: 0.2,
     reflectivity: 1,
   }), []);
 
   const rocketRedMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#cc2222"),
-    metalness: 0.8,
-    roughness: 0.25,
+    color: new THREE.Color("#ff3333"),
+    metalness: 0.7,
+    roughness: 0.3,
     clearcoat: 0.5,
   }), []);
 
@@ -69,7 +69,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
   });
 
   return (
-    <group scale={1.25}>
+    <group scale={1.1}>
       {/* Platform */}
       <mesh position={[0, -2.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[8, 64]} />
@@ -136,7 +136,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
         </mesh>
         <mesh position={[0, 0.3, 0]}>
           <cylinderGeometry args={[0.62, 0.62, 0.2, 32]} />
-          <meshStandardMaterial color="#2255aa" metalness={0.85} roughness={0.2} />
+          <meshStandardMaterial color="#3366ff" metalness={0.7} roughness={0.3} />
         </mesh>
 
         {/* Nose cone with better shape */}
@@ -179,7 +179,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
             <mesh position={[0.65, -0.5, 0]} rotation={[0, 0, 0.15]}>
               <boxGeometry args={[0.4, 0.8, 0.06]} />
               <meshStandardMaterial 
-                color={hovered === "rocket" ? "#ff5533" : "#2255aa"} 
+                color={hovered === "rocket" ? "#ff6644" : "#3366cc"} 
                 metalness={0.85} 
                 roughness={0.2}
               />
