@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import Particles from "./Particles";
 
 interface ExitModelsProps {
   onSelect: (vehicle: "rocket" | "astronaut") => void;
@@ -148,6 +149,42 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <meshBasicMaterial color="#ffff66" transparent opacity={0.9} />
         </mesh>
 
+        {/* Flame particles */}
+        <Particles
+          position={[0, -0.8, 0]}
+          count={80}
+          color="#ff6600"
+          size={0.08}
+          spread={0.25}
+          speed={hovered === "rocket" ? 4 : 2}
+          type="flame"
+          active={true}
+        />
+        <Particles
+          position={[0, -0.8, 0]}
+          count={40}
+          color="#ffff00"
+          size={0.05}
+          spread={0.15}
+          speed={hovered === "rocket" ? 5 : 2.5}
+          type="flame"
+          active={true}
+        />
+
+        {/* Trail particles when hovered */}
+        {hovered === "rocket" && (
+          <Particles
+            position={[0, -1.2, 0]}
+            count={60}
+            color="#ff8800"
+            size={0.04}
+            spread={0.4}
+            speed={3}
+            type="trail"
+            active={true}
+          />
+        )}
+
         <pointLight position={[0, -0.5, 0]} color="#ff6600" intensity={hovered === "rocket" ? 4 : 2} distance={5} />
       </group>
 
@@ -240,6 +277,52 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <cylinderGeometry args={[0.08, 0.08, 0.2, 8]} />
           <meshStandardMaterial color="#444444" metalness={0.8} roughness={0.2} />
         </mesh>
+
+        {/* Jetpack thrusters */}
+        <mesh position={[-0.15, -0.1, -0.5]}>
+          <cylinderGeometry args={[0.06, 0.08, 0.15, 8]} />
+          <meshStandardMaterial color="#444444" metalness={0.9} roughness={0.1} />
+        </mesh>
+        <mesh position={[0.15, -0.1, -0.5]}>
+          <cylinderGeometry args={[0.06, 0.08, 0.15, 8]} />
+          <meshStandardMaterial color="#444444" metalness={0.9} roughness={0.1} />
+        </mesh>
+
+        {/* Jetpack particles */}
+        <Particles
+          position={[-0.15, -0.2, -0.5]}
+          count={30}
+          color="#66ccff"
+          size={0.04}
+          spread={0.08}
+          speed={hovered === "astronaut" ? 2.5 : 1}
+          type="flame"
+          active={true}
+        />
+        <Particles
+          position={[0.15, -0.2, -0.5]}
+          count={30}
+          color="#66ccff"
+          size={0.04}
+          spread={0.08}
+          speed={hovered === "astronaut" ? 2.5 : 1}
+          type="flame"
+          active={true}
+        />
+
+        {/* Sparkle effect around astronaut when hovered */}
+        {hovered === "astronaut" && (
+          <Particles
+            position={[0, 0.5, 0]}
+            count={50}
+            color="#88ddff"
+            size={0.06}
+            spread={0.8}
+            speed={1}
+            type="sparkle"
+            active={true}
+          />
+        )}
 
         {/* Arms */}
         <group position={[-0.55, 0.3, 0]}>
