@@ -71,9 +71,8 @@ const ExitOptions = ({ position = [0, 0, 4], onSelectVehicle }: ExitOptionsProps
           color="#ff3333"
           anchorX="center"
           anchorY="middle"
-          font="/fonts/inter-bold.woff"
         >
-          🚀 EXIT 🧑‍🚀
+          EXIT
         </Text>
       </group>
 
