@@ -4,9 +4,9 @@ import StarField from "@/components/StarField";
 import CustomCursor from "@/components/CustomCursor";
 import IsometricFrame from "@/components/IsometricFrame";
 import { useParallax } from "@/hooks/useParallax";
-import { SpaceStationScene } from "@/components/SpaceStation";
+import ExitChoices from "@/components/ExitChoices";
 
-type GamePhase = "loading" | "start" | "station" | "space";
+type GamePhase = "loading" | "start" | "choose" | "space";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,21 +20,19 @@ const Index = () => {
   }, []);
 
   const handleStart = useCallback(() => {
-    setPhase("station");
+    setPhase("choose");
   }, []);
 
-  const handleExitStation = useCallback((vehicle: "rocket" | "astronaut") => {
+  const handleSelect = useCallback((vehicle: "rocket" | "astronaut") => {
     setSelectedVehicle(vehicle);
     setPhase("space");
   }, []);
 
   return (
     <div className="relative min-h-screen bg-background overflow-hidden space-cursor">
-      {/* Custom cursor */}
       <CustomCursor />
 
       <AnimatePresence mode="wait">
-        {/* Phase 1: Loading & Start Screen */}
         {(phase === "loading" || phase === "start") && (
           <motion.div
             key="start-screen"
@@ -46,20 +44,15 @@ const Index = () => {
             }}
             transition={{ duration: 0.8, ease: "easeInOut" }}
           >
-            {/* Animated star field background */}
             <StarField />
-
-            {/* Subtle gradient overlay */}
             <div className="fixed inset-0 bg-gradient-to-b from-transparent via-background/50 to-background pointer-events-none" />
 
-            {/* Main content with parallax */}
             <motion.div
               className="relative z-10 flex min-h-screen items-center justify-center"
               style={{
                 transform: `perspective(1000px) rotateX(${parallax.rotateX}deg) rotateY(${parallax.rotateY}deg)`,
               }}
             >
-              {/* Parallax container */}
               <motion.div
                 animate={{
                   x: parallax.x,
@@ -78,7 +71,6 @@ const Index = () => {
                 />
               </motion.div>
 
-              {/* Decorative elements */}
               <motion.div
                 className="absolute top-1/4 left-1/4 w-2 h-2 bg-accent rounded-full blur-sm"
                 animate={{
@@ -116,21 +108,19 @@ const Index = () => {
           </motion.div>
         )}
 
-        {/* Phase 2: Space Station Interior */}
-        {phase === "station" && (
+        {phase === "choose" && (
           <motion.div
-            key="station"
+            key="choose"
             className="relative z-10 w-full h-screen"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 2 }}
+            exit={{ opacity: 0, scale: 1.5 }}
             transition={{ duration: 0.8 }}
           >
-            <SpaceStationScene onExit={handleExitStation} />
+            <ExitChoices onSelect={handleSelect} />
           </motion.div>
         )}
 
-        {/* Phase 3: Space (placeholder) */}
         {phase === "space" && (
           <motion.div
             key="space"
