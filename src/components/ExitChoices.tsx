@@ -27,8 +27,8 @@ const Galaxy = () => {
     const randomZ = (Math.random() - 0.5) * 3 * (1 - radius / 35);
     
     positions[i3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
-    positions[i3 + 1] = randomY - 15;
-    positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ - 20;
+    positions[i3 + 1] = randomY - 5;
+    positions[i3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ - 15;
     
     // Color gradient from center (orange/yellow) to edges (blue/purple)
     const mixRatio = radius / 35;
@@ -131,14 +131,6 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         <p className="text-muted-foreground text-lg">Click to select your space adventure</p>
       </div>
 
-      {/* Instruction overlay */}
-      <div className="absolute top-1/2 left-4 -translate-y-1/2 pointer-events-none">
-        <div className="bg-background/60 backdrop-blur-sm rounded-lg px-4 py-2 border border-border/30">
-          <p className="text-muted-foreground text-sm animate-pulse">
-            ✨ Move your cursor to see the galaxy
-          </p>
-        </div>
-      </div>
 
       {/* Hover hint */}
       {hovered && (
