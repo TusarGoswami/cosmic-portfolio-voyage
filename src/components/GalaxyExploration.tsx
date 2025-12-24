@@ -1,6 +1,6 @@
-import { Suspense, useRef, useMemo, useState, useCallback } from "react";
+import { Suspense, useRef, useMemo, useState, useCallback, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Line, Html } from "@react-three/drei";
+import { Line, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,6 +25,8 @@ interface PlanetData {
   description: string;
   facts: string[];
   moons: number;
+  gravityRadius: number;
+  orbitCaptureRadius: number;
 }
 
 const PLANETS_DATA: PlanetData[] = [
@@ -33,51 +35,128 @@ const PLANETS_DATA: PlanetData[] = [
     spotColor: "#ffaa88", glowColor: "#ff9966", hasSatellite: true, initialAngle: 0,
     description: "A volcanic world with rivers of molten lava and intense heat.",
     facts: ["Orbital period: 88 days", "Surface temp: 450°C", "Volcanic activity: Extreme"],
-    moons: 1
+    moons: 1, gravityRadius: 12, orbitCaptureRadius: 6
   },
   { 
     id: 1, name: "Aquaris", orbitRadius: 32, size: 2.8, color: "#55aaff", orbitSpeed: 0.18, rotationSpeed: 1.4, 
     spotColor: "#88ccff", glowColor: "#77bbff", hasRing: true, ringColor: "#8899bb", initialAngle: Math.PI * 0.5,
     description: "An ocean world with crystalline ice rings and deep underwater cities.",
     facts: ["Orbital period: 210 days", "97% water surface", "Ring composition: Ice crystals"],
-    moons: 3
+    moons: 3, gravityRadius: 15, orbitCaptureRadius: 7
   },
   { 
     id: 2, name: "Verdania", orbitRadius: 44, size: 2.5, color: "#66ff88", orbitSpeed: 0.22, rotationSpeed: 2.5, 
     spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI,
     description: "A lush paradise planet covered in bioluminescent forests.",
     facts: ["Orbital period: 365 days", "85% forest coverage", "Biodiversity: Extreme"],
-    moons: 2
+    moons: 2, gravityRadius: 14, orbitCaptureRadius: 6.5
   },
   { 
     id: 3, name: "Solarius", orbitRadius: 58, size: 5, color: "#ffbb55", orbitSpeed: 0.08, rotationSpeed: 0.6, 
     spotColor: "#ffdd88", glowColor: "#ffcc66", hasRing: true, ringColor: "#ddaa66", hasSatellite: true, initialAngle: Math.PI * 1.3,
     description: "The golden giant with massive storms and floating cloud cities.",
     facts: ["Orbital period: 12 years", "Great Storm: 400 years old", "Atmosphere: Metallic hydrogen"],
-    moons: 67
+    moons: 67, gravityRadius: 25, orbitCaptureRadius: 12
   },
   { 
     id: 4, name: "Nebulora", orbitRadius: 75, size: 4, color: "#bb77ff", orbitSpeed: 0.06, rotationSpeed: 0.8, 
     spotColor: "#dd99ff", glowColor: "#cc88ff", hasSatellite: true, initialAngle: Math.PI * 0.7,
     description: "A mystical purple world surrounded by cosmic dust clouds.",
     facts: ["Orbital period: 30 years", "Nebula density: High", "Magnetic field: Extreme"],
-    moons: 24
+    moons: 24, gravityRadius: 20, orbitCaptureRadius: 10
   },
   { 
     id: 5, name: "Rosaria", orbitRadius: 92, size: 2.2, color: "#ff77aa", orbitSpeed: 0.12, rotationSpeed: 1.5, 
     spotColor: "#ff99cc", glowColor: "#ff88bb", initialAngle: Math.PI * 1.8,
     description: "The rose planet known for its crystalline pink deserts.",
     facts: ["Orbital period: 15 years", "Crystal formations: Abundant", "Surface: Silicon dioxide"],
-    moons: 0
+    moons: 0, gravityRadius: 12, orbitCaptureRadius: 6
   },
   { 
     id: 6, name: "Cryonia", orbitRadius: 110, size: 4.5, color: "#77ffff", orbitSpeed: 0.04, rotationSpeed: 0.5, 
     spotColor: "#99ffff", glowColor: "#88ffff", hasRing: true, ringColor: "#66cccc", hasSatellite: true, initialAngle: Math.PI * 0.3,
     description: "An ice giant at the edge of the system with aurora displays.",
     facts: ["Orbital period: 84 years", "Surface temp: -224°C", "Aurora frequency: Constant"],
-    moons: 42
+    moons: 42, gravityRadius: 22, orbitCaptureRadius: 11
   },
 ];
+
+// Keyboard state
+const useKeyboardControls = () => {
+  const keys = useRef({
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+    up: false,
+    down: false,
+  });
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case "KeyW":
+        case "ArrowUp":
+          keys.current.forward = true;
+          break;
+        case "KeyS":
+        case "ArrowDown":
+          keys.current.backward = true;
+          break;
+        case "KeyA":
+        case "ArrowLeft":
+          keys.current.left = true;
+          break;
+        case "KeyD":
+        case "ArrowRight":
+          keys.current.right = true;
+          break;
+        case "Space":
+          keys.current.up = true;
+          break;
+        case "ShiftLeft":
+          keys.current.down = true;
+          break;
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      switch (e.code) {
+        case "KeyW":
+        case "ArrowUp":
+          keys.current.forward = false;
+          break;
+        case "KeyS":
+        case "ArrowDown":
+          keys.current.backward = false;
+          break;
+        case "KeyA":
+        case "ArrowLeft":
+          keys.current.left = false;
+          break;
+        case "KeyD":
+        case "ArrowRight":
+          keys.current.right = false;
+          break;
+        case "Space":
+          keys.current.up = false;
+          break;
+        case "ShiftLeft":
+          keys.current.down = false;
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
+  return keys;
+};
 
 // Blinking Stars Background
 const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
@@ -254,19 +333,16 @@ const Satellite = ({ orbitRadius, speed, size = 0.3 }: { orbitRadius: number; sp
   );
 };
 
-// Interactive Planet Component
+// Planet Component
 interface PlanetProps {
   planet: PlanetData;
-  onSelect: (planet: PlanetData) => void;
-  isSelected: boolean;
+  getPlanetPosition: (planet: PlanetData, time: number) => THREE.Vector3;
 }
 
-const Planet = ({ planet, onSelect, isSelected }: PlanetProps) => {
+const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const planetRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-  const currentPosition = useRef(new THREE.Vector3());
 
   const spotTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -320,13 +396,10 @@ const Planet = ({ planet, onSelect, isSelected }: PlanetProps) => {
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
+    const pos = getPlanetPosition(planet, time);
     
     if (groupRef.current) {
-      const angle = planet.initialAngle + time * planet.orbitSpeed;
-      groupRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
-      groupRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
-      groupRef.current.position.y = Math.sin(angle * 2) * 1;
-      currentPosition.current.copy(groupRef.current.position);
+      groupRef.current.position.copy(pos);
     }
     
     if (planetRef.current) {
@@ -338,52 +411,29 @@ const Planet = ({ planet, onSelect, isSelected }: PlanetProps) => {
     }
   });
 
-  const handleClick = (e: any) => {
-    e.stopPropagation();
-    onSelect(planet);
-  };
-
   return (
     <group ref={groupRef}>
-      {/* Planet body */}
-      <mesh 
-        ref={planetRef}
-        onClick={handleClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        scale={hovered || isSelected ? 1.15 : 1}
-      >
+      <mesh ref={planetRef}>
         <sphereGeometry args={[planet.size, 64, 64]} />
         <meshStandardMaterial 
           map={spotTexture}
           emissive={planet.color}
-          emissiveIntensity={hovered || isSelected ? 0.4 : 0.15}
+          emissiveIntensity={0.15}
           metalness={0.15}
           roughness={0.75}
         />
       </mesh>
       
-      {/* Inner atmosphere */}
-      <mesh ref={atmosphereRef} scale={hovered || isSelected ? 1.15 : 1}>
+      <mesh ref={atmosphereRef}>
         <sphereGeometry args={[planet.size * 1.05, 32, 32]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={hovered || isSelected ? 0.4 : 0.2} />
+        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.2} />
       </mesh>
       
-      {/* Outer atmosphere glow */}
-      <mesh scale={hovered || isSelected ? 1.15 : 1}>
+      <mesh>
         <sphereGeometry args={[planet.size * 1.15, 32, 32]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={hovered || isSelected ? 0.25 : 0.1} />
+        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.1} />
       </mesh>
       
-      {/* Selection ring */}
-      {isSelected && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.size * 1.8, planet.size * 2, 64]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.5} side={THREE.DoubleSide} />
-        </mesh>
-      )}
-      
-      {/* Ring */}
       {planet.hasRing && (
         <>
           <mesh rotation={[Math.PI / 2.8, 0.1, 0]}>
@@ -397,18 +447,8 @@ const Planet = ({ planet, onSelect, isSelected }: PlanetProps) => {
         </>
       )}
       
-      {/* Satellite */}
       {planet.hasSatellite && (
         <Satellite orbitRadius={planet.size * 2.5} speed={1.5} size={planet.size * 0.2} />
-      )}
-      
-      {/* Hover label */}
-      {hovered && !isSelected && (
-        <Html distanceFactor={15} center>
-          <div className="bg-card/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border/30 whitespace-nowrap pointer-events-none">
-            <span className="text-foreground text-sm font-medium">{planet.name}</span>
-          </div>
-        </Html>
       )}
       
       <pointLight color={planet.color} intensity={0.3} distance={planet.size * 5} />
@@ -416,96 +456,218 @@ const Planet = ({ planet, onSelect, isSelected }: PlanetProps) => {
   );
 };
 
-// Space Station
-const SpaceStation = ({ position }: { position: [number, number, number] }) => {
-  const stationRef = useRef<THREE.Group>(null);
+// Asteroid Belt
+interface AsteroidBeltProps {
+  innerRadius: number;
+  outerRadius: number;
+  count: number;
+  shipPosition: THREE.Vector3;
+  onCollision: () => void;
+}
+
+const AsteroidBelt = ({ innerRadius, outerRadius, count, shipPosition, onCollision }: AsteroidBeltProps) => {
+  const asteroidsRef = useRef<THREE.InstancedMesh>(null);
+  const asteroidData = useRef<{ position: THREE.Vector3; rotation: THREE.Euler; speed: number; size: number }[]>([]);
+  
+  useMemo(() => {
+    asteroidData.current = [];
+    for (let i = 0; i < count; i++) {
+      const radius = innerRadius + Math.random() * (outerRadius - innerRadius);
+      const angle = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 6;
+      
+      asteroidData.current.push({
+        position: new THREE.Vector3(
+          Math.cos(angle) * radius,
+          y,
+          Math.sin(angle) * radius
+        ),
+        rotation: new THREE.Euler(
+          Math.random() * Math.PI,
+          Math.random() * Math.PI,
+          Math.random() * Math.PI
+        ),
+        speed: 0.02 + Math.random() * 0.05,
+        size: 0.3 + Math.random() * 0.7,
+      });
+    }
+  }, [innerRadius, outerRadius, count]);
 
   useFrame((state) => {
-    if (stationRef.current) {
-      stationRef.current.rotation.y = state.clock.elapsedTime * 0.08;
-    }
+    if (!asteroidsRef.current) return;
+    
+    const time = state.clock.elapsedTime;
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    
+    asteroidData.current.forEach((asteroid, i) => {
+      const angle = Math.atan2(asteroid.position.z, asteroid.position.x) + time * asteroid.speed;
+      const radius = Math.sqrt(asteroid.position.x ** 2 + asteroid.position.z ** 2);
+      
+      position.set(
+        Math.cos(angle) * radius,
+        asteroid.position.y + Math.sin(time * 2 + i) * 0.3,
+        Math.sin(angle) * radius
+      );
+      
+      quaternion.setFromEuler(new THREE.Euler(
+        asteroid.rotation.x + time * asteroid.speed * 2,
+        asteroid.rotation.y + time * asteroid.speed,
+        asteroid.rotation.z + time * asteroid.speed * 1.5
+      ));
+      
+      scale.setScalar(asteroid.size);
+      
+      matrix.compose(position, quaternion, scale);
+      asteroidsRef.current!.setMatrixAt(i, matrix);
+      
+      // Collision detection with ship
+      const distance = position.distanceTo(shipPosition);
+      if (distance < asteroid.size + 1) {
+        onCollision();
+      }
+    });
+    
+    asteroidsRef.current.instanceMatrix.needsUpdate = true;
   });
 
   return (
-    <group ref={stationRef} position={position} scale={2}>
+    <instancedMesh ref={asteroidsRef} args={[undefined, undefined, count]}>
+      <dodecahedronGeometry args={[1, 0]} />
+      <meshStandardMaterial color="#8b7355" roughness={0.9} metalness={0.1} />
+    </instancedMesh>
+  );
+};
+
+// Spaceship Component
+interface SpaceshipProps {
+  position: THREE.Vector3;
+  rotation: THREE.Euler;
+  velocity: THREE.Vector3;
+  isOrbiting: boolean;
+  orbitingPlanet: PlanetData | null;
+  vehicle: "rocket" | "astronaut";
+}
+
+const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: SpaceshipProps) => {
+  const shipRef = useRef<THREE.Group>(null);
+  const exhaustRef = useRef<THREE.Mesh>(null);
+  
+  const speed = velocity.length();
+
+  useFrame((state) => {
+    if (exhaustRef.current) {
+      const scale = 0.5 + speed * 2;
+      exhaustRef.current.scale.set(1, scale, 1);
+      const flicker = Math.sin(state.clock.elapsedTime * 20) * 0.2 + 0.8;
+      (exhaustRef.current.material as THREE.MeshBasicMaterial).opacity = speed > 0.01 ? flicker * 0.8 : 0;
+    }
+  });
+
+  if (vehicle === "astronaut") {
+    return (
+      <group ref={shipRef} position={position} rotation={rotation}>
+        {/* Astronaut body */}
+        <mesh>
+          <capsuleGeometry args={[0.4, 0.8, 8, 16]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.3} metalness={0.2} />
+        </mesh>
+        {/* Helmet */}
+        <mesh position={[0, 0.7, 0]}>
+          <sphereGeometry args={[0.35, 16, 16]} />
+          <meshStandardMaterial color="#88ccff" roughness={0.1} metalness={0.8} transparent opacity={0.8} />
+        </mesh>
+        {/* Visor */}
+        <mesh position={[0, 0.7, 0.2]}>
+          <sphereGeometry args={[0.2, 16, 16, 0, Math.PI]} />
+          <meshBasicMaterial color="#001133" />
+        </mesh>
+        {/* Jetpack */}
+        <mesh position={[0, 0, -0.3]}>
+          <boxGeometry args={[0.4, 0.6, 0.2]} />
+          <meshStandardMaterial color="#666666" metalness={0.6} roughness={0.4} />
+        </mesh>
+        {/* Jetpack exhaust */}
+        <mesh ref={exhaustRef} position={[0, -0.6, -0.3]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.15, 0.5, 8]} />
+          <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
+        </mesh>
+        <pointLight color="#ffaa00" intensity={speed * 2} distance={5} position={[0, -0.6, -0.3]} />
+      </group>
+    );
+  }
+
+  return (
+    <group ref={shipRef} position={position} rotation={rotation}>
+      {/* Rocket body */}
       <mesh>
-        <cylinderGeometry args={[1.2, 1.2, 0.6, 12]} />
-        <meshStandardMaterial color="#888888" metalness={0.9} roughness={0.2} />
+        <cylinderGeometry args={[0.4, 0.6, 2, 16]} />
+        <meshStandardMaterial color="#cccccc" metalness={0.8} roughness={0.2} />
       </mesh>
-      
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[3, 0.35, 12, 48]} />
-        <meshStandardMaterial color="#666666" metalness={0.8} roughness={0.3} />
+      {/* Nose cone */}
+      <mesh position={[0, 1.3, 0]}>
+        <coneGeometry args={[0.4, 0.8, 16]} />
+        <meshStandardMaterial color="#ff4444" metalness={0.6} roughness={0.3} />
       </mesh>
-      
-      {[0, 60, 120, 180, 240, 300].map((angle, i) => (
-        <mesh 
-          key={i} 
-          position={[Math.cos(angle * Math.PI / 180) * 1.5, 0, Math.sin(angle * Math.PI / 180) * 1.5]}
-          rotation={[0, -angle * Math.PI / 180, Math.PI / 2]}
-        >
-          <cylinderGeometry args={[0.08, 0.08, 3, 8]} />
-          <meshStandardMaterial color="#777777" metalness={0.8} roughness={0.3} />
+      {/* Window */}
+      <mesh position={[0, 0.5, 0.35]}>
+        <sphereGeometry args={[0.15, 16, 16, 0, Math.PI]} />
+        <meshBasicMaterial color="#88ccff" />
+      </mesh>
+      {/* Fins */}
+      {[0, 120, 240].map((angle, i) => (
+        <mesh key={i} position={[Math.sin(angle * Math.PI / 180) * 0.5, -0.8, Math.cos(angle * Math.PI / 180) * 0.5]} rotation={[0, -angle * Math.PI / 180, 0]}>
+          <boxGeometry args={[0.1, 0.6, 0.4]} />
+          <meshStandardMaterial color="#ff4444" metalness={0.6} roughness={0.3} />
         </mesh>
       ))}
-      
-      <mesh position={[5, 0, 0]}>
-        <boxGeometry args={[3, 0.08, 1.2]} />
-        <meshStandardMaterial color="#1a4a7c" metalness={0.4} roughness={0.6} emissive="#112244" emissiveIntensity={0.3} />
+      {/* Exhaust flame */}
+      <mesh ref={exhaustRef} position={[0, -1.3, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.3, 1, 16]} />
+        <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
       </mesh>
-      <mesh position={[-5, 0, 0]}>
-        <boxGeometry args={[3, 0.08, 1.2]} />
-        <meshStandardMaterial color="#1a4a7c" metalness={0.4} roughness={0.6} emissive="#112244" emissiveIntensity={0.3} />
-      </mesh>
-      
-      <pointLight color="#00ff88" intensity={1} distance={8} position={[0, 0.5, 0]} />
-      <pointLight color="#ff4444" intensity={0.5} distance={5} position={[3, 0, 0]} />
-      <pointLight color="#4444ff" intensity={0.5} distance={5} position={[-3, 0, 0]} />
+      <pointLight color="#ffaa00" intensity={speed * 3} distance={8} position={[0, -1.5, 0]} />
     </group>
   );
 };
 
-// Camera Controller for zoom
-interface CameraControllerProps {
-  selectedPlanet: PlanetData | null;
-  controlsRef: React.RefObject<any>;
+// Camera that follows the ship
+interface FollowCameraProps {
+  shipPosition: THREE.Vector3;
+  shipRotation: THREE.Euler;
+  isOrbiting: boolean;
 }
 
-const CameraController = ({ selectedPlanet, controlsRef }: CameraControllerProps) => {
+const FollowCamera = ({ shipPosition, shipRotation, isOrbiting }: FollowCameraProps) => {
   const { camera } = useThree();
-  const targetPosition = useRef(new THREE.Vector3(50, 60, 120));
-  const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
+  const targetPosition = useRef(new THREE.Vector3());
+  const targetLookAt = useRef(new THREE.Vector3());
 
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
+  useFrame(() => {
+    // Calculate camera position behind and above the ship
+    const offset = new THREE.Vector3(0, 8, 20);
+    const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(shipRotation);
+    offset.applyMatrix4(rotationMatrix);
     
-    if (selectedPlanet) {
-      // Calculate planet position
-      const angle = selectedPlanet.initialAngle + time * selectedPlanet.orbitSpeed;
-      const planetX = Math.cos(angle) * selectedPlanet.orbitRadius;
-      const planetZ = Math.sin(angle) * selectedPlanet.orbitRadius;
-      const planetY = Math.sin(angle * 2) * 1;
-      
-      // Set target to zoom to planet
-      const distance = selectedPlanet.size * 6;
-      targetPosition.current.set(
-        planetX + distance,
-        planetY + distance * 0.5,
-        planetZ + distance
-      );
-      targetLookAt.current.set(planetX, planetY, planetZ);
-    } else {
-      // Default overview position
-      targetPosition.current.set(50, 60, 120);
-      targetLookAt.current.set(0, 0, 0);
-    }
+    targetPosition.current.copy(shipPosition).add(offset);
+    targetLookAt.current.copy(shipPosition);
     
     // Smooth camera movement
-    camera.position.lerp(targetPosition.current, 0.02);
+    camera.position.lerp(targetPosition.current, isOrbiting ? 0.02 : 0.05);
     
-    if (controlsRef.current) {
-      controlsRef.current.target.lerp(targetLookAt.current, 0.02);
-    }
+    const lookAtTarget = new THREE.Vector3();
+    lookAtTarget.lerpVectors(
+      new THREE.Vector3(
+        camera.getWorldDirection(new THREE.Vector3()).x,
+        camera.getWorldDirection(new THREE.Vector3()).y,
+        camera.getWorldDirection(new THREE.Vector3()).z
+      ).add(camera.position),
+      targetLookAt.current,
+      0.05
+    );
+    camera.lookAt(targetLookAt.current);
   });
 
   return null;
@@ -513,12 +675,175 @@ const CameraController = ({ selectedPlanet, controlsRef }: CameraControllerProps
 
 // Main Galaxy Scene
 interface GalaxySceneProps {
-  selectedPlanet: PlanetData | null;
-  onPlanetSelect: (planet: PlanetData) => void;
+  vehicle: "rocket" | "astronaut";
+  onPlanetApproach: (planet: PlanetData | null) => void;
+  onOrbitCapture: (planet: PlanetData | null) => void;
+  orbitingPlanet: PlanetData | null;
+  showEnterButton: boolean;
+  onAsteroidCollision: () => void;
 }
 
-const GalaxyScene = ({ selectedPlanet, onPlanetSelect }: GalaxySceneProps) => {
-  const controlsRef = useRef<any>(null);
+const GalaxyScene = ({ 
+  vehicle, 
+  onPlanetApproach, 
+  onOrbitCapture, 
+  orbitingPlanet,
+  showEnterButton,
+  onAsteroidCollision
+}: GalaxySceneProps) => {
+  const keys = useKeyboardControls();
+  const shipPosition = useRef(new THREE.Vector3(30, 5, 30));
+  const shipVelocity = useRef(new THREE.Vector3());
+  const shipRotation = useRef(new THREE.Euler(0, 0, 0));
+  const orbitAngle = useRef(0);
+  const [, forceUpdate] = useState(0);
+
+  const getPlanetPosition = useCallback((planet: PlanetData, time: number) => {
+    const angle = planet.initialAngle + time * planet.orbitSpeed;
+    return new THREE.Vector3(
+      Math.cos(angle) * planet.orbitRadius,
+      Math.sin(angle * 2) * 1,
+      Math.sin(angle) * planet.orbitRadius
+    );
+  }, []);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    const delta = Math.min(state.clock.getDelta(), 0.1);
+    
+    const acceleration = 0.8;
+    const maxSpeed = 2;
+    const friction = 0.98;
+    const rotationSpeed = 0.03;
+    
+    // If orbiting, handle orbit mechanics
+    if (orbitingPlanet) {
+      const planetPos = getPlanetPosition(orbitingPlanet, time);
+      const orbitDistance = orbitingPlanet.size + orbitingPlanet.orbitCaptureRadius * 0.6;
+      
+      // Check for escape input
+      const escaping = keys.current.forward || keys.current.backward || keys.current.left || keys.current.right;
+      
+      if (escaping) {
+        // Escape velocity
+        const escapeDir = new THREE.Vector3();
+        if (keys.current.forward) escapeDir.z -= 1;
+        if (keys.current.backward) escapeDir.z += 1;
+        if (keys.current.left) escapeDir.x -= 1;
+        if (keys.current.right) escapeDir.x += 1;
+        escapeDir.normalize().multiplyScalar(maxSpeed * 1.5);
+        
+        shipVelocity.current.copy(escapeDir);
+        shipPosition.current.add(escapeDir.clone().multiplyScalar(delta * 60));
+        onOrbitCapture(null);
+      } else {
+        // Continue orbiting
+        orbitAngle.current += 0.02;
+        shipPosition.current.set(
+          planetPos.x + Math.cos(orbitAngle.current) * orbitDistance,
+          planetPos.y + Math.sin(orbitAngle.current * 0.5) * 2,
+          planetPos.z + Math.sin(orbitAngle.current) * orbitDistance
+        );
+        
+        // Face the direction of orbit
+        const tangent = new THREE.Vector3(
+          -Math.sin(orbitAngle.current),
+          0,
+          Math.cos(orbitAngle.current)
+        );
+        shipRotation.current.y = Math.atan2(tangent.x, tangent.z);
+      }
+    } else {
+      // Free flight controls
+      if (keys.current.left) shipRotation.current.y += rotationSpeed;
+      if (keys.current.right) shipRotation.current.y -= rotationSpeed;
+      
+      const forward = new THREE.Vector3(0, 0, -1);
+      forward.applyEuler(shipRotation.current);
+      
+      if (keys.current.forward) {
+        shipVelocity.current.add(forward.clone().multiplyScalar(acceleration * delta * 60));
+      }
+      if (keys.current.backward) {
+        shipVelocity.current.add(forward.clone().multiplyScalar(-acceleration * 0.5 * delta * 60));
+      }
+      if (keys.current.up) {
+        shipVelocity.current.y += acceleration * 0.5 * delta * 60;
+      }
+      if (keys.current.down) {
+        shipVelocity.current.y -= acceleration * 0.5 * delta * 60;
+      }
+      
+      // Clamp speed
+      if (shipVelocity.current.length() > maxSpeed) {
+        shipVelocity.current.normalize().multiplyScalar(maxSpeed);
+      }
+      
+      // Apply friction
+      shipVelocity.current.multiplyScalar(friction);
+      
+      // Check gravity and collision with planets
+      let nearestPlanet: PlanetData | null = null;
+      let nearestDistance = Infinity;
+      
+      for (const planet of PLANETS_DATA) {
+        const planetPos = getPlanetPosition(planet, time);
+        const distance = shipPosition.current.distanceTo(planetPos);
+        
+        // Invisible wall - can't pass through planet
+        if (distance < planet.size + 1) {
+          const pushDir = shipPosition.current.clone().sub(planetPos).normalize();
+          shipPosition.current.copy(planetPos).add(pushDir.multiplyScalar(planet.size + 1.1));
+          shipVelocity.current.reflect(pushDir).multiplyScalar(0.3);
+        }
+        
+        // Gravity attraction
+        if (distance < planet.gravityRadius && distance > planet.size) {
+          const gravityStrength = (1 - distance / planet.gravityRadius) * 0.015;
+          const gravityDir = planetPos.clone().sub(shipPosition.current).normalize();
+          shipVelocity.current.add(gravityDir.multiplyScalar(gravityStrength));
+          
+          if (distance < nearestDistance) {
+            nearestDistance = distance;
+            nearestPlanet = planet;
+          }
+          
+          // Orbit capture
+          if (distance < planet.size + planet.orbitCaptureRadius) {
+            onOrbitCapture(planet);
+            orbitAngle.current = Math.atan2(
+              shipPosition.current.z - planetPos.z,
+              shipPosition.current.x - planetPos.x
+            );
+          }
+        }
+      }
+      
+      onPlanetApproach(nearestPlanet);
+      
+      // Apply velocity
+      shipPosition.current.add(shipVelocity.current.clone().multiplyScalar(delta * 60));
+      
+      // Keep ship in bounds
+      const maxBound = 140;
+      if (shipPosition.current.length() > maxBound) {
+        shipPosition.current.normalize().multiplyScalar(maxBound);
+        shipVelocity.current.multiplyScalar(-0.5);
+      }
+      
+      // Keep above a minimum height
+      if (shipPosition.current.y < -20) {
+        shipPosition.current.y = -20;
+        shipVelocity.current.y = Math.abs(shipVelocity.current.y) * 0.5;
+      }
+      if (shipPosition.current.y > 50) {
+        shipPosition.current.y = 50;
+        shipVelocity.current.y = -Math.abs(shipVelocity.current.y) * 0.5;
+      }
+    }
+    
+    forceUpdate(n => n + 1);
+  });
 
   return (
     <>
@@ -526,7 +851,6 @@ const GalaxyScene = ({ selectedPlanet, onPlanetSelect }: GalaxySceneProps) => {
       <directionalLight position={[30, 30, 15]} intensity={0.4} />
       
       <BlinkingStars count={5000} />
-      
       <GalaxyCore />
       
       {/* Orbital paths */}
@@ -538,29 +862,39 @@ const GalaxyScene = ({ selectedPlanet, onPlanetSelect }: GalaxySceneProps) => {
       {PLANETS_DATA.map((planet) => (
         <Planet 
           key={`planet-${planet.id}`} 
-          planet={planet} 
-          onSelect={onPlanetSelect}
-          isSelected={selectedPlanet?.id === planet.id}
+          planet={planet}
+          getPlanetPosition={getPlanetPosition}
         />
       ))}
       
-      {/* Space Station */}
-      <SpaceStation position={[70, 15, -50]} />
+      {/* Asteroid Belt */}
+      <AsteroidBelt 
+        innerRadius={48}
+        outerRadius={54}
+        count={200}
+        shipPosition={shipPosition.current}
+        onCollision={onAsteroidCollision}
+      />
       
-      {/* Camera controller */}
-      <CameraController selectedPlanet={selectedPlanet} controlsRef={controlsRef} />
+      {/* Player Spaceship */}
+      <Spaceship 
+        position={shipPosition.current}
+        rotation={shipRotation.current}
+        velocity={shipVelocity.current}
+        isOrbiting={orbitingPlanet !== null}
+        orbitingPlanet={orbitingPlanet}
+        vehicle={vehicle}
+      />
       
-      <OrbitControls 
-        ref={controlsRef}
-        enablePan={false}
-        minDistance={15}
-        maxDistance={250}
-        minPolarAngle={Math.PI / 6}
-        maxPolarAngle={Math.PI / 2.2}
+      {/* Follow Camera */}
+      <FollowCamera 
+        shipPosition={shipPosition.current}
+        shipRotation={shipRotation.current}
+        isOrbiting={orbitingPlanet !== null}
       />
       
       {/* Nebula fog */}
-      <fog attach="fog" args={["#050510", 120, 400]} />
+      <fog attach="fog" args={["#050510", 80, 300]} />
     </>
   );
 };
@@ -574,140 +908,149 @@ interface PlanetDetailProps {
 const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
   return (
     <motion.div
-      initial={{ opacity: 0, x: 100 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 100 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="absolute top-6 right-6 w-80 bg-card/95 backdrop-blur-md rounded-2xl border border-border/30 overflow-hidden shadow-2xl"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.3 }}
+      className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-md z-50"
     >
-      {/* Header */}
-      <div
-        className="p-6 relative"
-        style={{
-          background: `linear-gradient(135deg, ${planet.color}33, transparent)`,
-        }}
-      >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-background/50 hover:bg-background/80 transition-colors"
-        >
-          <span className="text-foreground text-lg">×</span>
-        </button>
-        
+      <div className="w-[600px] max-w-[90vw] bg-card/95 backdrop-blur-md rounded-2xl border border-border/30 overflow-hidden shadow-2xl">
         <div
-          className="w-16 h-16 rounded-full mb-4 shadow-lg"
+          className="p-8 relative"
           style={{
-            background: `radial-gradient(circle at 30% 30%, ${planet.color}, ${planet.color}88)`,
-            boxShadow: `0 0 30px ${planet.color}66`,
+            background: `linear-gradient(135deg, ${planet.color}44, transparent)`,
           }}
-        />
-        
-        <h2 className="text-2xl font-bold text-foreground">{planet.name}</h2>
-        <p className="text-muted-foreground text-sm mt-1">{planet.description}</p>
-      </div>
-      
-      {/* Stats */}
-      <div className="p-6 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-background/50 rounded-lg p-3">
-            <div className="text-muted-foreground text-xs uppercase tracking-wider">Size</div>
-            <div className="text-foreground font-semibold">{planet.size.toFixed(1)}x Earth</div>
-          </div>
-          <div className="bg-background/50 rounded-lg p-3">
-            <div className="text-muted-foreground text-xs uppercase tracking-wider">Moons</div>
-            <div className="text-foreground font-semibold">{planet.moons}</div>
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-background/50 hover:bg-background/80 transition-colors text-xl"
+          >
+            ×
+          </button>
+          
+          <div className="flex items-center gap-6">
+            <div
+              className="w-24 h-24 rounded-full shadow-lg flex-shrink-0"
+              style={{
+                background: `radial-gradient(circle at 30% 30%, ${planet.color}, ${planet.color}88)`,
+                boxShadow: `0 0 40px ${planet.color}66`,
+              }}
+            />
+            <div>
+              <h2 className="text-3xl font-bold text-foreground">{planet.name}</h2>
+              <p className="text-muted-foreground mt-2">{planet.description}</p>
+            </div>
           </div>
         </div>
         
-        {/* Facts */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Quick Facts</h3>
-          <ul className="space-y-2">
-            {planet.facts.map((fact, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <span
-                  className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                  style={{ backgroundColor: planet.color }}
-                />
-                <span className="text-muted-foreground text-sm">{fact}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        {/* Features */}
-        <div className="flex flex-wrap gap-2">
-          {planet.hasRing && (
-            <span className="px-2 py-1 text-xs rounded-full bg-accent/20 text-accent border border-accent/30">
-              Has Rings
-            </span>
-          )}
-          {planet.moons > 10 && (
-            <span className="px-2 py-1 text-xs rounded-full bg-space-glow/20 text-[hsl(var(--space-glow))] border border-space-glow/30">
-              Many Moons
-            </span>
-          )}
-          {planet.hasSatellite && (
-            <span className="px-2 py-1 text-xs rounded-full bg-space-star/20 text-[hsl(var(--space-star))] border border-space-star/30">
-              Satellite
-            </span>
-          )}
+        <div className="p-8 space-y-6">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-background/50 rounded-lg p-4 text-center">
+              <div className="text-muted-foreground text-xs uppercase tracking-wider">Size</div>
+              <div className="text-foreground text-2xl font-bold">{planet.size.toFixed(1)}x</div>
+            </div>
+            <div className="bg-background/50 rounded-lg p-4 text-center">
+              <div className="text-muted-foreground text-xs uppercase tracking-wider">Moons</div>
+              <div className="text-foreground text-2xl font-bold">{planet.moons}</div>
+            </div>
+            <div className="bg-background/50 rounded-lg p-4 text-center">
+              <div className="text-muted-foreground text-xs uppercase tracking-wider">Orbit</div>
+              <div className="text-foreground text-2xl font-bold">{planet.orbitRadius}AU</div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Quick Facts</h3>
+            <ul className="space-y-2">
+              {planet.facts.map((fact, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <span
+                    className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
+                    style={{ backgroundColor: planet.color }}
+                  />
+                  <span className="text-muted-foreground">{fact}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {planet.hasRing && (
+              <span className="px-3 py-1.5 text-sm rounded-full bg-accent/20 text-accent border border-accent/30">
+                Has Rings
+              </span>
+            )}
+            {planet.moons > 10 && (
+              <span className="px-3 py-1.5 text-sm rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                Many Moons
+              </span>
+            )}
+            {planet.hasSatellite && (
+              <span className="px-3 py-1.5 text-sm rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                Satellite
+              </span>
+            )}
+          </div>
+          
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-lg bg-accent hover:bg-accent/80 text-accent-foreground font-medium transition-colors"
+          >
+            Continue Exploring
+          </button>
         </div>
       </div>
     </motion.div>
   );
 };
 
-// Planet Selection HUD
-interface HUDProps {
-  onPlanetSelect: (planet: PlanetData) => void;
-  selectedPlanet: PlanetData | null;
-}
-
-const PlanetHUD = ({ onPlanetSelect, selectedPlanet }: HUDProps) => {
-  return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 bg-card/80 backdrop-blur-md rounded-full px-5 py-3 border border-border/30">
-      {PLANETS_DATA.map((planet) => (
-        <button
-          key={planet.id}
-          onClick={() => onPlanetSelect(planet)}
-          className={`w-9 h-9 rounded-full transition-all duration-300 ${
-            selectedPlanet?.id === planet.id
-              ? "ring-2 ring-foreground scale-110"
-              : "hover:scale-110 opacity-70 hover:opacity-100"
-          }`}
-          style={{
-            background: `radial-gradient(circle at 30% 30%, ${planet.color}, ${planet.color}88)`,
-            boxShadow: selectedPlanet?.id === planet.id ? `0 0 15px ${planet.color}` : "none",
-          }}
-          title={planet.name}
-        />
-      ))}
-    </div>
-  );
-};
-
 const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
-  const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null);
+  const [nearPlanet, setNearPlanet] = useState<PlanetData | null>(null);
+  const [orbitingPlanet, setOrbitingPlanet] = useState<PlanetData | null>(null);
+  const [viewingPlanet, setViewingPlanet] = useState<PlanetData | null>(null);
+  const [collisionFlash, setCollisionFlash] = useState(false);
 
-  const handlePlanetSelect = useCallback((planet: PlanetData) => {
-    setSelectedPlanet(planet);
+  const handleAsteroidCollision = useCallback(() => {
+    setCollisionFlash(true);
+    setTimeout(() => setCollisionFlash(false), 200);
   }, []);
 
-  const handleClose = useCallback(() => {
-    setSelectedPlanet(null);
+  const handleEnterPlanet = useCallback(() => {
+    if (orbitingPlanet) {
+      setViewingPlanet(orbitingPlanet);
+    }
+  }, [orbitingPlanet]);
+
+  const handleClosePlanetView = useCallback(() => {
+    setViewingPlanet(null);
   }, []);
 
   return (
     <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0d0d25] to-[#050515]">
+      {/* Collision flash overlay */}
+      <AnimatePresence>
+        {collisionFlash && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-red-500 z-40 pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
       <Canvas 
-        camera={{ position: [50, 60, 120], fov: 55 }}
+        camera={{ position: [50, 20, 50], fov: 60 }}
         gl={{ antialias: true }}
       >
         <Suspense fallback={null}>
           <GalaxyScene 
-            selectedPlanet={selectedPlanet}
-            onPlanetSelect={handlePlanetSelect}
+            vehicle={vehicle}
+            onPlanetApproach={setNearPlanet}
+            onOrbitCapture={setOrbitingPlanet}
+            orbitingPlanet={orbitingPlanet}
+            showEnterButton={orbitingPlanet !== null}
+            onAsteroidCollision={handleAsteroidCollision}
           />
         </Suspense>
       </Canvas>
@@ -717,36 +1060,103 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
         <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-md rounded-xl px-5 py-4 border border-accent/30 shadow-lg shadow-accent/10">
           <h2 className="text-foreground text-2xl font-bold mb-1 bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Galaxy Explorer</h2>
           <p className="text-muted-foreground text-sm">
-            {vehicle === "rocket" ? "🚀" : "🧑‍🚀"} Viewing as {vehicle === "rocket" ? "Rocket" : "Astronaut"}
+            {vehicle === "rocket" ? "🚀" : "🧑‍🚀"} Flying as {vehicle === "rocket" ? "Rocket" : "Astronaut"}
           </p>
         </div>
       </div>
 
-      {/* Planet count */}
-      {!selectedPlanet && (
-        <div className="absolute top-6 right-6 pointer-events-none">
-          <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-md rounded-xl px-5 py-3 border border-accent/30 shadow-lg shadow-accent/10">
-            <p className="text-muted-foreground text-xs uppercase tracking-wider">Planets</p>
-            <p className="text-foreground text-3xl font-bold bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">7</p>
+      {/* Controls info */}
+      <div className="absolute bottom-6 left-6 pointer-events-none">
+        <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-md rounded-xl px-5 py-4 border border-border/30 shadow-lg">
+          <p className="text-foreground text-sm font-medium mb-2">Controls</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>W / ↑</span><span>Thrust Forward</span>
+            <span>S / ↓</span><span>Brake</span>
+            <span>A / ←</span><span>Turn Left</span>
+            <span>D / →</span><span>Turn Right</span>
+            <span>Space</span><span>Rise</span>
+            <span>Shift</span><span>Descend</span>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Planet Selection HUD */}
-      <PlanetHUD onPlanetSelect={handlePlanetSelect} selectedPlanet={selectedPlanet} />
-
-      {/* Planet Detail Panel */}
+      {/* Near planet indicator */}
       <AnimatePresence>
-        {selectedPlanet && (
-          <PlanetDetail planet={selectedPlanet} onClose={handleClose} />
+        {nearPlanet && !orbitingPlanet && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute top-6 right-6 pointer-events-none"
+          >
+            <div 
+              className="backdrop-blur-md rounded-xl px-5 py-4 border shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, ${nearPlanet.color}33, transparent)`,
+                borderColor: `${nearPlanet.color}55`,
+                boxShadow: `0 0 20px ${nearPlanet.color}33`,
+              }}
+            >
+              <p className="text-muted-foreground text-xs uppercase tracking-wider">Approaching</p>
+              <p className="text-foreground text-xl font-bold">{nearPlanet.name}</p>
+              <p className="text-muted-foreground text-sm mt-1">Gravity field detected</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Orbiting indicator with enter button */}
+      <AnimatePresence>
+        {orbitingPlanet && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          >
+            <div 
+              className="backdrop-blur-md rounded-2xl px-8 py-6 border shadow-2xl text-center"
+              style={{
+                background: `linear-gradient(135deg, ${orbitingPlanet.color}44, ${orbitingPlanet.color}11)`,
+                borderColor: `${orbitingPlanet.color}66`,
+                boxShadow: `0 0 40px ${orbitingPlanet.color}44`,
+              }}
+            >
+              <p className="text-muted-foreground text-sm uppercase tracking-wider mb-1">Orbiting</p>
+              <p className="text-foreground text-3xl font-bold mb-4">{orbitingPlanet.name}</p>
+              
+              <button
+                onClick={handleEnterPlanet}
+                className="px-6 py-3 rounded-lg font-medium transition-all hover:scale-105"
+                style={{
+                  background: orbitingPlanet.color,
+                  color: '#000',
+                  boxShadow: `0 0 20px ${orbitingPlanet.color}88`,
+                }}
+              >
+                Enter Planet
+              </button>
+              
+              <p className="text-muted-foreground text-xs mt-4">
+                Press W/A/S/D or Arrow keys to escape orbit
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Planet detail view */}
+      <AnimatePresence>
+        {viewingPlanet && (
+          <PlanetDetail planet={viewingPlanet} onClose={handleClosePlanetView} />
         )}
       </AnimatePresence>
 
       {/* Instructions */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none">
-        <div className="bg-gradient-to-r from-background/70 via-background/80 to-background/70 backdrop-blur-md rounded-full px-8 py-3 border border-border/30 shadow-lg">
-          <p className="text-muted-foreground text-sm text-center">
-            🖱️ Click planets to explore • Drag to rotate • Scroll to zoom
+      <div className="absolute bottom-6 right-6 pointer-events-none">
+        <div className="bg-gradient-to-br from-background/70 to-background/50 backdrop-blur-md rounded-xl px-5 py-3 border border-border/30">
+          <p className="text-muted-foreground text-sm">
+            ⚠️ Asteroid belt ahead! Navigate carefully.
           </p>
         </div>
       </div>
