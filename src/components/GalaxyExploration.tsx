@@ -81,188 +81,64 @@ const PLANETS_DATA: PlanetData[] = [
   },
 ];
 
-// Keyboard state - using key property for better compatibility
-const useKeyboardControls = () => {
-  const keys = useRef({
-    forward: false,
-    backward: false,
-    left: false,
-    right: false,
-    up: false,
-    down: false,
-  });
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent default for space and shift to avoid page scroll
-      if (e.code === "Space" || e.key === " " || e.shiftKey) {
-        e.preventDefault();
-      }
-      
-      const key = e.key.toLowerCase();
-      
-      if (key === "w" || e.code === "ArrowUp") {
-        keys.current.forward = true;
-      }
-      if (key === "s" || e.code === "ArrowDown") {
-        keys.current.backward = true;
-      }
-      if (key === "a" || e.code === "ArrowLeft") {
-        keys.current.left = true;
-      }
-      if (key === "d" || e.code === "ArrowRight") {
-        keys.current.right = true;
-      }
-      if (e.code === "Space" || e.key === " ") {
-        keys.current.up = true;
-      }
-      if (e.shiftKey || e.code === "ShiftLeft" || e.code === "ShiftRight") {
-        keys.current.down = true;
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      
-      if (key === "w" || e.code === "ArrowUp") {
-        keys.current.forward = false;
-      }
-      if (key === "s" || e.code === "ArrowDown") {
-        keys.current.backward = false;
-      }
-      if (key === "a" || e.code === "ArrowLeft") {
-        keys.current.left = false;
-      }
-      if (key === "d" || e.code === "ArrowRight") {
-        keys.current.right = false;
-      }
-      if (e.code === "Space" || e.key === " ") {
-        keys.current.up = false;
-      }
-      if (!e.shiftKey && (e.code === "ShiftLeft" || e.code === "ShiftRight" || e.key === "Shift")) {
-        keys.current.down = false;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, []);
-
-  return keys;
+// Keyboard state - global singleton to avoid event conflicts
+const keyState = {
+  forward: false,
+  backward: false,
+  left: false,
+  right: false,
+  up: false,
+  down: false,
 };
 
-// Minimap Component
-interface MinimapProps {
-  shipPosition: { x: number; z: number };
-  planets: PlanetData[];
-  currentTime: number;
-}
+// Setup keyboard listeners once
+let listenersSetup = false;
+const setupKeyboardListeners = () => {
+  if (listenersSetup) return;
+  listenersSetup = true;
 
-const Minimap = ({ shipPosition, planets, currentTime }: MinimapProps) => {
-  const scale = 0.8; // Scale factor for minimap
-  const mapSize = 160;
-  const maxRadius = 120; // Max orbit radius to fit in map
-  
-  const getPlanetMapPosition = (planet: PlanetData) => {
-    const angle = planet.initialAngle + currentTime * planet.orbitSpeed;
-    const x = Math.cos(angle) * planet.orbitRadius;
-    const z = Math.sin(angle) * planet.orbitRadius;
-    return {
-      x: (x / maxRadius) * (mapSize / 2) * scale + mapSize / 2,
-      y: (z / maxRadius) * (mapSize / 2) * scale + mapSize / 2,
-    };
+  const handleKeyDown = (e: KeyboardEvent) => {
+    const key = e.key.toLowerCase();
+    const code = e.code;
+    
+    // Prevent default browser behavior for game controls
+    if (key === 'w' || key === 'a' || key === 's' || key === 'd' || 
+        key === ' ' || key === 'shift' ||
+        code === 'ArrowUp' || code === 'ArrowDown' || code === 'ArrowLeft' || code === 'ArrowRight' ||
+        code === 'Space' || code === 'ShiftLeft' || code === 'ShiftRight') {
+      e.preventDefault();
+    }
+    
+    if (key === "w" || code === "ArrowUp") keyState.forward = true;
+    if (key === "s" || code === "ArrowDown") keyState.backward = true;
+    if (key === "a" || code === "ArrowLeft") keyState.left = true;
+    if (key === "d" || code === "ArrowRight") keyState.right = true;
+    if (key === " " || code === "Space") keyState.up = true;
+    if (key === "shift" || code === "ShiftLeft" || code === "ShiftRight") keyState.down = true;
   };
-  
-  const shipMapPos = {
-    x: (shipPosition.x / maxRadius) * (mapSize / 2) * scale + mapSize / 2,
-    y: (shipPosition.z / maxRadius) * (mapSize / 2) * scale + mapSize / 2,
+
+  const handleKeyUp = (e: KeyboardEvent) => {
+    const key = e.key.toLowerCase();
+    const code = e.code;
+    
+    if (key === "w" || code === "ArrowUp") keyState.forward = false;
+    if (key === "s" || code === "ArrowDown") keyState.backward = false;
+    if (key === "a" || code === "ArrowLeft") keyState.left = false;
+    if (key === "d" || code === "ArrowRight") keyState.right = false;
+    if (key === " " || code === "Space") keyState.up = false;
+    if (key === "shift" || code === "ShiftLeft" || code === "ShiftRight") keyState.down = false;
   };
-  
-  return (
-    <div className="absolute top-6 right-6 pointer-events-none">
-      <div 
-        className="relative bg-background/80 backdrop-blur-md rounded-xl border border-border/40 overflow-hidden"
-        style={{ width: mapSize, height: mapSize }}
-      >
-        {/* Sun at center */}
-        <div 
-          className="absolute w-4 h-4 rounded-full bg-yellow-400"
-          style={{
-            left: mapSize / 2 - 8,
-            top: mapSize / 2 - 8,
-            boxShadow: "0 0 10px #ffcc00",
-          }}
-        />
-        
-        {/* Asteroid belt */}
-        <div 
-          className="absolute rounded-full border border-dashed border-gray-500/30"
-          style={{
-            width: (51 / maxRadius) * mapSize * scale,
-            height: (51 / maxRadius) * mapSize * scale,
-            left: mapSize / 2 - ((51 / maxRadius) * mapSize * scale) / 2,
-            top: mapSize / 2 - ((51 / maxRadius) * mapSize * scale) / 2,
-          }}
-        />
-        
-        {/* Orbit rings */}
-        {planets.map((planet) => (
-          <div
-            key={`orbit-${planet.id}`}
-            className="absolute rounded-full border border-white/10"
-            style={{
-              width: (planet.orbitRadius / maxRadius) * mapSize * scale,
-              height: (planet.orbitRadius / maxRadius) * mapSize * scale,
-              left: mapSize / 2 - ((planet.orbitRadius / maxRadius) * mapSize * scale) / 2,
-              top: mapSize / 2 - ((planet.orbitRadius / maxRadius) * mapSize * scale) / 2,
-            }}
-          />
-        ))}
-        
-        {/* Planets */}
-        {planets.map((planet) => {
-          const pos = getPlanetMapPosition(planet);
-          const size = Math.max(4, planet.size * 2);
-          return (
-            <div
-              key={planet.id}
-              className="absolute rounded-full"
-              style={{
-                width: size,
-                height: size,
-                left: pos.x - size / 2,
-                top: pos.y - size / 2,
-                backgroundColor: planet.color,
-                boxShadow: `0 0 4px ${planet.color}`,
-              }}
-              title={planet.name}
-            />
-          );
-        })}
-        
-        {/* Ship position */}
-        <div
-          className="absolute"
-          style={{
-            left: Math.max(4, Math.min(mapSize - 4, shipMapPos.x)) - 4,
-            top: Math.max(4, Math.min(mapSize - 4, shipMapPos.y)) - 4,
-          }}
-        >
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse" style={{ boxShadow: "0 0 6px #fff, 0 0 10px #00ffff" }} />
-          <div className="absolute -top-1 -left-1 w-4 h-4 border-2 border-cyan-400 rounded-full animate-ping opacity-50" />
-        </div>
-        
-        {/* Label */}
-        <div className="absolute bottom-1 left-1 text-[10px] text-muted-foreground uppercase tracking-wider">
-          Minimap
-        </div>
-      </div>
-    </div>
-  );
+
+  document.addEventListener("keydown", handleKeyDown, { capture: true });
+  document.addEventListener("keyup", handleKeyUp, { capture: true });
+};
+
+const useKeyboardControls = () => {
+  useEffect(() => {
+    setupKeyboardListeners();
+  }, []);
+
+  return { current: keyState };
 };
 
 // Blinking Stars Background
@@ -1121,12 +997,9 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
   const [orbitingPlanet, setOrbitingPlanet] = useState<PlanetData | null>(null);
   const [viewingPlanet, setViewingPlanet] = useState<PlanetData | null>(null);
   const [collisionFlash, setCollisionFlash] = useState(false);
-  const [shipPos, setShipPos] = useState({ x: 30, z: 30 });
-  const [currentTime, setCurrentTime] = useState(0);
 
-  const handleShipPositionUpdate = useCallback((pos: { x: number; z: number }, time: number) => {
-    setShipPos(pos);
-    setCurrentTime(time);
+  const handleShipPositionUpdate = useCallback(() => {
+    // No-op, minimap removed
   }, []);
 
   const handleAsteroidCollision = useCallback(() => {
@@ -1185,10 +1058,6 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
         </div>
       </div>
 
-      {/* Minimap */}
-      {!viewingPlanet && (
-        <Minimap shipPosition={shipPos} planets={PLANETS_DATA} currentTime={currentTime} />
-      )}
 
       {/* Controls info */}
       <div className="absolute bottom-6 left-6 pointer-events-none">
