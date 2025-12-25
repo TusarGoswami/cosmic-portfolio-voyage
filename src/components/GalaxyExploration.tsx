@@ -91,6 +91,13 @@ const keyState = {
   down: false,
 };
 
+// Mouse state for look controls
+const mouseState = {
+  movementX: 0,
+  movementY: 0,
+  isLocked: false,
+};
+
 // Setup keyboard listeners once
 let listenersSetup = false;
 const setupKeyboardListeners = () => {
@@ -129,8 +136,21 @@ const setupKeyboardListeners = () => {
     if (key === "shift" || code === "ShiftLeft" || code === "ShiftRight") keyState.down = false;
   };
 
+  const handleMouseMove = (e: MouseEvent) => {
+    if (mouseState.isLocked) {
+      mouseState.movementX = e.movementX;
+      mouseState.movementY = e.movementY;
+    }
+  };
+
+  const handlePointerLockChange = () => {
+    mouseState.isLocked = document.pointerLockElement !== null;
+  };
+
   document.addEventListener("keydown", handleKeyDown, { capture: true });
   document.addEventListener("keyup", handleKeyUp, { capture: true });
+  document.addEventListener("mousemove", handleMouseMove);
+  document.addEventListener("pointerlockchange", handlePointerLockChange);
 };
 
 const useKeyboardControls = () => {
@@ -139,6 +159,27 @@ const useKeyboardControls = () => {
   }, []);
 
   return { current: keyState };
+};
+
+const useMouseControls = () => {
+  useEffect(() => {
+    setupKeyboardListeners(); // This also sets up mouse listeners
+  }, []);
+
+  const consumeMouseMovement = () => {
+    const movement = { x: mouseState.movementX, y: mouseState.movementY };
+    mouseState.movementX = 0;
+    mouseState.movementY = 0;
+    return movement;
+  };
+
+  return { 
+    isLocked: () => mouseState.isLocked,
+    consumeMouseMovement,
+    requestPointerLock: (element: HTMLElement) => {
+      element.requestPointerLock();
+    }
+  };
 };
 
 // Blinking Stars Background
@@ -757,12 +798,25 @@ const GalaxyScene = ({
   onAsteroidCollision,
   onShipPositionUpdate
 }: GalaxySceneProps) => {
+  const { gl } = useThree();
   const keys = useKeyboardControls();
+  const mouse = useMouseControls();
   const shipPosition = useRef(new THREE.Vector3(30, 5, 30));
   const shipVelocity = useRef(new THREE.Vector3());
   const shipRotation = useRef(new THREE.Euler(0, 0, 0));
   const orbitAngle = useRef(0);
   const [, forceUpdate] = useState(0);
+
+  // Handle click to lock pointer
+  useEffect(() => {
+    const handleClick = () => {
+      if (!mouse.isLocked()) {
+        mouse.requestPointerLock(gl.domElement);
+      }
+    };
+    gl.domElement.addEventListener('click', handleClick);
+    return () => gl.domElement.removeEventListener('click', handleClick);
+  }, [gl, mouse]);
 
   const getPlanetPosition = useCallback((planet: PlanetData, time: number) => {
     const angle = planet.initialAngle + time * planet.orbitSpeed;
@@ -820,7 +874,18 @@ const GalaxyScene = ({
         shipRotation.current.y = Math.atan2(tangent.x, tangent.z);
       }
     } else {
-      // Free flight controls
+      // Free flight controls - mouse look
+      const mouseMovement = mouse.consumeMouseMovement();
+      const mouseSensitivity = 0.003;
+      
+      if (mouse.isLocked()) {
+        shipRotation.current.y -= mouseMovement.x * mouseSensitivity;
+        // Optionally add pitch control (uncomment if wanted)
+        // shipRotation.current.x -= mouseMovement.y * mouseSensitivity;
+        // shipRotation.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, shipRotation.current.x));
+      }
+      
+      // Keyboard rotation as fallback
       if (keys.current.left) shipRotation.current.y += rotationSpeed;
       if (keys.current.right) shipRotation.current.y -= rotationSpeed;
       
@@ -1151,7 +1216,9 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
             <span>D / →</span><span>Turn Right</span>
             <span>Space</span><span>Rise</span>
             <span>Shift</span><span>Descend</span>
+            <span>Mouse</span><span>Look Around</span>
           </div>
+          <p className="text-accent text-xs mt-3 font-medium">Click to enable mouse look • ESC to release</p>
         </div>
       </div>
 
