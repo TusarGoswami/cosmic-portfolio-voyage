@@ -6,8 +6,9 @@ import IsometricFrame from "@/components/IsometricFrame";
 import { useParallax } from "@/hooks/useParallax";
 import ExitChoices from "@/components/ExitChoices";
 import GalaxyExploration from "@/components/GalaxyExploration";
+import LaunchTransition from "@/components/LaunchTransition";
 
-type GamePhase = "loading" | "start" | "choose" | "space";
+type GamePhase = "loading" | "start" | "choose" | "launching" | "space";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -26,6 +27,10 @@ const Index = () => {
 
   const handleSelect = useCallback((vehicle: "rocket" | "astronaut") => {
     setSelectedVehicle(vehicle);
+    setPhase("launching");
+  }, []);
+
+  const handleLaunchComplete = useCallback(() => {
     setPhase("space");
   }, []);
 
@@ -115,11 +120,19 @@ const Index = () => {
             className="relative z-10 w-full h-screen"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.5 }}
-            transition={{ duration: 0.8 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
           >
             <ExitChoices onSelect={handleSelect} />
           </motion.div>
+        )}
+
+        {phase === "launching" && selectedVehicle && (
+          <LaunchTransition 
+            key="launching"
+            vehicle={selectedVehicle} 
+            onComplete={handleLaunchComplete} 
+          />
         )}
 
         {phase === "space" && selectedVehicle && (
@@ -128,7 +141,7 @@ const Index = () => {
             className="relative z-10 w-full h-screen"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.8 }}
           >
             <GalaxyExploration vehicle={selectedVehicle} />
           </motion.div>
