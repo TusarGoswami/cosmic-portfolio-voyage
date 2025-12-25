@@ -253,6 +253,235 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
   );
 };
 
+// Cosmic Dust Particles - floating ambient particles
+const CosmicDust = ({ count = 800 }: { count?: number }) => {
+  const dustRef = useRef<THREE.Points>(null);
+  
+  const { positions, sizes, velocities, colors } = useMemo(() => {
+    const positions = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const velocities = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    
+    const dustColors = [
+      [0.6, 0.7, 1.0],   // Blue-ish
+      [1.0, 0.8, 0.6],   // Warm
+      [0.8, 0.6, 1.0],   // Purple
+      [0.6, 1.0, 0.8],   // Cyan-green
+      [1.0, 0.6, 0.7],   // Pink
+    ];
+    
+    for (let i = 0; i < count; i++) {
+      // Spread dust throughout the galaxy
+      const radius = 20 + Math.random() * 120;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = (Math.random() - 0.5) * Math.PI * 0.4; // Mostly flat distribution
+      
+      positions[i * 3] = Math.cos(theta) * Math.cos(phi) * radius;
+      positions[i * 3 + 1] = Math.sin(phi) * radius * 0.3;
+      positions[i * 3 + 2] = Math.sin(theta) * Math.cos(phi) * radius;
+      
+      sizes[i] = Math.random() * 1.5 + 0.5;
+      
+      // Random slow velocities
+      velocities[i * 3] = (Math.random() - 0.5) * 0.02;
+      velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.01;
+      velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+      
+      const colorIdx = Math.floor(Math.random() * dustColors.length);
+      colors[i * 3] = dustColors[colorIdx][0];
+      colors[i * 3 + 1] = dustColors[colorIdx][1];
+      colors[i * 3 + 2] = dustColors[colorIdx][2];
+    }
+    
+    return { positions, sizes, velocities, colors };
+  }, [count]);
+
+  useFrame((state) => {
+    if (dustRef.current) {
+      const time = state.clock.elapsedTime;
+      const posAttr = dustRef.current.geometry.attributes.position as THREE.BufferAttribute;
+      const sizeAttr = dustRef.current.geometry.attributes.size as THREE.BufferAttribute;
+      
+      for (let i = 0; i < count; i++) {
+        // Gentle floating motion
+        posAttr.array[i * 3] += velocities[i * 3] + Math.sin(time * 0.5 + i) * 0.005;
+        posAttr.array[i * 3 + 1] += velocities[i * 3 + 1] + Math.cos(time * 0.3 + i * 0.5) * 0.003;
+        posAttr.array[i * 3 + 2] += velocities[i * 3 + 2] + Math.sin(time * 0.4 + i * 0.3) * 0.005;
+        
+        // Pulsing size
+        sizeAttr.array[i] = sizes[i] * (0.7 + Math.sin(time * 2 + i * 0.1) * 0.3);
+      }
+      
+      posAttr.needsUpdate = true;
+      sizeAttr.needsUpdate = true;
+    }
+  });
+
+  return (
+    <points ref={dustRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-size" count={count} array={sizes} itemSize={1} />
+        <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={1.5}
+        vertexColors
+        transparent
+        opacity={0.4}
+        sizeAttenuation
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+};
+
+// Space Debris - small floating rocks and ice crystals
+const SpaceDebris = ({ count = 150 }: { count?: number }) => {
+  const debrisRef = useRef<THREE.InstancedMesh>(null);
+  
+  const debrisData = useMemo(() => {
+    const data: { 
+      position: THREE.Vector3; 
+      rotation: THREE.Euler; 
+      scale: number;
+      rotationSpeed: THREE.Vector3;
+      floatOffset: number;
+    }[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      const radius = 25 + Math.random() * 100;
+      const theta = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 30;
+      
+      data.push({
+        position: new THREE.Vector3(
+          Math.cos(theta) * radius,
+          y,
+          Math.sin(theta) * radius
+        ),
+        rotation: new THREE.Euler(
+          Math.random() * Math.PI * 2,
+          Math.random() * Math.PI * 2,
+          Math.random() * Math.PI * 2
+        ),
+        scale: 0.1 + Math.random() * 0.4,
+        rotationSpeed: new THREE.Vector3(
+          (Math.random() - 0.5) * 0.5,
+          (Math.random() - 0.5) * 0.5,
+          (Math.random() - 0.5) * 0.5
+        ),
+        floatOffset: Math.random() * Math.PI * 2,
+      });
+    }
+    
+    return data;
+  }, [count]);
+
+  useFrame((state) => {
+    if (!debrisRef.current) return;
+    
+    const time = state.clock.elapsedTime;
+    const matrix = new THREE.Matrix4();
+    const position = new THREE.Vector3();
+    const quaternion = new THREE.Quaternion();
+    const scale = new THREE.Vector3();
+    
+    debrisData.forEach((debris, i) => {
+      // Gentle floating motion
+      position.set(
+        debris.position.x + Math.sin(time * 0.2 + debris.floatOffset) * 0.5,
+        debris.position.y + Math.cos(time * 0.3 + debris.floatOffset) * 0.3,
+        debris.position.z + Math.sin(time * 0.25 + debris.floatOffset * 0.5) * 0.5
+      );
+      
+      // Slow tumbling rotation
+      quaternion.setFromEuler(new THREE.Euler(
+        debris.rotation.x + time * debris.rotationSpeed.x,
+        debris.rotation.y + time * debris.rotationSpeed.y,
+        debris.rotation.z + time * debris.rotationSpeed.z
+      ));
+      
+      scale.setScalar(debris.scale);
+      
+      matrix.compose(position, quaternion, scale);
+      debrisRef.current!.setMatrixAt(i, matrix);
+    });
+    
+    debrisRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={debrisRef} args={[undefined, undefined, count]}>
+      <icosahedronGeometry args={[1, 0]} />
+      <meshStandardMaterial 
+        color="#667788" 
+        roughness={0.8} 
+        metalness={0.3}
+        transparent
+        opacity={0.7}
+      />
+    </instancedMesh>
+  );
+};
+
+// Glowing Nebula Wisps - ethereal gas clouds
+const NebulaWisps = ({ count = 20 }: { count?: number }) => {
+  const wispsRef = useRef<THREE.Group>(null);
+  
+  const wispsData = useMemo(() => {
+    const data: { position: THREE.Vector3; color: string; scale: number; }[] = [];
+    const colors = ["#4466ff", "#ff66aa", "#66ffcc", "#ffaa66", "#aa66ff"];
+    
+    for (let i = 0; i < count; i++) {
+      const radius = 40 + Math.random() * 80;
+      const theta = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.5) * 20;
+      
+      data.push({
+        position: new THREE.Vector3(
+          Math.cos(theta) * radius,
+          y,
+          Math.sin(theta) * radius
+        ),
+        color: colors[Math.floor(Math.random() * colors.length)],
+        scale: 3 + Math.random() * 8,
+      });
+    }
+    
+    return data;
+  }, [count]);
+
+  useFrame((state) => {
+    if (wispsRef.current) {
+      const time = state.clock.elapsedTime;
+      wispsRef.current.children.forEach((child, i) => {
+        if (child instanceof THREE.Mesh) {
+          child.material.opacity = 0.05 + Math.sin(time * 0.5 + i * 0.5) * 0.03;
+          child.rotation.z = time * 0.05 + i;
+        }
+      });
+    }
+  });
+
+  return (
+    <group ref={wispsRef}>
+      {wispsData.map((wisp, i) => (
+        <mesh key={i} position={wisp.position}>
+          <sphereGeometry args={[wisp.scale, 16, 16]} />
+          <meshBasicMaterial 
+            color={wisp.color} 
+            transparent 
+            opacity={0.06}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+};
+
 // Central Sun/Galaxy Core
 const GalaxyCore = () => {
   const sunRef = useRef<THREE.Mesh>(null);
@@ -897,6 +1126,14 @@ const GalaxyScene = ({
         />
       ))}
       
+      {/* Cosmic Dust Particles */}
+      <CosmicDust count={800} />
+      
+      {/* Space Debris */}
+      <SpaceDebris count={150} />
+      
+      {/* Nebula Wisps */}
+      <NebulaWisps count={25} />
       
       
       {/* Player Spaceship */}
