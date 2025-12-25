@@ -400,29 +400,43 @@ const StationInterior = () => {
       {/* Back wall with large window opening */}
       <mesh position={[0, 2, -10]}>
         <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.9} />
+        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
       </mesh>
 
-      {/* Window frame - transparent glass */}
+      {/* Window frame - large panoramic */}
       <mesh position={[0, 1, -9.9]}>
-        <circleGeometry args={[6, 64]} />
-        <meshBasicMaterial color="#000000" transparent opacity={0} />
+        <ringGeometry args={[6, 7, 64]} />
+        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 1, -9.85]}>
+        <ringGeometry args={[5.8, 6, 64]} />
+        <meshStandardMaterial color="#D4A574" metalness={0.9} roughness={0.2} emissive="#3a2a1a" emissiveIntensity={0.3} />
+      </mesh>
+
+      {/* Window cross dividers */}
+      <mesh position={[0, 1, -9.8]}>
+        <boxGeometry args={[12, 0.15, 0.1]} />
+        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
+      </mesh>
+      <mesh position={[0, 1, -9.8]}>
+        <boxGeometry args={[0.15, 12, 0.1]} />
+        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
       </mesh>
 
       {/* Side walls */}
       <mesh position={[-10, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.9} />
+        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
       </mesh>
       <mesh position={[10, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.1} roughness={0.9} />
+        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
       </mesh>
 
       {/* Ceiling */}
       <mesh position={[0, 8, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#f5f5f5" metalness={0.1} roughness={0.9} />
+        <meshStandardMaterial color="#0a0a15" metalness={0.6} roughness={0.5} />
       </mesh>
 
       {/* Ceiling ribs */}
