@@ -777,10 +777,10 @@ const GalaxyScene = ({
     const time = state.clock.elapsedTime;
     const delta = Math.min(state.clock.getDelta(), 0.1);
     
-    const acceleration = 0.8;
-    const maxSpeed = 2;
-    const friction = 0.98;
-    const rotationSpeed = 0.03;
+    const acceleration = 2.5;
+    const maxSpeed = 5;
+    const friction = 0.96;
+    const rotationSpeed = 0.05;
     
     // If orbiting, handle orbit mechanics
     if (orbitingPlanet) {
