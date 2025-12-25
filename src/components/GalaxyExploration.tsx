@@ -670,7 +670,7 @@ const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: Spaces
   );
 };
 
-// Camera that follows the ship
+// Camera that follows the ship - TRUE third person view
 interface FollowCameraProps {
   shipPosition: THREE.Vector3;
   shipRotation: THREE.Euler;
@@ -679,21 +679,41 @@ interface FollowCameraProps {
 
 const FollowCamera = ({ shipPosition, shipRotation, isOrbiting }: FollowCameraProps) => {
   const { camera } = useThree();
-  const targetPosition = useRef(new THREE.Vector3());
-  const targetLookAt = useRef(new THREE.Vector3());
+  const currentCameraPos = useRef(new THREE.Vector3(30, 10, 40));
+  const currentLookAt = useRef(new THREE.Vector3(30, 5, 30));
 
   useFrame(() => {
-    // Calculate camera position behind and above the ship - closer for better visibility
-    const offset = new THREE.Vector3(0, 4, 12);
-    const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(shipRotation);
-    offset.applyMatrix4(rotationMatrix);
+    // Camera offset - behind and above the ship
+    const cameraDistance = 15;
+    const cameraHeight = 6;
     
-    targetPosition.current.copy(shipPosition).add(offset);
-    targetLookAt.current.copy(shipPosition);
+    // Calculate camera position based on ship's facing direction (Y rotation)
+    const behindOffset = new THREE.Vector3(
+      Math.sin(shipRotation.y) * cameraDistance,
+      cameraHeight,
+      Math.cos(shipRotation.y) * cameraDistance
+    );
     
-    // Smooth camera movement
-    camera.position.lerp(targetPosition.current, isOrbiting ? 0.03 : 0.08);
-    camera.lookAt(targetLookAt.current);
+    // Target camera position is ship position + offset (behind the ship)
+    const targetCameraPos = shipPosition.clone().add(behindOffset);
+    
+    // Look at position is slightly ahead of the ship
+    const lookAheadDistance = 5;
+    const lookAtOffset = new THREE.Vector3(
+      -Math.sin(shipRotation.y) * lookAheadDistance,
+      0,
+      -Math.cos(shipRotation.y) * lookAheadDistance
+    );
+    const targetLookAt = shipPosition.clone().add(lookAtOffset);
+    
+    // Smooth camera follow - faster lerp for responsive feel
+    const lerpSpeed = isOrbiting ? 0.05 : 0.12;
+    currentCameraPos.current.lerp(targetCameraPos, lerpSpeed);
+    currentLookAt.current.lerp(targetLookAt, lerpSpeed);
+    
+    // Apply camera position and look at
+    camera.position.copy(currentCameraPos.current);
+    camera.lookAt(currentLookAt.current);
   });
 
   return null;
