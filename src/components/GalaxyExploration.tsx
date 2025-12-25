@@ -879,11 +879,10 @@ const GalaxyScene = ({
       const mouseSensitivity = 0.003;
       
       if (mouse.isLocked()) {
-        // Horizontal look (yaw)
         shipRotation.current.y -= mouseMovement.x * mouseSensitivity;
-        // Vertical look (pitch) - clamped to prevent flipping
-        shipRotation.current.x -= mouseMovement.y * mouseSensitivity;
-        shipRotation.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, shipRotation.current.x));
+        // Optionally add pitch control (uncomment if wanted)
+        // shipRotation.current.x -= mouseMovement.y * mouseSensitivity;
+        // shipRotation.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, shipRotation.current.x));
       }
       
       // Keyboard rotation as fallback
