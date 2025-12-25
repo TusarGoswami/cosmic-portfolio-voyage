@@ -652,16 +652,6 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
           <capsuleGeometry args={[0.12, 0.5, 8, 8]} />
           <meshStandardMaterial color="#ffffff" roughness={0.3} />
         </mesh>
-        {/* Jetpack exhaust flames */}
-        <mesh ref={exhaustRef} position={[-0.15, -0.6, -0.35]} rotation={[Math.PI, 0, 0]}>
-          <coneGeometry args={[0.1, 0.6, 8]} />
-          <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
-        </mesh>
-        <mesh ref={secondExhaustRef} position={[0.15, -0.6, -0.35]} rotation={[Math.PI, 0, 0]}>
-          <coneGeometry args={[0.1, 0.6, 8]} />
-          <meshBasicMaterial color="#ff6600" transparent opacity={0} />
-        </mesh>
-        <pointLight color="#ffaa00" intensity={2} distance={8} position={[0, -0.8, -0.3]} />
       </group>
     );
   }
@@ -709,16 +699,6 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
         <cylinderGeometry args={[0.25, 0.35, 0.3, 16]} />
         <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.1} />
       </mesh>
-      {/* Exhaust flame */}
-      <mesh ref={exhaustRef} position={[0, -1.8, 0]} rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[0.3, 1.2, 16]} />
-        <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
-      </mesh>
-      <mesh ref={secondExhaustRef} position={[0, -2, 0]} rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[0.15, 0.8, 16]} />
-        <meshBasicMaterial color="#ffff66" transparent opacity={0} />
-      </mesh>
-      <pointLight color="#ffaa00" intensity={2} distance={12} position={[0, -2, 0]} />
     </group>
   );
 };
