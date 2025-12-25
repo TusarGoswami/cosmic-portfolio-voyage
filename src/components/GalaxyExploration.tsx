@@ -526,32 +526,44 @@ const AsteroidBelt = ({ innerRadius, outerRadius, count, shipPosition, onCollisi
 
 // Spaceship Component
 interface SpaceshipProps {
-  position: THREE.Vector3;
-  rotation: THREE.Euler;
-  velocity: THREE.Vector3;
+  positionRef: React.MutableRefObject<THREE.Vector3>;
+  rotationRef: React.MutableRefObject<THREE.Euler>;
+  velocityRef: React.MutableRefObject<THREE.Vector3>;
   isOrbiting: boolean;
   orbitingPlanet: PlanetData | null;
   vehicle: "rocket" | "astronaut";
 }
 
-const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: SpaceshipProps) => {
+const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle }: SpaceshipProps) => {
   const shipRef = useRef<THREE.Group>(null);
   const exhaustRef = useRef<THREE.Mesh>(null);
-  
-  const speed = velocity.length();
+  const secondExhaustRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
+    // Update ship position and rotation from refs every frame
+    if (shipRef.current) {
+      shipRef.current.position.copy(positionRef.current);
+      shipRef.current.rotation.copy(rotationRef.current);
+    }
+    
+    const speed = velocityRef.current.length();
+    
     if (exhaustRef.current) {
       const scale = 0.5 + speed * 2;
       exhaustRef.current.scale.set(1, scale, 1);
       const flicker = Math.sin(state.clock.elapsedTime * 20) * 0.2 + 0.8;
       (exhaustRef.current.material as THREE.MeshBasicMaterial).opacity = speed > 0.01 ? flicker * 0.8 : 0;
     }
+    
+    if (secondExhaustRef.current) {
+      const speed = velocityRef.current.length();
+      (secondExhaustRef.current.material as THREE.MeshBasicMaterial).opacity = speed > 0.01 ? 0.8 : 0;
+    }
   });
 
   if (vehicle === "astronaut") {
     return (
-      <group ref={shipRef} position={position} rotation={rotation} scale={2}>
+      <group ref={shipRef} scale={2}>
         {/* Astronaut body */}
         <mesh>
           <capsuleGeometry args={[0.4, 0.8, 8, 16]} />
@@ -604,17 +616,17 @@ const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: Spaces
           <coneGeometry args={[0.1, 0.6, 8]} />
           <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
         </mesh>
-        <mesh position={[0.15, -0.6, -0.35]} rotation={[Math.PI, 0, 0]}>
+        <mesh ref={secondExhaustRef} position={[0.15, -0.6, -0.35]} rotation={[Math.PI, 0, 0]}>
           <coneGeometry args={[0.1, 0.6, 8]} />
-          <meshBasicMaterial color="#ff6600" transparent opacity={speed > 0.01 ? 0.8 : 0} />
+          <meshBasicMaterial color="#ff6600" transparent opacity={0} />
         </mesh>
-        <pointLight color="#ffaa00" intensity={speed * 3} distance={8} position={[0, -0.8, -0.3]} />
+        <pointLight color="#ffaa00" intensity={2} distance={8} position={[0, -0.8, -0.3]} />
       </group>
     );
   }
 
   return (
-    <group ref={shipRef} position={position} rotation={rotation} scale={2}>
+    <group ref={shipRef} scale={2}>
       {/* Rocket body */}
       <mesh>
         <cylinderGeometry args={[0.4, 0.6, 2.5, 16]} />
@@ -661,11 +673,11 @@ const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: Spaces
         <coneGeometry args={[0.3, 1.2, 16]} />
         <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
       </mesh>
-      <mesh position={[0, -2, 0]} rotation={[Math.PI, 0, 0]}>
+      <mesh ref={secondExhaustRef} position={[0, -2, 0]} rotation={[Math.PI, 0, 0]}>
         <coneGeometry args={[0.15, 0.8, 16]} />
-        <meshBasicMaterial color="#ffff66" transparent opacity={speed > 0.01 ? 0.9 : 0} />
+        <meshBasicMaterial color="#ffff66" transparent opacity={0} />
       </mesh>
-      <pointLight color="#ffaa00" intensity={speed * 4} distance={12} position={[0, -2, 0]} />
+      <pointLight color="#ffaa00" intensity={2} distance={12} position={[0, -2, 0]} />
     </group>
   );
 };
@@ -935,9 +947,9 @@ const GalaxyScene = ({
       
       {/* Player Spaceship */}
       <Spaceship 
-        position={shipPosition.current}
-        rotation={shipRotation.current}
-        velocity={shipVelocity.current}
+        positionRef={shipPosition}
+        rotationRef={shipRotation}
+        velocityRef={shipVelocity}
         isOrbiting={orbitingPlanet !== null}
         orbitingPlanet={orbitingPlanet}
         vehicle={vehicle}
