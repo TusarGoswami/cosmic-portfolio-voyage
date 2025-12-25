@@ -480,91 +480,6 @@ const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
   );
 };
 
-// Asteroid Belt
-interface AsteroidBeltProps {
-  innerRadius: number;
-  outerRadius: number;
-  count: number;
-  shipPosition: THREE.Vector3;
-  onCollision: () => void;
-}
-
-const AsteroidBelt = ({ innerRadius, outerRadius, count, shipPosition, onCollision }: AsteroidBeltProps) => {
-  const asteroidsRef = useRef<THREE.InstancedMesh>(null);
-  const asteroidData = useRef<{ position: THREE.Vector3; rotation: THREE.Euler; speed: number; size: number }[]>([]);
-  
-  useMemo(() => {
-    asteroidData.current = [];
-    for (let i = 0; i < count; i++) {
-      const radius = innerRadius + Math.random() * (outerRadius - innerRadius);
-      const angle = Math.random() * Math.PI * 2;
-      const y = (Math.random() - 0.5) * 6;
-      
-      asteroidData.current.push({
-        position: new THREE.Vector3(
-          Math.cos(angle) * radius,
-          y,
-          Math.sin(angle) * radius
-        ),
-        rotation: new THREE.Euler(
-          Math.random() * Math.PI,
-          Math.random() * Math.PI,
-          Math.random() * Math.PI
-        ),
-        speed: 0.02 + Math.random() * 0.05,
-        size: 0.3 + Math.random() * 0.7,
-      });
-    }
-  }, [innerRadius, outerRadius, count]);
-
-  useFrame((state) => {
-    if (!asteroidsRef.current) return;
-    
-    const time = state.clock.elapsedTime;
-    const matrix = new THREE.Matrix4();
-    const position = new THREE.Vector3();
-    const quaternion = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
-    
-    asteroidData.current.forEach((asteroid, i) => {
-      const angle = Math.atan2(asteroid.position.z, asteroid.position.x) + time * asteroid.speed;
-      const radius = Math.sqrt(asteroid.position.x ** 2 + asteroid.position.z ** 2);
-      
-      position.set(
-        Math.cos(angle) * radius,
-        asteroid.position.y + Math.sin(time * 2 + i) * 0.3,
-        Math.sin(angle) * radius
-      );
-      
-      quaternion.setFromEuler(new THREE.Euler(
-        asteroid.rotation.x + time * asteroid.speed * 2,
-        asteroid.rotation.y + time * asteroid.speed,
-        asteroid.rotation.z + time * asteroid.speed * 1.5
-      ));
-      
-      scale.setScalar(asteroid.size);
-      
-      matrix.compose(position, quaternion, scale);
-      asteroidsRef.current!.setMatrixAt(i, matrix);
-      
-      // Collision detection with ship
-      const distance = position.distanceTo(shipPosition);
-      if (distance < asteroid.size + 1) {
-        onCollision();
-      }
-    });
-    
-    asteroidsRef.current.instanceMatrix.needsUpdate = true;
-  });
-
-  return (
-    <instancedMesh ref={asteroidsRef} args={[undefined, undefined, count]}>
-      <dodecahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial color="#8b7355" roughness={0.9} metalness={0.1} />
-    </instancedMesh>
-  );
-};
-
 // Spaceship Component
 interface SpaceshipProps {
   positionRef: React.MutableRefObject<THREE.Vector3>;
@@ -982,14 +897,7 @@ const GalaxyScene = ({
         />
       ))}
       
-      {/* Asteroid Belt */}
-      <AsteroidBelt 
-        innerRadius={48}
-        outerRadius={54}
-        count={200}
-        shipPosition={shipPosition.current}
-        onCollision={onAsteroidCollision}
-      />
+      
       
       {/* Player Spaceship */}
       <Spaceship 
