@@ -31,49 +31,49 @@ interface PlanetData {
 
 const PLANETS_DATA: PlanetData[] = [
   { 
-    id: 0, name: "Pyralis", orbitRadius: 22, size: 2, color: "#ff7755", orbitSpeed: 0.25, rotationSpeed: 1.8, 
+    id: 0, name: "Pyralis", orbitRadius: 22, size: 2.8, color: "#ff7755", orbitSpeed: 0.25, rotationSpeed: 1.8, 
     spotColor: "#ffaa88", glowColor: "#ff9966", hasSatellite: true, initialAngle: 0,
     description: "A volcanic world with rivers of molten lava and intense heat.",
     facts: ["Orbital period: 88 days", "Surface temp: 450°C", "Volcanic activity: Extreme"],
     moons: 1, gravityRadius: 12, orbitCaptureRadius: 6
   },
   { 
-    id: 1, name: "Aquaris", orbitRadius: 32, size: 2.8, color: "#55aaff", orbitSpeed: 0.18, rotationSpeed: 1.4, 
+    id: 1, name: "Aquaris", orbitRadius: 32, size: 4, color: "#55aaff", orbitSpeed: 0.18, rotationSpeed: 1.4, 
     spotColor: "#88ccff", glowColor: "#77bbff", hasRing: true, ringColor: "#8899bb", initialAngle: Math.PI * 0.5,
     description: "An ocean world with crystalline ice rings and deep underwater cities.",
     facts: ["Orbital period: 210 days", "97% water surface", "Ring composition: Ice crystals"],
     moons: 3, gravityRadius: 15, orbitCaptureRadius: 7
   },
   { 
-    id: 2, name: "Verdania", orbitRadius: 44, size: 2.5, color: "#66ff88", orbitSpeed: 0.22, rotationSpeed: 2.5, 
+    id: 2, name: "Verdania", orbitRadius: 44, size: 3.5, color: "#66ff88", orbitSpeed: 0.22, rotationSpeed: 2.5, 
     spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI,
     description: "A lush paradise planet covered in bioluminescent forests.",
     facts: ["Orbital period: 365 days", "85% forest coverage", "Biodiversity: Extreme"],
     moons: 2, gravityRadius: 14, orbitCaptureRadius: 6.5
   },
   { 
-    id: 3, name: "Solarius", orbitRadius: 58, size: 5, color: "#ffbb55", orbitSpeed: 0.08, rotationSpeed: 0.6, 
+    id: 3, name: "Solarius", orbitRadius: 58, size: 7, color: "#ffbb55", orbitSpeed: 0.08, rotationSpeed: 0.6, 
     spotColor: "#ffdd88", glowColor: "#ffcc66", hasRing: true, ringColor: "#ddaa66", hasSatellite: true, initialAngle: Math.PI * 1.3,
     description: "The golden giant with massive storms and floating cloud cities.",
     facts: ["Orbital period: 12 years", "Great Storm: 400 years old", "Atmosphere: Metallic hydrogen"],
     moons: 67, gravityRadius: 25, orbitCaptureRadius: 12
   },
   { 
-    id: 4, name: "Nebulora", orbitRadius: 75, size: 4, color: "#bb77ff", orbitSpeed: 0.06, rotationSpeed: 0.8, 
+    id: 4, name: "Nebulora", orbitRadius: 75, size: 5.5, color: "#bb77ff", orbitSpeed: 0.06, rotationSpeed: 0.8, 
     spotColor: "#dd99ff", glowColor: "#cc88ff", hasSatellite: true, initialAngle: Math.PI * 0.7,
     description: "A mystical purple world surrounded by cosmic dust clouds.",
     facts: ["Orbital period: 30 years", "Nebula density: High", "Magnetic field: Extreme"],
     moons: 24, gravityRadius: 20, orbitCaptureRadius: 10
   },
   { 
-    id: 5, name: "Rosaria", orbitRadius: 92, size: 2.2, color: "#ff77aa", orbitSpeed: 0.12, rotationSpeed: 1.5, 
+    id: 5, name: "Rosaria", orbitRadius: 92, size: 3, color: "#ff77aa", orbitSpeed: 0.12, rotationSpeed: 1.5, 
     spotColor: "#ff99cc", glowColor: "#ff88bb", initialAngle: Math.PI * 1.8,
     description: "The rose planet known for its crystalline pink deserts.",
     facts: ["Orbital period: 15 years", "Crystal formations: Abundant", "Surface: Silicon dioxide"],
     moons: 0, gravityRadius: 12, orbitCaptureRadius: 6
   },
   { 
-    id: 6, name: "Cryonia", orbitRadius: 110, size: 4.5, color: "#77ffff", orbitSpeed: 0.04, rotationSpeed: 0.5, 
+    id: 6, name: "Cryonia", orbitRadius: 110, size: 6, color: "#77ffff", orbitSpeed: 0.04, rotationSpeed: 0.5, 
     spotColor: "#99ffff", glowColor: "#88ffff", hasRing: true, ringColor: "#66cccc", hasSatellite: true, initialAngle: Math.PI * 0.3,
     description: "An ice giant at the edge of the system with aurora displays.",
     facts: ["Orbital period: 84 years", "Surface temp: -224°C", "Aurora frequency: Constant"],
