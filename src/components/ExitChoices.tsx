@@ -403,34 +403,34 @@ const StationInterior = () => {
         <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
       </mesh>
 
-      {/* Window frame - large panoramic - transparent */}
+      {/* Window frame - large panoramic */}
       <mesh position={[0, 1, -9.9]}>
         <ringGeometry args={[6, 7, 64]} />
-        <meshStandardMaterial color="#ffffff" transparent opacity={0.1} metalness={0.8} roughness={0.3} />
+        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
       </mesh>
       <mesh position={[0, 1, -9.85]}>
         <ringGeometry args={[5.8, 6, 64]} />
-        <meshStandardMaterial color="#ffffff" transparent opacity={0.15} metalness={0.9} roughness={0.2} />
+        <meshStandardMaterial color="#D4A574" metalness={0.9} roughness={0.2} emissive="#3a2a1a" emissiveIntensity={0.3} />
       </mesh>
 
-      {/* Window cross dividers - transparent */}
+      {/* Window cross dividers */}
       <mesh position={[0, 1, -9.8]}>
         <boxGeometry args={[12, 0.15, 0.1]} />
-        <meshStandardMaterial color="#ffffff" transparent opacity={0.1} metalness={0.8} roughness={0.3} />
+        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
       </mesh>
       <mesh position={[0, 1, -9.8]}>
         <boxGeometry args={[0.15, 12, 0.1]} />
-        <meshStandardMaterial color="#ffffff" transparent opacity={0.1} metalness={0.8} roughness={0.3} />
+        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
       </mesh>
 
-      {/* Side walls - white */}
+      {/* Side walls */}
       <mesh position={[-10, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
       </mesh>
       <mesh position={[10, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#ffffff" metalness={0.3} roughness={0.5} />
+        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
       </mesh>
 
       {/* Ceiling */}
