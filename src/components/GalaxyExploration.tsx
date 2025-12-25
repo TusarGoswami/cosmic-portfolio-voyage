@@ -831,8 +831,8 @@ const GalaxyScene = ({
     const time = state.clock.elapsedTime;
     const delta = Math.min(state.clock.getDelta(), 0.1);
     
-    const acceleration = 2.5;
-    const maxSpeed = 5;
+    const acceleration = 3.5;
+    const maxSpeed = 7;
     const friction = 0.96;
     const rotationSpeed = 0.05;
     
