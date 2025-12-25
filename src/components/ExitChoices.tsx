@@ -1,8 +1,9 @@
 import { Suspense, useState, useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars, OrbitControls, Text } from "@react-three/drei";
+import { Stars, OrbitControls, Text, Float, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import ExitModels from "./ExitModels";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ExitChoicesProps {
   onSelect: (vehicle: "rocket" | "astronaut") => void;
@@ -267,6 +268,132 @@ const DataCylinder = ({ position }: { position: [number, number, number] }) => {
   );
 };
 
+// Floating energy particles around vehicles
+const EnergyOrbs = ({ position, color }: { position: [number, number, number]; color: string }) => {
+  const orbsRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    if (orbsRef.current) {
+      orbsRef.current.rotation.y = time * 0.3;
+      orbsRef.current.children.forEach((child, i) => {
+        if (child instanceof THREE.Mesh) {
+          child.position.y = Math.sin(time * 2 + i * 0.5) * 0.3 + 1;
+        }
+      });
+    }
+  });
+
+  return (
+    <group ref={orbsRef} position={position}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <mesh key={i} position={[Math.cos(i * Math.PI / 3) * 1.5, 1, Math.sin(i * Math.PI / 3) * 1.5]}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshBasicMaterial color={color} transparent opacity={0.8} />
+        </mesh>
+      ))}
+    </group>
+  );
+};
+
+// Pulsing platform rings
+const PlatformRings = ({ position, color, active }: { position: [number, number, number]; color: string; active: boolean }) => {
+  const ringsRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    if (ringsRef.current) {
+      ringsRef.current.children.forEach((child, i) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) {
+          const pulse = Math.sin(time * 3 - i * 0.5) * 0.5 + 0.5;
+          child.material.opacity = active ? 0.3 + pulse * 0.5 : 0.2;
+          child.scale.setScalar(1 + (active ? pulse * 0.1 : 0));
+        }
+      });
+    }
+  });
+
+  return (
+    <group ref={ringsRef} position={position}>
+      {[1.8, 2.2, 2.6].map((radius, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02 * i, 0]}>
+          <ringGeometry args={[radius - 0.05, radius, 64]} />
+          <meshBasicMaterial color={color} transparent opacity={0.3} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+    </group>
+  );
+};
+
+// Animated nebula clouds
+const NebulaEffect = () => {
+  const nebulaRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    if (nebulaRef.current) {
+      nebulaRef.current.children.forEach((child, i) => {
+        if (child instanceof THREE.Mesh) {
+          child.rotation.z = time * 0.02 * (i % 2 === 0 ? 1 : -1);
+          child.material.opacity = 0.15 + Math.sin(time * 0.5 + i) * 0.05;
+        }
+      });
+    }
+  });
+
+  return (
+    <group ref={nebulaRef} position={[0, 0, -80]}>
+      <mesh position={[-30, 10, -20]}>
+        <sphereGeometry args={[25, 32, 32]} />
+        <meshBasicMaterial color="#7c4dff" transparent opacity={0.15} />
+      </mesh>
+      <mesh position={[35, -15, -30]}>
+        <sphereGeometry args={[30, 32, 32]} />
+        <meshBasicMaterial color="#ff6699" transparent opacity={0.12} />
+      </mesh>
+      <mesh position={[0, 25, -40]}>
+        <sphereGeometry args={[20, 32, 32]} />
+        <meshBasicMaterial color="#4fc3f7" transparent opacity={0.1} />
+      </mesh>
+    </group>
+  );
+};
+
+// Volumetric light beams
+const LightBeams = () => {
+  const beamsRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    if (beamsRef.current) {
+      beamsRef.current.children.forEach((child, i) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) {
+          child.material.opacity = 0.05 + Math.sin(time + i * 0.5) * 0.03;
+        }
+      });
+    }
+  });
+
+  return (
+    <group ref={beamsRef}>
+      {/* Beam from window */}
+      <mesh position={[0, 0, -5]} rotation={[0.2, 0, 0]}>
+        <coneGeometry args={[8, 15, 32, 1, true]} />
+        <meshBasicMaterial color="#4fc3f7" transparent opacity={0.05} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Spotlight beams on vehicles */}
+      <mesh position={[-4, 4, 2]} rotation={[0.4, 0.2, 0]}>
+        <coneGeometry args={[3, 8, 16, 1, true]} />
+        <meshBasicMaterial color="#00ffaa" transparent opacity={0.04} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[4, 4, 2]} rotation={[0.4, -0.2, 0]}>
+        <coneGeometry args={[3, 8, 16, 1, true]} />
+        <meshBasicMaterial color="#ff6699" transparent opacity={0.04} side={THREE.DoubleSide} />
+      </mesh>
+    </group>
+  );
+};
+
 // Galaxy visible through station window
 const GalaxyView = () => {
   const galaxyRef = useRef<THREE.Points>(null);
@@ -499,25 +626,51 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
   const [hovered, setHovered] = useState<string | null>(null);
 
   return (
-    <div className="w-full h-full absolute inset-0">
+    <div className="w-full h-full absolute inset-0 overflow-hidden">
+      {/* Animated background gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-background/20 pointer-events-none z-10" />
+      
       <Canvas
         camera={{ position: [0, 2, 12], fov: 60 }}
-        gl={{ antialias: true }}
+        gl={{ antialias: true, alpha: true }}
       >
         <Suspense fallback={null}>
-          {/* Lighting */}
-          <ambientLight intensity={0.3} />
-          <directionalLight position={[5, 10, 5]} intensity={0.6} />
-          <pointLight position={[0, 5, 0]} intensity={0.4} color="#4fc3f7" />
+          {/* Enhanced Lighting */}
+          <ambientLight intensity={0.2} />
+          <directionalLight position={[5, 10, 5]} intensity={0.8} color="#ffffff" />
+          <pointLight position={[0, 8, 0]} intensity={0.6} color="#4fc3f7" />
+          <pointLight position={[-5, 3, 5]} intensity={0.4} color="#00ffaa" />
+          <pointLight position={[5, 3, 5]} intensity={0.4} color="#ff6699" />
+          
+          {/* Fog for depth */}
+          <fog attach="fog" args={['#0a0a1a', 15, 80]} />
 
           {/* Space station interior */}
           <StationInterior />
 
           {/* Galaxy visible through window */}
           <GalaxyView />
+          
+          {/* Nebula clouds */}
+          <NebulaEffect />
+          
+          {/* Volumetric light beams */}
+          <LightBeams />
 
-          {/* Background stars */}
-          <Stars radius={150} depth={50} count={3000} factor={3} saturation={0} fade speed={0.5} />
+          {/* Background stars - enhanced */}
+          <Stars radius={200} depth={80} count={5000} factor={4} saturation={0.5} fade speed={0.3} />
+          
+          {/* Floating sparkles */}
+          <Sparkles count={100} scale={20} size={2} speed={0.3} opacity={0.5} color="#4fc3f7" />
+          <Sparkles count={50} scale={15} size={3} speed={0.2} opacity={0.3} color="#ff6699" position={[0, 2, -5]} />
+
+          {/* Platform rings for vehicles */}
+          <PlatformRings position={[-4, -3.4, 2]} color="#00ffaa" active={hovered === "rocket"} />
+          <PlatformRings position={[4, -3.4, 2]} color="#ff6699" active={hovered === "astronaut"} />
+          
+          {/* Energy orbs */}
+          <EnergyOrbs position={[-4, -3, 2]} color="#00ffaa" />
+          <EnergyOrbs position={[4, -3, 2]} color="#ff6699" />
 
           {/* Vehicle selection models */}
           <group position={[0, -2, 0]}>
@@ -535,25 +688,96 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         </Suspense>
       </Canvas>
 
-      {/* Title overlay */}
-      <div className="absolute top-12 left-1/2 -translate-x-1/2 text-center pointer-events-none">
-        <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2">
-          Choose Your Vehicle
-        </h1>
-        <p className="text-muted-foreground text-lg">Click to select your space adventure</p>
-      </div>
-
-      {/* Hover hint */}
-      {hovered && (
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-center pointer-events-none">
-          <div className="bg-background/80 backdrop-blur-sm rounded-lg px-6 py-3 border border-border/50">
-            <p className="text-foreground text-lg font-semibold">
-              {hovered === "rocket" ? "🚀 Rocket - Fast & Powerful" : "🧑‍🚀 Astronaut - Free & Agile"}
-            </p>
-            <p className="text-muted-foreground text-sm">Click to select</p>
-          </div>
+      {/* Enhanced Title overlay with animation */}
+      <motion.div 
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="absolute top-8 left-1/2 -translate-x-1/2 text-center pointer-events-none z-20"
+      >
+        <div className="relative">
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-3 tracking-wider">
+            <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg">
+              SELECT VEHICLE
+            </span>
+          </h1>
+          <motion.div 
+            className="h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto"
+            initial={{ width: 0 }}
+            animate={{ width: "100%" }}
+            transition={{ duration: 1, delay: 0.3 }}
+          />
         </div>
-      )}
+        <p className="text-muted-foreground text-lg mt-3 tracking-wide">
+          Choose your path through the cosmos
+        </p>
+      </motion.div>
+
+      {/* Corner decorative elements */}
+      <div className="absolute top-4 left-4 w-16 h-16 border-l-2 border-t-2 border-cyan-500/50 pointer-events-none z-20" />
+      <div className="absolute top-4 right-4 w-16 h-16 border-r-2 border-t-2 border-pink-500/50 pointer-events-none z-20" />
+      <div className="absolute bottom-4 left-4 w-16 h-16 border-l-2 border-b-2 border-cyan-500/50 pointer-events-none z-20" />
+      <div className="absolute bottom-4 right-4 w-16 h-16 border-r-2 border-b-2 border-pink-500/50 pointer-events-none z-20" />
+
+      {/* Enhanced Hover hint with animations */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute bottom-16 left-1/2 -translate-x-1/2 text-center pointer-events-none z-20"
+          >
+            <div className={`
+              relative overflow-hidden rounded-xl px-8 py-4 
+              ${hovered === "rocket" 
+                ? "bg-gradient-to-r from-emerald-900/80 to-cyan-900/80 border border-emerald-400/50" 
+                : "bg-gradient-to-r from-pink-900/80 to-purple-900/80 border border-pink-400/50"
+              } 
+              backdrop-blur-md shadow-2xl
+            `}>
+              {/* Animated shine effect */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
+              />
+              
+              <p className="text-foreground text-xl font-bold tracking-wide relative z-10">
+                {hovered === "rocket" ? "🚀 ROCKET" : "🧑‍🚀 ASTRONAUT"}
+              </p>
+              <p className={`text-sm mt-1 relative z-10 ${hovered === "rocket" ? "text-emerald-300" : "text-pink-300"}`}>
+                {hovered === "rocket" ? "Fast & Powerful Navigation" : "Free & Agile Exploration"}
+              </p>
+              <motion.p 
+                className="text-xs text-muted-foreground mt-2 relative z-10"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                Click to launch
+              </motion.p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom instruction bar */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-8 text-muted-foreground text-sm pointer-events-none z-20"
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Rocket: Speed & Power</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-pink-400 animate-pulse" />
+          <span>Astronaut: Freedom & Control</span>
+        </div>
+      </motion.div>
     </div>
   );
 };
