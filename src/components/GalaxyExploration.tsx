@@ -900,10 +900,10 @@ const GalaxyScene = ({
         shipVelocity.current.add(forward.clone().multiplyScalar(-acceleration * 0.5 * delta * 60));
       }
       if (keys.current.up) {
-        shipVelocity.current.y += acceleration * 0.5 * delta * 60;
+        shipVelocity.current.y += acceleration * 1.2 * delta * 60;
       }
       if (keys.current.down) {
-        shipVelocity.current.y -= acceleration * 0.5 * delta * 60;
+        shipVelocity.current.y -= acceleration * 1.2 * delta * 60;
       }
       
       // Clamp speed
