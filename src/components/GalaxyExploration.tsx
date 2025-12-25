@@ -551,7 +551,7 @@ const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: Spaces
 
   if (vehicle === "astronaut") {
     return (
-      <group ref={shipRef} position={position} rotation={rotation}>
+      <group ref={shipRef} position={position} rotation={rotation} scale={2}>
         {/* Astronaut body */}
         <mesh>
           <capsuleGeometry args={[0.4, 0.8, 8, 16]} />
@@ -565,53 +565,107 @@ const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: Spaces
         {/* Visor */}
         <mesh position={[0, 0.7, 0.2]}>
           <sphereGeometry args={[0.2, 16, 16, 0, Math.PI]} />
-          <meshBasicMaterial color="#001133" />
+          <meshBasicMaterial color="#ffaa00" />
         </mesh>
         {/* Jetpack */}
         <mesh position={[0, 0, -0.3]}>
-          <boxGeometry args={[0.4, 0.6, 0.2]} />
-          <meshStandardMaterial color="#666666" metalness={0.6} roughness={0.4} />
+          <boxGeometry args={[0.5, 0.7, 0.25]} />
+          <meshStandardMaterial color="#444444" metalness={0.7} roughness={0.3} />
         </mesh>
-        {/* Jetpack exhaust */}
-        <mesh ref={exhaustRef} position={[0, -0.6, -0.3]} rotation={[Math.PI, 0, 0]}>
-          <coneGeometry args={[0.15, 0.5, 8]} />
+        {/* Jetpack thrusters */}
+        <mesh position={[-0.15, -0.4, -0.35]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.2, 8]} />
+          <meshStandardMaterial color="#333333" metalness={0.8} />
+        </mesh>
+        <mesh position={[0.15, -0.4, -0.35]}>
+          <cylinderGeometry args={[0.08, 0.1, 0.2, 8]} />
+          <meshStandardMaterial color="#333333" metalness={0.8} />
+        </mesh>
+        {/* Arms */}
+        <mesh position={[-0.5, 0.1, 0]} rotation={[0, 0, 0.5]}>
+          <capsuleGeometry args={[0.12, 0.4, 8, 8]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.3} />
+        </mesh>
+        <mesh position={[0.5, 0.1, 0]} rotation={[0, 0, -0.5]}>
+          <capsuleGeometry args={[0.12, 0.4, 8, 8]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.3} />
+        </mesh>
+        {/* Legs */}
+        <mesh position={[-0.2, -0.7, 0]}>
+          <capsuleGeometry args={[0.12, 0.5, 8, 8]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.3} />
+        </mesh>
+        <mesh position={[0.2, -0.7, 0]}>
+          <capsuleGeometry args={[0.12, 0.5, 8, 8]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.3} />
+        </mesh>
+        {/* Jetpack exhaust flames */}
+        <mesh ref={exhaustRef} position={[-0.15, -0.6, -0.35]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.1, 0.6, 8]} />
           <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
         </mesh>
-        <pointLight color="#ffaa00" intensity={speed * 2} distance={5} position={[0, -0.6, -0.3]} />
+        <mesh position={[0.15, -0.6, -0.35]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.1, 0.6, 8]} />
+          <meshBasicMaterial color="#ff6600" transparent opacity={speed > 0.01 ? 0.8 : 0} />
+        </mesh>
+        <pointLight color="#ffaa00" intensity={speed * 3} distance={8} position={[0, -0.8, -0.3]} />
       </group>
     );
   }
 
   return (
-    <group ref={shipRef} position={position} rotation={rotation}>
+    <group ref={shipRef} position={position} rotation={rotation} scale={2}>
       {/* Rocket body */}
       <mesh>
-        <cylinderGeometry args={[0.4, 0.6, 2, 16]} />
-        <meshStandardMaterial color="#cccccc" metalness={0.8} roughness={0.2} />
+        <cylinderGeometry args={[0.4, 0.6, 2.5, 16]} />
+        <meshStandardMaterial color="#e8e8e8" metalness={0.8} roughness={0.2} />
+      </mesh>
+      {/* Red stripe */}
+      <mesh position={[0, 0.5, 0]}>
+        <cylinderGeometry args={[0.42, 0.42, 0.3, 16]} />
+        <meshStandardMaterial color="#ff3333" metalness={0.6} roughness={0.3} />
+      </mesh>
+      {/* Blue stripe */}
+      <mesh position={[0, 0, 0]}>
+        <cylinderGeometry args={[0.48, 0.48, 0.2, 16]} />
+        <meshStandardMaterial color="#3366ff" metalness={0.6} roughness={0.3} />
       </mesh>
       {/* Nose cone */}
-      <mesh position={[0, 1.3, 0]}>
-        <coneGeometry args={[0.4, 0.8, 16]} />
-        <meshStandardMaterial color="#ff4444" metalness={0.6} roughness={0.3} />
+      <mesh position={[0, 1.6, 0]}>
+        <coneGeometry args={[0.4, 1, 16]} />
+        <meshStandardMaterial color="#ff3333" metalness={0.6} roughness={0.3} />
       </mesh>
       {/* Window */}
-      <mesh position={[0, 0.5, 0.35]}>
-        <sphereGeometry args={[0.15, 16, 16, 0, Math.PI]} />
-        <meshBasicMaterial color="#88ccff" />
+      <mesh position={[0, 0.7, 0.38]}>
+        <circleGeometry args={[0.15, 16]} />
+        <meshBasicMaterial color="#66ccff" />
       </mesh>
-      {/* Fins */}
-      {[0, 120, 240].map((angle, i) => (
-        <mesh key={i} position={[Math.sin(angle * Math.PI / 180) * 0.5, -0.8, Math.cos(angle * Math.PI / 180) * 0.5]} rotation={[0, -angle * Math.PI / 180, 0]}>
-          <boxGeometry args={[0.1, 0.6, 0.4]} />
-          <meshStandardMaterial color="#ff4444" metalness={0.6} roughness={0.3} />
+      <mesh position={[0, 0.7, 0.36]}>
+        <ringGeometry args={[0.13, 0.17, 16]} />
+        <meshBasicMaterial color="#888888" />
+      </mesh>
+      {/* Fins - 4 fins */}
+      {[0, 90, 180, 270].map((angle, i) => (
+        <mesh key={i} position={[Math.sin(angle * Math.PI / 180) * 0.55, -1, Math.cos(angle * Math.PI / 180) * 0.55]} rotation={[0.2, -angle * Math.PI / 180, 0]}>
+          <boxGeometry args={[0.15, 0.7, 0.5]} />
+          <meshStandardMaterial color={i % 2 === 0 ? "#ff3333" : "#3366ff"} metalness={0.6} roughness={0.3} />
         </mesh>
       ))}
+      {/* Engine nozzle */}
+      <mesh position={[0, -1.4, 0]}>
+        <cylinderGeometry args={[0.25, 0.35, 0.3, 16]} />
+        <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.1} />
+      </mesh>
       {/* Exhaust flame */}
-      <mesh ref={exhaustRef} position={[0, -1.3, 0]} rotation={[Math.PI, 0, 0]}>
-        <coneGeometry args={[0.3, 1, 16]} />
+      <mesh ref={exhaustRef} position={[0, -1.8, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.3, 1.2, 16]} />
         <meshBasicMaterial color="#ff6600" transparent opacity={0.8} />
       </mesh>
-      <pointLight color="#ffaa00" intensity={speed * 3} distance={8} position={[0, -1.5, 0]} />
+      <mesh position={[0, -2, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.15, 0.8, 16]} />
+        <meshBasicMaterial color="#ffff66" transparent opacity={speed > 0.01 ? 0.9 : 0} />
+      </mesh>
+      <pointLight color="#ffaa00" intensity={speed * 4} distance={12} position={[0, -2, 0]} />
     </group>
   );
 };
@@ -629,8 +683,8 @@ const FollowCamera = ({ shipPosition, shipRotation, isOrbiting }: FollowCameraPr
   const targetLookAt = useRef(new THREE.Vector3());
 
   useFrame(() => {
-    // Calculate camera position behind and above the ship
-    const offset = new THREE.Vector3(0, 8, 20);
+    // Calculate camera position behind and above the ship - closer for better visibility
+    const offset = new THREE.Vector3(0, 4, 12);
     const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(shipRotation);
     offset.applyMatrix4(rotationMatrix);
     
@@ -638,18 +692,7 @@ const FollowCamera = ({ shipPosition, shipRotation, isOrbiting }: FollowCameraPr
     targetLookAt.current.copy(shipPosition);
     
     // Smooth camera movement
-    camera.position.lerp(targetPosition.current, isOrbiting ? 0.02 : 0.05);
-    
-    const lookAtTarget = new THREE.Vector3();
-    lookAtTarget.lerpVectors(
-      new THREE.Vector3(
-        camera.getWorldDirection(new THREE.Vector3()).x,
-        camera.getWorldDirection(new THREE.Vector3()).y,
-        camera.getWorldDirection(new THREE.Vector3()).z
-      ).add(camera.position),
-      targetLookAt.current,
-      0.05
-    );
+    camera.position.lerp(targetPosition.current, isOrbiting ? 0.03 : 0.08);
     camera.lookAt(targetLookAt.current);
   });
 
