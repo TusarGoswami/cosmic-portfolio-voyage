@@ -672,48 +672,54 @@ const Spaceship = ({ position, rotation, velocity, isOrbiting, vehicle }: Spaces
 
 // Camera that follows the ship - TRUE third person view
 interface FollowCameraProps {
-  shipPosition: THREE.Vector3;
-  shipRotation: THREE.Euler;
+  shipPositionRef: React.MutableRefObject<THREE.Vector3>;
+  shipRotationRef: React.MutableRefObject<THREE.Euler>;
   isOrbiting: boolean;
 }
 
-const FollowCamera = ({ shipPosition, shipRotation, isOrbiting }: FollowCameraProps) => {
+const FollowCamera = ({ shipPositionRef, shipRotationRef, isOrbiting }: FollowCameraProps) => {
   const { camera } = useThree();
-  const currentCameraPos = useRef(new THREE.Vector3(30, 10, 40));
-  const currentLookAt = useRef(new THREE.Vector3(30, 5, 30));
+  const smoothCameraPos = useRef(new THREE.Vector3(30, 10, 40));
+  const smoothLookAt = useRef(new THREE.Vector3(30, 5, 30));
+  const initialized = useRef(false);
 
   useFrame(() => {
+    // Read current values from refs (always up-to-date)
+    const shipPos = shipPositionRef.current;
+    const shipRot = shipRotationRef.current;
+    
     // Camera offset - behind and above the ship
-    const cameraDistance = 15;
-    const cameraHeight = 6;
+    const cameraDistance = 18;
+    const cameraHeight = 8;
     
     // Calculate camera position based on ship's facing direction (Y rotation)
     const behindOffset = new THREE.Vector3(
-      Math.sin(shipRotation.y) * cameraDistance,
+      Math.sin(shipRot.y) * cameraDistance,
       cameraHeight,
-      Math.cos(shipRotation.y) * cameraDistance
+      Math.cos(shipRot.y) * cameraDistance
     );
     
     // Target camera position is ship position + offset (behind the ship)
-    const targetCameraPos = shipPosition.clone().add(behindOffset);
+    const targetCameraPos = shipPos.clone().add(behindOffset);
     
-    // Look at position is slightly ahead of the ship
-    const lookAheadDistance = 5;
-    const lookAtOffset = new THREE.Vector3(
-      -Math.sin(shipRotation.y) * lookAheadDistance,
-      0,
-      -Math.cos(shipRotation.y) * lookAheadDistance
-    );
-    const targetLookAt = shipPosition.clone().add(lookAtOffset);
+    // Look at the ship directly
+    const targetLookAt = shipPos.clone();
+    
+    // Initialize camera position immediately on first frame
+    if (!initialized.current) {
+      smoothCameraPos.current.copy(targetCameraPos);
+      smoothLookAt.current.copy(targetLookAt);
+      initialized.current = true;
+    }
     
     // Smooth camera follow - faster lerp for responsive feel
-    const lerpSpeed = isOrbiting ? 0.05 : 0.12;
-    currentCameraPos.current.lerp(targetCameraPos, lerpSpeed);
-    currentLookAt.current.lerp(targetLookAt, lerpSpeed);
+    const lerpSpeed = isOrbiting ? 0.08 : 0.15;
+    smoothCameraPos.current.lerp(targetCameraPos, lerpSpeed);
+    smoothLookAt.current.lerp(targetLookAt, lerpSpeed * 1.5);
     
     // Apply camera position and look at
-    camera.position.copy(currentCameraPos.current);
-    camera.lookAt(currentLookAt.current);
+    camera.position.copy(smoothCameraPos.current);
+    camera.lookAt(smoothLookAt.current);
   });
 
   return null;
@@ -939,8 +945,8 @@ const GalaxyScene = ({
       
       {/* Follow Camera */}
       <FollowCamera 
-        shipPosition={shipPosition.current}
-        shipRotation={shipRotation.current}
+        shipPositionRef={shipPosition}
+        shipRotationRef={shipRotation}
         isOrbiting={orbitingPlanet !== null}
       />
       
