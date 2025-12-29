@@ -640,18 +640,28 @@ const FollowCamera = ({ shipPositionRef, shipRotationRef, isOrbiting }: FollowCa
     const cameraDistance = 18;
     const cameraHeight = 8;
     
-    // Calculate camera position based on ship's facing direction (Y rotation)
+    // Calculate camera position based on ship's facing direction (Y rotation and X pitch)
+    // This makes the camera rotate with the mouse/view direction
+    const pitchFactor = Math.cos(shipRot.x);
+    const verticalOffset = cameraHeight - Math.sin(shipRot.x) * cameraDistance * 0.5;
+    
     const behindOffset = new THREE.Vector3(
-      Math.sin(shipRot.y) * cameraDistance,
-      cameraHeight,
-      Math.cos(shipRot.y) * cameraDistance
+      Math.sin(shipRot.y) * cameraDistance * pitchFactor,
+      verticalOffset,
+      Math.cos(shipRot.y) * cameraDistance * pitchFactor
     );
     
     // Target camera position is ship position + offset (behind the ship)
     const targetCameraPos = shipPos.clone().add(behindOffset);
     
-    // Look at the ship directly
-    const targetLookAt = shipPos.clone();
+    // Look ahead of the ship in the direction it's facing (not just at the ship)
+    const lookAheadDistance = 15;
+    const forward = new THREE.Vector3(
+      -Math.sin(shipRot.y) * lookAheadDistance,
+      -Math.sin(shipRot.x) * lookAheadDistance * 0.5,
+      -Math.cos(shipRot.y) * lookAheadDistance
+    );
+    const targetLookAt = shipPos.clone().add(forward);
     
     // Initialize camera position immediately on first frame
     if (!initialized.current) {
@@ -661,9 +671,9 @@ const FollowCamera = ({ shipPositionRef, shipRotationRef, isOrbiting }: FollowCa
     }
     
     // Smooth camera follow - faster lerp for responsive feel
-    const lerpSpeed = isOrbiting ? 0.08 : 0.15;
+    const lerpSpeed = isOrbiting ? 0.08 : 0.12;
     smoothCameraPos.current.lerp(targetCameraPos, lerpSpeed);
-    smoothLookAt.current.lerp(targetLookAt, lerpSpeed * 1.5);
+    smoothLookAt.current.lerp(targetLookAt, lerpSpeed * 1.2);
     
     // Apply camera position and look at
     camera.position.copy(smoothCameraPos.current);
