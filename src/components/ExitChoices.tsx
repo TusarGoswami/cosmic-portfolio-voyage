@@ -12,33 +12,6 @@ interface ExitChoicesProps {
 
 
 
-// Floating energy particles around vehicles
-const EnergyOrbs = ({ position, color }: { position: [number, number, number]; color: string }) => {
-  const orbsRef = useRef<THREE.Group>(null);
-  
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
-    if (orbsRef.current) {
-      orbsRef.current.rotation.y = time * 0.3;
-      orbsRef.current.children.forEach((child, i) => {
-        if (child instanceof THREE.Mesh) {
-          child.position.y = Math.sin(time * 2 + i * 0.5) * 0.3 + 1;
-        }
-      });
-    }
-  });
-
-  return (
-    <group ref={orbsRef} position={position}>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <mesh key={i} position={[Math.cos(i * Math.PI / 3) * 1.5, 1, Math.sin(i * Math.PI / 3) * 1.5]}>
-          <sphereGeometry args={[0.08, 16, 16]} />
-          <meshBasicMaterial color={color} transparent opacity={0.8} />
-        </mesh>
-      ))}
-    </group>
-  );
-};
 
 // Pulsing platform rings
 const PlatformRings = ({ position, color, active }: { position: [number, number, number]; color: string; active: boolean }) => {
