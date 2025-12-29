@@ -10,38 +10,6 @@ interface ExitChoicesProps {
 }
 
 
-
-
-
-// Pulsing platform rings
-const PlatformRings = ({ position, color, active }: { position: [number, number, number]; color: string; active: boolean }) => {
-  const ringsRef = useRef<THREE.Group>(null);
-  
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
-    if (ringsRef.current) {
-      ringsRef.current.children.forEach((child, i) => {
-        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) {
-          const pulse = Math.sin(time * 3 - i * 0.5) * 0.5 + 0.5;
-          child.material.opacity = active ? 0.3 + pulse * 0.5 : 0.2;
-          child.scale.setScalar(1 + (active ? pulse * 0.1 : 0));
-        }
-      });
-    }
-  });
-
-  return (
-    <group ref={ringsRef} position={position}>
-      {[1.8, 2.2, 2.6].map((radius, i) => (
-        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02 * i, 0]}>
-          <ringGeometry args={[radius - 0.05, radius, 64]} />
-          <meshBasicMaterial color={color} transparent opacity={0.3} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-    </group>
-  );
-};
-
 // Animated nebula clouds
 const NebulaEffect = () => {
   const nebulaRef = useRef<THREE.Group>(null);
