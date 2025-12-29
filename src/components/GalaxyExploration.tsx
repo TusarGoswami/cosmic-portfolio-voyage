@@ -3,7 +3,6 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
-import PlanetSurface from "./PlanetSurface";
 
 interface GalaxyExplorationProps {
   vehicle: "rocket" | "astronaut";
@@ -358,61 +357,6 @@ const Satellite = ({ orbitRadius, speed, size = 0.3 }: { orbitRadius: number; sp
   );
 };
 
-// Landing Zone indicator on planet surface
-const LandingZone = ({ planetSize, color }: { planetSize: number; color: string }) => {
-  const groupRef = useRef<THREE.Group>(null);
-  const beaconRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.5;
-    }
-    if (beaconRef.current) {
-      const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.3 + 0.7;
-      (beaconRef.current.material as THREE.MeshBasicMaterial).opacity = pulse;
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={[0, planetSize * 0.95, 0]}>
-      {/* Landing pad base */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[planetSize * 0.08, planetSize * 0.15, 6]} />
-        <meshBasicMaterial color="#00ff88" transparent opacity={0.8} side={THREE.DoubleSide} />
-      </mesh>
-      
-      {/* Outer ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[planetSize * 0.15, planetSize * 0.18, 32]} />
-        <meshBasicMaterial color="#00ffaa" transparent opacity={0.4} side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* Beacon light */}
-      <mesh ref={beaconRef} position={[0, planetSize * 0.1, 0]}>
-        <sphereGeometry args={[planetSize * 0.03, 8, 8]} />
-        <meshBasicMaterial color="#00ff88" transparent />
-      </mesh>
-      <pointLight position={[0, planetSize * 0.1, 0]} color="#00ff88" intensity={1} distance={planetSize * 0.5} />
-
-      {/* Landing arrows */}
-      {[0, 120, 240].map((angle, i) => (
-        <mesh
-          key={i}
-          position={[
-            Math.sin((angle * Math.PI) / 180) * planetSize * 0.12,
-            0.01,
-            Math.cos((angle * Math.PI) / 180) * planetSize * 0.12,
-          ]}
-          rotation={[-Math.PI / 2, 0, (-angle * Math.PI) / 180]}
-        >
-          <coneGeometry args={[planetSize * 0.02, planetSize * 0.04, 3]} />
-          <meshBasicMaterial color="#00ff88" transparent opacity={0.9} />
-        </mesh>
-      ))}
-    </group>
-  );
-};
-
 // Planet Component
 interface PlanetProps {
   planet: PlanetData;
@@ -513,9 +457,6 @@ const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
         <sphereGeometry args={[planet.size * 1.15, 32, 32]} />
         <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.1} />
       </mesh>
-
-      {/* Landing Zone Indicator */}
-      <LandingZone planetSize={planet.size} color={planet.color} />
       
       {planet.hasRing && (
         <>
@@ -1090,7 +1031,6 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
   const [nearPlanet, setNearPlanet] = useState<PlanetData | null>(null);
   const [orbitingPlanet, setOrbitingPlanet] = useState<PlanetData | null>(null);
   const [viewingPlanet, setViewingPlanet] = useState<PlanetData | null>(null);
-  const [landedPlanet, setLandedPlanet] = useState<PlanetData | null>(null);
   const [collisionFlash, setCollisionFlash] = useState(false);
 
   const handleShipPositionUpdate = useCallback(() => {
@@ -1104,30 +1044,13 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
 
   const handleEnterPlanet = useCallback(() => {
     if (orbitingPlanet) {
-      // Land on the planet instead of just viewing info
-      setLandedPlanet(orbitingPlanet);
-      setOrbitingPlanet(null);
+      setViewingPlanet(orbitingPlanet);
     }
   }, [orbitingPlanet]);
-
-  const handleTakeoff = useCallback(() => {
-    setLandedPlanet(null);
-  }, []);
 
   const handleClosePlanetView = useCallback(() => {
     setViewingPlanet(null);
   }, []);
-
-  // If landed on a planet, show surface exploration
-  if (landedPlanet) {
-    return (
-      <PlanetSurface
-        planet={landedPlanet}
-        vehicle={vehicle}
-        onTakeoff={handleTakeoff}
-      />
-    );
-  }
 
   return (
     <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0d0d25] to-[#050515]">
@@ -1242,7 +1165,7 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
                   boxShadow: `0 0 20px ${orbitingPlanet.color}88`,
                 }}
               >
-                🛬 Land on Planet
+                Enter Planet
               </button>
               
               <p className="text-muted-foreground text-xs mt-4">
