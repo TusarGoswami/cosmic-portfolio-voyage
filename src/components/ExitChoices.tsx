@@ -394,29 +394,29 @@ const LightBeams = () => {
   );
 };
 
-// Galaxy visible through station window
+// Galaxy visible through station window - Large and prominent
 const GalaxyView = () => {
   const galaxyRef = useRef<THREE.Points>(null);
   const coreRef = useRef<THREE.Mesh>(null);
 
   const { positions, colors, sizes } = useMemo(() => {
-    const count = 5000;
+    const count = 8000;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-      // Spiral galaxy pattern
-      const radius = Math.random() * 40 + 5;
-      const spinAngle = radius * 0.4;
+      // Spiral galaxy pattern - larger radius for bigger galaxy
+      const radius = Math.random() * 60 + 8;
+      const spinAngle = radius * 0.35;
       const branchAngle = ((i % 4) / 4) * Math.PI * 2;
-      const randomX = (Math.random() - 0.5) * 3;
-      const randomY = (Math.random() - 0.5) * 2;
-      const randomZ = (Math.random() - 0.5) * 3;
+      const randomX = (Math.random() - 0.5) * 4;
+      const randomY = (Math.random() - 0.5) * 3;
+      const randomZ = (Math.random() - 0.5) * 4;
 
       positions[i * 3] = Math.cos(branchAngle + spinAngle) * radius + randomX;
-      positions[i * 3 + 1] = randomY - 20;
-      positions[i * 3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ - 50;
+      positions[i * 3 + 1] = randomY + 5;
+      positions[i * 3 + 2] = Math.sin(branchAngle + spinAngle) * radius + randomZ - 30;
 
       // Colors - multi-color gradient
       const mixedColor = new THREE.Color();
@@ -433,13 +433,13 @@ const GalaxyView = () => {
       
       const innerColor = innerColors[i % 3];
       const outerColor = outerColors[i % 3];
-      mixedColor.lerpColors(innerColor, outerColor, radius / 45);
+      mixedColor.lerpColors(innerColor, outerColor, radius / 68);
 
       colors[i * 3] = mixedColor.r;
       colors[i * 3 + 1] = mixedColor.g;
       colors[i * 3 + 2] = mixedColor.b;
 
-      sizes[i] = Math.random() * 2 + 0.5;
+      sizes[i] = Math.random() * 2.5 + 0.8;
     }
 
     return { positions, colors, sizes };
@@ -447,54 +447,54 @@ const GalaxyView = () => {
 
   useFrame((state) => {
     if (galaxyRef.current) {
-      galaxyRef.current.rotation.z = state.clock.elapsedTime * 0.015;
+      galaxyRef.current.rotation.z = state.clock.elapsedTime * 0.012;
     }
     if (coreRef.current) {
-      coreRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 2) * 0.1);
+      coreRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 2) * 0.15);
     }
   });
 
   return (
-    <group position={[0, -5, -60]}>
-      {/* Galaxy core glow */}
-      <mesh ref={coreRef} position={[0, -15, 0]}>
-        <sphereGeometry args={[8, 32, 32]} />
-        <meshBasicMaterial color="#ffdd66" transparent opacity={0.6} />
-      </mesh>
-      <mesh position={[0, -15, 0]}>
+    <group position={[0, 8, -35]}>
+      {/* Galaxy core glow - larger and brighter */}
+      <mesh ref={coreRef} position={[0, 0, 0]}>
         <sphereGeometry args={[12, 32, 32]} />
-        <meshBasicMaterial color="#ffaa44" transparent opacity={0.3} />
+        <meshBasicMaterial color="#ffdd66" transparent opacity={0.7} />
       </mesh>
-      <mesh position={[0, -15, 0]}>
+      <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[18, 32, 32]} />
-        <meshBasicMaterial color="#ff6644" transparent opacity={0.15} />
+        <meshBasicMaterial color="#ffaa44" transparent opacity={0.4} />
+      </mesh>
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[25, 32, 32]} />
+        <meshBasicMaterial color="#ff6644" transparent opacity={0.2} />
       </mesh>
 
       {/* Galaxy spiral */}
       <points ref={galaxyRef}>
         <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={5000} array={positions} itemSize={3} />
-          <bufferAttribute attach="attributes-color" count={5000} array={colors} itemSize={3} />
-          <bufferAttribute attach="attributes-size" count={5000} array={sizes} itemSize={1} />
+          <bufferAttribute attach="attributes-position" count={8000} array={positions} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={8000} array={colors} itemSize={3} />
+          <bufferAttribute attach="attributes-size" count={8000} array={sizes} itemSize={1} />
         </bufferGeometry>
         <pointsMaterial
-          size={1.5}
+          size={2}
           vertexColors
           transparent
-          opacity={0.9}
+          opacity={1}
           sizeAttenuation
           blending={THREE.AdditiveBlending}
         />
       </points>
 
-      {/* Distant planets */}
-      <mesh position={[-25, -10, -20]}>
-        <sphereGeometry args={[4, 32, 32]} />
-        <meshStandardMaterial color="#7c4dff" emissive="#4a2d99" emissiveIntensity={0.4} />
+      {/* Distant planets - repositioned */}
+      <mesh position={[-35, 5, -10]}>
+        <sphereGeometry args={[5, 32, 32]} />
+        <meshStandardMaterial color="#7c4dff" emissive="#4a2d99" emissiveIntensity={0.5} />
       </mesh>
-      <mesh position={[30, -25, -15]}>
-        <sphereGeometry args={[3, 32, 32]} />
-        <meshStandardMaterial color="#ff7755" emissive="#993322" emissiveIntensity={0.4} />
+      <mesh position={[40, -10, -5]}>
+        <sphereGeometry args={[4, 32, 32]} />
+        <meshStandardMaterial color="#ff7755" emissive="#993322" emissiveIntensity={0.5} />
       </mesh>
     </group>
   );
