@@ -44,40 +44,6 @@ const NebulaEffect = () => {
   );
 };
 
-// Volumetric light beams
-const LightBeams = () => {
-  const beamsRef = useRef<THREE.Group>(null);
-  
-  useFrame((state) => {
-    const time = state.clock.elapsedTime;
-    if (beamsRef.current) {
-      beamsRef.current.children.forEach((child, i) => {
-        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshBasicMaterial) {
-          child.material.opacity = 0.05 + Math.sin(time + i * 0.5) * 0.03;
-        }
-      });
-    }
-  });
-
-  return (
-    <group ref={beamsRef}>
-      {/* Beam from window */}
-      <mesh position={[0, 0, -5]} rotation={[0.2, 0, 0]}>
-        <coneGeometry args={[8, 15, 32, 1, true]} />
-        <meshBasicMaterial color="#4fc3f7" transparent opacity={0.05} side={THREE.DoubleSide} />
-      </mesh>
-      {/* Spotlight beams on vehicles */}
-      <mesh position={[-4, 4, 2]} rotation={[0.4, 0.2, 0]}>
-        <coneGeometry args={[3, 8, 16, 1, true]} />
-        <meshBasicMaterial color="#00ffaa" transparent opacity={0.04} side={THREE.DoubleSide} />
-      </mesh>
-      <mesh position={[4, 4, 2]} rotation={[0.4, -0.2, 0]}>
-        <coneGeometry args={[3, 8, 16, 1, true]} />
-        <meshBasicMaterial color="#ff6699" transparent opacity={0.04} side={THREE.DoubleSide} />
-      </mesh>
-    </group>
-  );
-};
 
 // Galaxy visible through station window - Large and prominent
 const GalaxyView = () => {
@@ -325,10 +291,6 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           
           {/* Nebula clouds */}
           <NebulaEffect />
-          
-          {/* Volumetric light beams */}
-          <LightBeams />
-
           {/* Background stars - enhanced */}
           <Stars radius={200} depth={80} count={5000} factor={4} saturation={0.5} fade speed={0.3} />
           
