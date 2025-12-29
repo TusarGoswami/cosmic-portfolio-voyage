@@ -1,6 +1,6 @@
 import { Suspense, useState, useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars, OrbitControls, Text, Float, Sparkles } from "@react-three/drei";
+import { Stars, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import ExitModels from "./ExitModels";
 import { motion, AnimatePresence } from "framer-motion";
@@ -99,7 +99,7 @@ const MiniGalaxy = () => {
   }, []);
 
   // Planet positions ref for animation
-  const planetRefs = useRef<THREE.Mesh[]>([]);
+  const planetRefs = useRef<THREE.Group[]>([]);
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
@@ -160,21 +160,23 @@ const MiniGalaxy = () => {
       {/* Planets */}
       {planetsData.map((planet, i) => (
         <group key={`planet-${i}`}>
-          <mesh
+          <group
             ref={(el) => {
               if (el) planetRefs.current[i] = el;
             }}
             position={[planet.orbitRadius, 0, 0]}
           >
-            <sphereGeometry args={[planet.size, 32, 32]} />
-            <meshStandardMaterial color={planet.color} emissive={planet.color} emissiveIntensity={0.2} />
-          </mesh>
-          {planet.hasRing && (
-            <mesh position={[planet.orbitRadius, 0, 0]} rotation={[Math.PI / 2.5, 0, 0]}>
-              <ringGeometry args={[planet.size * 1.4, planet.size * 2, 32]} />
-              <meshBasicMaterial color={planet.color} transparent opacity={0.5} side={THREE.DoubleSide} />
+            <mesh>
+              <sphereGeometry args={[planet.size, 32, 32]} />
+              <meshStandardMaterial color={planet.color} emissive={planet.color} emissiveIntensity={0.2} />
             </mesh>
-          )}
+            {planet.hasRing && (
+              <mesh rotation={[Math.PI / 2.5, 0, 0]}>
+                <ringGeometry args={[planet.size * 1.4, planet.size * 2, 32]} />
+                <meshBasicMaterial color={planet.color} transparent opacity={0.5} side={THREE.DoubleSide} />
+              </mesh>
+            )}
+          </group>
         </group>
       ))}
 
@@ -294,15 +296,15 @@ const StationInterior = () => {
         <meshBasicMaterial color="#ffe066" transparent opacity={0.9} />
       </mesh>
 
-      {/* Ceiling lights */}
+      {/* Ceiling lights - now just point lights without visible boxes */}
       {Array.from({ length: 3 }).map((_, i) => (
-        <group key={`ceiling-light-${i}`} position={[0, 7.5, -6 + i * 6]}>
-          <mesh>
-            <boxGeometry args={[4, 0.1, 0.5]} />
-            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} />
-          </mesh>
-          <pointLight position={[0, -1, 0]} color="#ffffff" intensity={0.8} distance={12} />
-        </group>
+        <pointLight 
+          key={`ceiling-light-${i}`} 
+          position={[0, 7.5, -6 + i * 6]} 
+          color="#ffffff" 
+          intensity={0.8} 
+          distance={12} 
+        />
       ))}
 
       {/* Corner accent lights */}
@@ -344,10 +346,6 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           <NebulaEffect />
           {/* Background stars - enhanced */}
           <Stars radius={200} depth={80} count={5000} factor={4} saturation={0.5} fade speed={0.3} />
-
-          {/* Floating sparkles */}
-          <Sparkles count={100} scale={20} size={2} speed={0.3} opacity={0.5} color="#4fc3f7" />
-          <Sparkles count={50} scale={15} size={3} speed={0.2} opacity={0.3} color="#ff6699" position={[0, 2, -5]} />
 
           {/* Vehicle selection models */}
           <group position={[0, -2, 0]}>
