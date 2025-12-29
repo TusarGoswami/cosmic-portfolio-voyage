@@ -202,14 +202,198 @@ const MiniGalaxy = () => {
   );
 };
 
-// Space station interior
+// Detailed planet with texture effects
+const DetailedPlanet = ({ 
+  position, 
+  size, 
+  color, 
+  emissiveColor,
+  hasRing = false, 
+  ringColor,
+  rotationSpeed = 0.001 
+}: { 
+  position: [number, number, number]; 
+  size: number; 
+  color: string; 
+  emissiveColor?: string;
+  hasRing?: boolean; 
+  ringColor?: string;
+  rotationSpeed?: number;
+}) => {
+  const planetRef = useRef<THREE.Mesh>(null);
+  const atmosphereRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (planetRef.current) {
+      planetRef.current.rotation.y += rotationSpeed;
+    }
+    if (atmosphereRef.current) {
+      atmosphereRef.current.rotation.y -= rotationSpeed * 0.5;
+    }
+  });
+
+  return (
+    <group position={position}>
+      {/* Main planet body */}
+      <mesh ref={planetRef}>
+        <sphereGeometry args={[size, 64, 64]} />
+        <meshStandardMaterial 
+          color={color}
+          emissive={emissiveColor || color}
+          emissiveIntensity={0.15}
+          roughness={0.8}
+          metalness={0.2}
+        />
+      </mesh>
+
+      {/* Atmosphere glow */}
+      <mesh ref={atmosphereRef} scale={1.05}>
+        <sphereGeometry args={[size, 32, 32]} />
+        <meshBasicMaterial 
+          color={emissiveColor || color} 
+          transparent 
+          opacity={0.15} 
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Outer glow */}
+      <mesh scale={1.15}>
+        <sphereGeometry args={[size, 32, 32]} />
+        <meshBasicMaterial 
+          color={emissiveColor || color} 
+          transparent 
+          opacity={0.08} 
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Ring if applicable */}
+      {hasRing && (
+        <mesh rotation={[Math.PI / 2.5, 0, 0]}>
+          <ringGeometry args={[size * 1.4, size * 2.2, 64]} />
+          <meshBasicMaterial 
+            color={ringColor || color} 
+            transparent 
+            opacity={0.6} 
+            side={THREE.DoubleSide} 
+          />
+        </mesh>
+      )}
+
+      {/* Surface details - darker spots */}
+      {Array.from({ length: 6 }).map((_, i) => {
+        const theta = (i / 6) * Math.PI * 2;
+        const phi = 0.3 + Math.random() * 0.4 * Math.PI;
+        const x = size * 0.95 * Math.sin(phi) * Math.cos(theta);
+        const y = size * 0.95 * Math.cos(phi);
+        const z = size * 0.95 * Math.sin(phi) * Math.sin(theta);
+        const spotSize = size * (0.15 + Math.random() * 0.2);
+        
+        return (
+          <mesh key={i} position={[x, y, z]}>
+            <sphereGeometry args={[spotSize, 16, 16]} />
+            <meshBasicMaterial 
+              color={new THREE.Color(color).multiplyScalar(0.6)} 
+              transparent 
+              opacity={0.4} 
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+};
+
+// Fixed planets visible through transparent walls
+const OuterSpacePlanets = () => {
+  return (
+    <group>
+      {/* Large gas giant - left side */}
+      <DetailedPlanet 
+        position={[-35, 5, -15]} 
+        size={10} 
+        color="#c4a574" 
+        emissiveColor="#d4a574"
+        hasRing 
+        ringColor="#a08060"
+        rotationSpeed={0.0005}
+      />
+      
+      {/* Blue ice planet - right side */}
+      <DetailedPlanet 
+        position={[38, -2, -10]} 
+        size={7} 
+        color="#4a9eff" 
+        emissiveColor="#6ab4ff"
+        rotationSpeed={0.001}
+      />
+      
+      {/* Red rocky planet - back left */}
+      <DetailedPlanet 
+        position={[-20, 12, -40]} 
+        size={5} 
+        color="#d45a5a" 
+        emissiveColor="#ff6b6b"
+        rotationSpeed={0.0015}
+      />
+      
+      {/* Purple planet with rings - back right */}
+      <DetailedPlanet 
+        position={[25, 8, -35]} 
+        size={8} 
+        color="#8b5cf6" 
+        emissiveColor="#a78bfa"
+        hasRing 
+        ringColor="#7c3aed"
+        rotationSpeed={0.0008}
+      />
+      
+      {/* Green planet - far back center */}
+      <DetailedPlanet 
+        position={[0, -3, -55]} 
+        size={12} 
+        color="#22c55e" 
+        emissiveColor="#4ade80"
+        rotationSpeed={0.0003}
+      />
+      
+      {/* Small orange moon - near right */}
+      <DetailedPlanet 
+        position={[30, 15, -5]} 
+        size={2.5} 
+        color="#f97316" 
+        emissiveColor="#fb923c"
+        rotationSpeed={0.002}
+      />
+      
+      {/* Cyan planet - far left */}
+      <DetailedPlanet 
+        position={[-45, -5, -25]} 
+        size={6} 
+        color="#06b6d4" 
+        emissiveColor="#22d3ee"
+        rotationSpeed={0.0012}
+      />
+
+      {/* Distant star/sun */}
+      <mesh position={[50, 30, -70]}>
+        <sphereGeometry args={[15, 32, 32]} />
+        <meshBasicMaterial color="#ffe066" />
+      </mesh>
+      <pointLight position={[50, 30, -70]} color="#ffe066" intensity={1.5} distance={150} />
+    </group>
+  );
+};
+
+// Space station interior with transparent walls
 const StationInterior = () => {
   return (
     <group>
       {/* Floor */}
       <mesh position={[0, -3.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#1a1a2e" metalness={0.7} roughness={0.4} />
+        <meshStandardMaterial color="#1a1a2e" metalness={0.8} roughness={0.3} />
       </mesh>
 
       {/* Floor grid lines */}
@@ -226,83 +410,113 @@ const StationInterior = () => {
         </mesh>
       ))}
 
-      {/* Back wall with large window opening */}
-      <mesh position={[0, 2, -10]}>
-        <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
-      </mesh>
-
-      {/* Window frame - large panoramic */}
-      <mesh position={[0, 1, -9.9]}>
-        <ringGeometry args={[6, 7, 64]} />
-        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
-      </mesh>
-      <mesh position={[0, 1, -9.85]}>
-        <ringGeometry args={[5.8, 6, 64]} />
-        <meshStandardMaterial
-          color="#D4A574"
-          metalness={0.9}
-          roughness={0.2}
-          emissive="#3a2a1a"
-          emissiveIntensity={0.3}
-        />
-      </mesh>
-
-      {/* Window cross dividers */}
-      <mesh position={[0, 1, -9.8]}>
-        <boxGeometry args={[12, 0.15, 0.1]} />
-        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
-      </mesh>
-      <mesh position={[0, 1, -9.8]}>
-        <boxGeometry args={[0.15, 12, 0.1]} />
-        <meshStandardMaterial color="#B87333" metalness={0.8} roughness={0.3} />
-      </mesh>
-
-      {/* Side walls */}
-      <mesh position={[-10, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
-      </mesh>
-      <mesh position={[10, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <planeGeometry args={[20, 12]} />
-        <meshStandardMaterial color="#0d0d1a" metalness={0.5} roughness={0.6} />
-      </mesh>
-
-      {/* Ceiling */}
+      {/* Ceiling - semi-transparent */}
       <mesh position={[0, 8, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#0a0a15" metalness={0.6} roughness={0.5} />
+        <meshStandardMaterial color="#0a0a15" transparent opacity={0.6} metalness={0.7} roughness={0.3} />
       </mesh>
 
-      {/* Ceiling ribs */}
-      {Array.from({ length: 5 }).map((_, i) => (
-        <mesh key={`rib-${i}`} position={[0, 7.9, -8 + i * 4]}>
-          <boxGeometry args={[20, 0.2, 0.3]} />
-          <meshStandardMaterial color="#B87333" metalness={0.7} roughness={0.4} />
+      {/* LEFT WALL - Transparent glass */}
+      <mesh position={[-10, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[20, 12]} />
+        <meshPhysicalMaterial 
+          color="#1a2a4a"
+          transparent 
+          opacity={0.1}
+          metalness={0.1}
+          roughness={0.05}
+          transmission={0.9}
+          thickness={0.5}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Left wall frame edges */}
+      <mesh position={[-10, -3.5, 0]}>
+        <boxGeometry args={[0.15, 0.15, 20]} />
+        <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[-10, 8, 0]}>
+        <boxGeometry args={[0.15, 0.15, 20]} />
+        <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
+      </mesh>
+
+      {/* RIGHT WALL - Transparent glass */}
+      <mesh position={[10, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[20, 12]} />
+        <meshPhysicalMaterial 
+          color="#1a2a4a"
+          transparent 
+          opacity={0.1}
+          metalness={0.1}
+          roughness={0.05}
+          transmission={0.9}
+          thickness={0.5}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Right wall frame edges */}
+      <mesh position={[10, -3.5, 0]}>
+        <boxGeometry args={[0.15, 0.15, 20]} />
+        <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[10, 8, 0]}>
+        <boxGeometry args={[0.15, 0.15, 20]} />
+        <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
+      </mesh>
+
+      {/* BACK WALL - Transparent glass */}
+      <mesh position={[0, 2, -10]}>
+        <planeGeometry args={[20, 12]} />
+        <meshPhysicalMaterial 
+          color="#1a2a4a"
+          transparent 
+          opacity={0.1}
+          metalness={0.1}
+          roughness={0.05}
+          transmission={0.9}
+          thickness={0.5}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Back wall frame edges */}
+      <mesh position={[0, -3.5, -10]}>
+        <boxGeometry args={[20, 0.15, 0.15]} />
+        <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[0, 8, -10]}>
+        <boxGeometry args={[20, 0.15, 0.15]} />
+        <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
+      </mesh>
+
+      {/* Vertical corner pillars */}
+      {[[-10, -10], [10, -10], [-10, 10], [10, 10]].map(([x, z], i) => (
+        <mesh key={`pillar-${i}`} position={[x, 2.25, z]}>
+          <boxGeometry args={[0.2, 11.5, 0.2]} />
+          <meshStandardMaterial color="#1a1a2e" metalness={0.9} roughness={0.2} />
         </mesh>
       ))}
 
       {/* LED strips on floor edges */}
-      <mesh position={[-9.5, -3.4, 0]}>
+      <mesh position={[-9.9, -3.4, 0]}>
         <boxGeometry args={[0.1, 0.05, 18]} />
         <meshBasicMaterial color="#00ffff" transparent opacity={0.9} />
       </mesh>
-      <mesh position={[9.5, -3.4, 0]}>
+      <mesh position={[9.9, -3.4, 0]}>
         <boxGeometry args={[0.1, 0.05, 18]} />
         <meshBasicMaterial color="#00ffff" transparent opacity={0.9} />
       </mesh>
-      <mesh position={[0, -3.4, -9.5]}>
+      <mesh position={[0, -3.4, -9.9]}>
         <boxGeometry args={[18, 0.05, 0.1]} />
         <meshBasicMaterial color="#ffe066" transparent opacity={0.9} />
       </mesh>
 
-      {/* Ceiling lights - now just point lights without visible boxes */}
+      {/* Ceiling lights - point lights only */}
       {Array.from({ length: 3 }).map((_, i) => (
         <pointLight 
           key={`ceiling-light-${i}`} 
           position={[0, 7.5, -6 + i * 6]} 
           color="#ffffff" 
-          intensity={0.8} 
+          intensity={0.6} 
           distance={12} 
         />
       ))}
@@ -336,7 +550,10 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           {/* Fog for depth */}
           <fog attach="fog" args={["#0a0a1a", 15, 80]} />
 
-          {/* Space station interior */}
+          {/* Fixed planets visible through transparent walls */}
+          <OuterSpacePlanets />
+
+          {/* Space station interior with transparent walls */}
           <StationInterior />
 
           {/* Mini Galaxy visible through window */}
