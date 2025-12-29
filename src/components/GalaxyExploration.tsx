@@ -361,12 +361,15 @@ const Satellite = ({ orbitRadius, speed, size = 0.3 }: { orbitRadius: number; sp
 interface PlanetProps {
   planet: PlanetData;
   getPlanetPosition: (planet: PlanetData, time: number) => THREE.Vector3;
+  onPlanetClick?: (planet: PlanetData) => void;
+  onPlanetHover?: (planet: PlanetData | null) => void;
 }
 
-const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
+const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: PlanetProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const planetRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   const spotTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -424,6 +427,13 @@ const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
     
     if (groupRef.current) {
       groupRef.current.position.copy(pos);
+      // Pulse effect when hovered
+      if (isHovered) {
+        const pulse = 1 + Math.sin(time * 4) * 0.05;
+        groupRef.current.scale.setScalar(pulse);
+      } else {
+        groupRef.current.scale.setScalar(1);
+      }
     }
     
     if (planetRef.current) {
@@ -435,14 +445,37 @@ const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
     }
   });
 
+  const handlePointerOver = (e: any) => {
+    e.stopPropagation();
+    setIsHovered(true);
+    document.body.style.cursor = 'pointer';
+    onPlanetHover?.(planet);
+  };
+
+  const handlePointerOut = () => {
+    setIsHovered(false);
+    document.body.style.cursor = 'default';
+    onPlanetHover?.(null);
+  };
+
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+    onPlanetClick?.(planet);
+  };
+
   return (
     <group ref={groupRef}>
-      <mesh ref={planetRef}>
+      <mesh 
+        ref={planetRef}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+        onClick={handleClick}
+      >
         <sphereGeometry args={[planet.size, 64, 64]} />
         <meshStandardMaterial 
           map={spotTexture}
           emissive={planet.color}
-          emissiveIntensity={0.15}
+          emissiveIntensity={isHovered ? 0.4 : 0.15}
           metalness={0.15}
           roughness={0.75}
         />
@@ -450,13 +483,21 @@ const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
       
       <mesh ref={atmosphereRef}>
         <sphereGeometry args={[planet.size * 1.05, 32, 32]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.2} />
+        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={isHovered ? 0.4 : 0.2} />
       </mesh>
       
       <mesh>
         <sphereGeometry args={[planet.size * 1.15, 32, 32]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.1} />
+        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={isHovered ? 0.25 : 0.1} />
       </mesh>
+      
+      {/* Hover ring indicator */}
+      {isHovered && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[planet.size * 1.3, planet.size * 1.5, 64]} />
+          <meshBasicMaterial color={planet.color} transparent opacity={0.6} side={THREE.DoubleSide} />
+        </mesh>
+      )}
       
       {planet.hasRing && (
         <>
@@ -475,7 +516,7 @@ const Planet = ({ planet, getPlanetPosition }: PlanetProps) => {
         <Satellite orbitRadius={planet.size * 2.5} speed={1.5} size={planet.size * 0.2} />
       )}
       
-      <pointLight color={planet.color} intensity={0.3} distance={planet.size * 5} />
+      <pointLight color={planet.color} intensity={isHovered ? 0.8 : 0.3} distance={planet.size * 5} />
     </group>
   );
 };
@@ -692,6 +733,7 @@ interface GalaxySceneProps {
   showEnterButton: boolean;
   onAsteroidCollision: () => void;
   onShipPositionUpdate: (pos: { x: number; z: number }, time: number) => void;
+  onPlanetClick: (planet: PlanetData) => void;
 }
 
 const GalaxyScene = ({ 
@@ -701,7 +743,8 @@ const GalaxyScene = ({
   orbitingPlanet,
   showEnterButton,
   onAsteroidCollision,
-  onShipPositionUpdate
+  onShipPositionUpdate,
+  onPlanetClick
 }: GalaxySceneProps) => {
   const { gl } = useThree();
   const keys = useKeyboardControls();
@@ -904,6 +947,7 @@ const GalaxyScene = ({
           key={`planet-${planet.id}`} 
           planet={planet}
           getPlanetPosition={getPlanetPosition}
+          onPlanetClick={onPlanetClick}
         />
       ))}
       
@@ -1058,6 +1102,10 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
     }
   }, [orbitingPlanet]);
 
+  const handlePlanetClick = useCallback((planet: PlanetData) => {
+    setViewingPlanet(planet);
+  }, []);
+
   const handleClosePlanetView = useCallback(() => {
     setViewingPlanet(null);
   }, []);
@@ -1089,6 +1137,7 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
             showEnterButton={orbitingPlanet !== null}
             onAsteroidCollision={handleAsteroidCollision}
             onShipPositionUpdate={handleShipPositionUpdate}
+            onPlanetClick={handlePlanetClick}
           />
         </Suspense>
       </Canvas>
