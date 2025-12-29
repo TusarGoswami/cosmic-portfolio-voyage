@@ -136,15 +136,12 @@ const Index = () => {
         )}
 
         {phase === "space" && selectedVehicle && (
-          <motion.div
+          <div
             key="space"
             className="relative z-10 w-full h-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
           >
             <GalaxyExploration vehicle={selectedVehicle} />
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
