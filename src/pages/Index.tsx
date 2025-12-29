@@ -27,7 +27,7 @@ const Index = () => {
 
   const handleSelect = useCallback((vehicle: "rocket" | "astronaut") => {
     setSelectedVehicle(vehicle);
-    setPhase("launching");
+    setPhase("space");
   }, []);
 
   const handleLaunchComplete = useCallback(() => {
