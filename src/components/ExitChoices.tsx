@@ -305,83 +305,85 @@ const DetailedPlanet = ({
   );
 };
 
-// Fixed planets visible through transparent walls
-const OuterSpacePlanets = () => {
-  return (
-    <group>
-      {/* Large gas giant - left side */}
-      <DetailedPlanet 
-        position={[-35, 5, -15]} 
-        size={10} 
-        color="#c4a574" 
-        emissiveColor="#d4a574"
-        hasRing 
-        ringColor="#a08060"
-        rotationSpeed={0.0005}
-      />
-      
-      {/* Blue ice planet - right side */}
-      <DetailedPlanet 
-        position={[38, -2, -10]} 
-        size={7} 
-        color="#4a9eff" 
-        emissiveColor="#6ab4ff"
-        rotationSpeed={0.001}
-      />
-      
-      {/* Red rocky planet - back left */}
-      <DetailedPlanet 
-        position={[-20, 12, -40]} 
-        size={5} 
-        color="#d45a5a" 
-        emissiveColor="#ff6b6b"
-        rotationSpeed={0.0015}
-      />
-      
-      {/* Purple planet with rings - back right */}
-      <DetailedPlanet 
-        position={[25, 8, -35]} 
-        size={8} 
-        color="#8b5cf6" 
-        emissiveColor="#a78bfa"
-        hasRing 
-        ringColor="#7c3aed"
-        rotationSpeed={0.0008}
-      />
-      
-      {/* Green planet - far back center */}
-      <DetailedPlanet 
-        position={[0, -3, -55]} 
-        size={12} 
-        color="#22c55e" 
-        emissiveColor="#4ade80"
-        rotationSpeed={0.0003}
-      />
-      
-      {/* Small orange moon - near right */}
-      <DetailedPlanet 
-        position={[30, 15, -5]} 
-        size={2.5} 
-        color="#f97316" 
-        emissiveColor="#fb923c"
-        rotationSpeed={0.002}
-      />
-      
-      {/* Cyan planet - far left */}
-      <DetailedPlanet 
-        position={[-45, -5, -25]} 
-        size={6} 
-        color="#06b6d4" 
-        emissiveColor="#22d3ee"
-        rotationSpeed={0.0012}
-      />
+// Solar system with sun in center and orbiting planets
+const SolarSystem = () => {
+  const systemRef = useRef<THREE.Group>(null);
+  const planetGroupRefs = useRef<THREE.Group[]>([]);
 
-      {/* Distant star/sun */}
-      <mesh position={[50, 30, -70]}>
-        <sphereGeometry args={[15, 32, 32]} />
-        <meshBasicMaterial color="#ffe066" />
+  const planetsData = useMemo(() => [
+    { orbitRadius: 18, size: 2, color: "#a0522d", emissiveColor: "#cd853f", speed: 0.15, name: "Mercury" },
+    { orbitRadius: 25, size: 3, color: "#daa520", emissiveColor: "#ffd700", speed: 0.12, name: "Venus" },
+    { orbitRadius: 33, size: 3.5, color: "#4a9eff", emissiveColor: "#6ab4ff", speed: 0.1, name: "Earth" },
+    { orbitRadius: 42, size: 2.5, color: "#d45a5a", emissiveColor: "#ff6b6b", speed: 0.08, name: "Mars" },
+    { orbitRadius: 55, size: 7, color: "#c4a574", emissiveColor: "#d4a574", speed: 0.04, hasRing: true, ringColor: "#a08060", name: "Jupiter" },
+    { orbitRadius: 70, size: 6, color: "#f4d03f", emissiveColor: "#f7dc6f", speed: 0.03, hasRing: true, ringColor: "#d4ac0d", name: "Saturn" },
+    { orbitRadius: 85, size: 4, color: "#06b6d4", emissiveColor: "#22d3ee", speed: 0.02, name: "Uranus" },
+  ], []);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    
+    // Rotate each planet around the sun
+    planetGroupRefs.current.forEach((group, i) => {
+      if (group && planetsData[i]) {
+        const angle = time * planetsData[i].speed;
+        group.rotation.y = angle;
+      }
+    });
+  });
+
+  return (
+    <group ref={systemRef} position={[0, 5, -60]} rotation={[0.4, 0, 0]}>
+      {/* Central Sun */}
+      <mesh>
+        <sphereGeometry args={[8, 64, 64]} />
+        <meshBasicMaterial color="#ffee66" />
       </mesh>
-      <pointLight position={[50, 30, -70]} color="#ffe066" intensity={1.5} distance={150} />
+      
+      {/* Sun glow layers */}
+      <mesh>
+        <sphereGeometry args={[9, 32, 32]} />
+        <meshBasicMaterial color="#ffcc00" transparent opacity={0.5} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[10.5, 32, 32]} />
+        <meshBasicMaterial color="#ff9900" transparent opacity={0.3} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[12, 32, 32]} />
+        <meshBasicMaterial color="#ff6600" transparent opacity={0.15} />
+      </mesh>
+
+      {/* Sun light */}
+      <pointLight color="#ffdd44" intensity={3} distance={200} />
+
+      {/* Orbital paths */}
+      {planetsData.map((planet, i) => (
+        <mesh key={`orbit-${i}`} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[planet.orbitRadius - 0.1, planet.orbitRadius + 0.1, 128]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.15} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+
+      {/* Orbiting planets */}
+      {planetsData.map((planet, i) => (
+        <group 
+          key={`planet-orbit-${i}`}
+          ref={(el) => {
+            if (el) planetGroupRefs.current[i] = el;
+          }}
+        >
+          <DetailedPlanet 
+            position={[planet.orbitRadius, 0, 0]}
+            size={planet.size}
+            color={planet.color}
+            emissiveColor={planet.emissiveColor}
+            hasRing={planet.hasRing}
+            ringColor={planet.ringColor}
+            rotationSpeed={0.002}
+          />
+        </group>
+      ))}
     </group>
   );
 };
@@ -550,8 +552,8 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           {/* Fog for depth */}
           <fog attach="fog" args={["#0a0a1a", 15, 80]} />
 
-          {/* Fixed planets visible through transparent walls */}
-          <OuterSpacePlanets />
+          {/* Solar system with sun and orbiting planets */}
+          <SolarSystem />
 
           {/* Space station interior with transparent walls */}
           <StationInterior />
