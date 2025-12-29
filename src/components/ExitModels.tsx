@@ -13,21 +13,32 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
   const rocketRef = useRef<THREE.Group>(null);
   const astronautRef = useRef<THREE.Group>(null);
 
-  // Create realistic metal textures
+  // Create attractive rocket materials - vibrant teal/gold theme
   const rocketBodyMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#e0e0e0"),
-    metalness: 0.8,
-    roughness: 0.2,
-    clearcoat: 0.3,
-    clearcoatRoughness: 0.2,
+    color: new THREE.Color("#1a1a2e"),
+    metalness: 0.9,
+    roughness: 0.15,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.1,
     reflectivity: 1,
   }), []);
 
-  const rocketRedMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#ff3333"),
-    metalness: 0.7,
-    roughness: 0.3,
-    clearcoat: 0.5,
+  const rocketAccentMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#00e5ff"),
+    metalness: 0.8,
+    roughness: 0.2,
+    clearcoat: 0.8,
+    emissive: new THREE.Color("#00e5ff"),
+    emissiveIntensity: 0.3,
+  }), []);
+
+  const rocketGoldMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#ffd700"),
+    metalness: 0.95,
+    roughness: 0.1,
+    clearcoat: 1,
+    emissive: new THREE.Color("#ff9500"),
+    emissiveIntensity: 0.2,
   }), []);
 
   const suitMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
@@ -129,25 +140,25 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           </mesh>
         ))}
         
-        {/* Red stripe band */}
+        {/* Accent stripe band */}
         <mesh position={[0, 1, 0]}>
           <cylinderGeometry args={[0.52, 0.52, 0.25, 32]} />
-          <primitive object={rocketRedMaterial} attach="material" />
+          <primitive object={rocketAccentMaterial} attach="material" />
         </mesh>
         <mesh position={[0, 0.3, 0]}>
           <cylinderGeometry args={[0.62, 0.62, 0.2, 32]} />
-          <meshStandardMaterial color="#3366ff" metalness={0.7} roughness={0.3} />
+          <primitive object={rocketGoldMaterial} attach="material" />
         </mesh>
 
         {/* Nose cone with better shape */}
         <mesh position={[0, 2.5, 0]}>
           <coneGeometry args={[0.5, 1.2, 32]} />
-          <primitive object={rocketRedMaterial} attach="material" />
+          <primitive object={rocketGoldMaterial} attach="material" />
         </mesh>
         {/* Nose tip */}
         <mesh position={[0, 3.2, 0]}>
           <coneGeometry args={[0.12, 0.3, 16]} />
-          <meshStandardMaterial color="#cccccc" metalness={1} roughness={0.1} />
+          <primitive object={rocketAccentMaterial} attach="material" />
         </mesh>
 
         {/* Windows - multiple portholes */}
@@ -179,9 +190,11 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
             <mesh position={[0.65, -0.5, 0]} rotation={[0, 0, 0.15]}>
               <boxGeometry args={[0.4, 0.8, 0.06]} />
               <meshStandardMaterial 
-                color={hovered === "rocket" ? "#ff6644" : "#3366cc"} 
+                color={hovered === "rocket" ? "#00e5ff" : "#ffd700"} 
                 metalness={0.85} 
                 roughness={0.2}
+                emissive={hovered === "rocket" ? "#00e5ff" : "#ff9500"}
+                emissiveIntensity={0.2}
               />
             </mesh>
             {/* Fin edge detail */}
