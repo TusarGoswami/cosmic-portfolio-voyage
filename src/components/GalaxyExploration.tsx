@@ -2,6 +2,7 @@ import { Suspense, useRef, useMemo, useState, useCallback, useEffect } from "rea
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line, Html } from "@react-three/drei";
 import * as THREE from "three";
+import Particles from "./Particles";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface GalaxyExplorationProps {
@@ -521,7 +522,7 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
   );
 };
 
-// Spaceship Component
+// Spaceship Component - Detailed models matching ExitChoices
 interface SpaceshipProps {
   positionRef: React.MutableRefObject<THREE.Vector3>;
   rotationRef: React.MutableRefObject<THREE.Euler>;
@@ -533,128 +534,367 @@ interface SpaceshipProps {
 
 const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle }: SpaceshipProps) => {
   const shipRef = useRef<THREE.Group>(null);
-  const exhaustRef = useRef<THREE.Mesh>(null);
-  const secondExhaustRef = useRef<THREE.Mesh>(null);
+
+  // Create attractive rocket materials - vibrant teal/gold theme
+  const rocketBodyMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#1a1a2e"),
+    metalness: 0.9,
+    roughness: 0.15,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.1,
+    reflectivity: 1,
+  }), []);
+
+  const rocketAccentMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#00e5ff"),
+    metalness: 0.8,
+    roughness: 0.2,
+    clearcoat: 0.8,
+    emissive: new THREE.Color("#00e5ff"),
+    emissiveIntensity: 0.3,
+  }), []);
+
+  const rocketGoldMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#ffd700"),
+    metalness: 0.95,
+    roughness: 0.1,
+    clearcoat: 1,
+    emissive: new THREE.Color("#ff9500"),
+    emissiveIntensity: 0.2,
+  }), []);
+
+  const suitMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#f8f8f8"),
+    metalness: 0.1,
+    roughness: 0.7,
+    clearcoat: 0.1,
+    sheen: 0.3,
+    sheenRoughness: 0.8,
+    sheenColor: new THREE.Color("#aaccff"),
+  }), []);
+
+  const visorMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color("#ffaa00"),
+    metalness: 1,
+    roughness: 0.02,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05,
+    reflectivity: 1,
+    envMapIntensity: 2,
+  }), []);
 
   useFrame((state) => {
-    // Update ship position and rotation from refs every frame
     if (shipRef.current) {
       shipRef.current.position.copy(positionRef.current);
       shipRef.current.rotation.copy(rotationRef.current);
     }
-    
-    const speed = velocityRef.current.length();
-    
-    if (exhaustRef.current) {
-      const scale = 0.5 + speed * 2;
-      exhaustRef.current.scale.set(1, scale, 1);
-      const flicker = Math.sin(state.clock.elapsedTime * 20) * 0.2 + 0.8;
-      (exhaustRef.current.material as THREE.MeshBasicMaterial).opacity = speed > 0.01 ? flicker * 0.8 : 0;
-    }
-    
-    if (secondExhaustRef.current) {
-      const speed = velocityRef.current.length();
-      (secondExhaustRef.current.material as THREE.MeshBasicMaterial).opacity = speed > 0.01 ? 0.8 : 0;
-    }
   });
+
+  const speed = velocityRef.current.length();
+  const isMoving = speed > 0.01;
 
   if (vehicle === "astronaut") {
     return (
-      <group ref={shipRef} scale={2}>
-        {/* Astronaut body */}
-        <mesh>
-          <capsuleGeometry args={[0.4, 0.8, 8, 16]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.3} metalness={0.2} />
+      <group ref={shipRef} scale={1.8}>
+        {/* Helmet - larger and more detailed */}
+        <mesh position={[0, 1.5, 0]}>
+          <sphereGeometry args={[0.7, 64, 64]} />
+          <primitive object={suitMaterial} attach="material" />
         </mesh>
-        {/* Helmet */}
-        <mesh position={[0, 0.7, 0]}>
-          <sphereGeometry args={[0.35, 16, 16]} />
-          <meshStandardMaterial color="#88ccff" roughness={0.1} metalness={0.8} transparent opacity={0.8} />
+        
+        {/* Gold visor - reflective */}
+        <mesh position={[0, 1.55, 0.45]} rotation={[-0.2, 0, 0]}>
+          <sphereGeometry args={[0.5, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <primitive object={visorMaterial} attach="material" />
         </mesh>
-        {/* Visor */}
-        <mesh position={[0, 0.7, 0.2]}>
-          <sphereGeometry args={[0.2, 16, 16, 0, Math.PI]} />
-          <meshBasicMaterial color="#ffaa00" />
+
+        {/* Helmet rim/collar */}
+        <mesh position={[0, 0.9, 0]}>
+          <torusGeometry args={[0.6, 0.1, 16, 64]} />
+          <meshStandardMaterial color="#aaaaaa" metalness={0.9} roughness={0.15} />
         </mesh>
-        {/* Jetpack */}
-        <mesh position={[0, 0, -0.3]}>
-          <boxGeometry args={[0.5, 0.7, 0.25]} />
-          <meshStandardMaterial color="#444444" metalness={0.7} roughness={0.3} />
+
+        {/* Neck ring */}
+        <mesh position={[0, 0.75, 0]}>
+          <cylinderGeometry args={[0.5, 0.55, 0.15, 32]} />
+          <meshStandardMaterial color="#888888" metalness={0.85} roughness={0.2} />
         </mesh>
+
+        {/* Torso - more realistic shape */}
+        <mesh position={[0, 0.15, 0]}>
+          <capsuleGeometry args={[0.55, 0.7, 16, 32]} />
+          <primitive object={suitMaterial} attach="material" />
+        </mesh>
+
+        {/* Chest control unit */}
+        <mesh position={[0, 0.35, 0.52]}>
+          <boxGeometry args={[0.45, 0.5, 0.12]} />
+          <meshStandardMaterial color="#1a1a1a" metalness={0.95} roughness={0.1} />
+        </mesh>
+        {/* Control buttons/lights */}
+        <mesh position={[-0.12, 0.5, 0.59]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+          <meshBasicMaterial color="#00ff00" />
+        </mesh>
+        <mesh position={[0.12, 0.5, 0.59]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+          <meshBasicMaterial color="#ff0000" />
+        </mesh>
+        <mesh position={[0, 0.38, 0.59]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+          <meshBasicMaterial color="#0088ff" />
+        </mesh>
+
+        {/* Life support backpack - larger */}
+        <mesh position={[0, 0.2, -0.55]}>
+          <boxGeometry args={[0.75, 0.95, 0.35]} />
+          <meshStandardMaterial color="#555555" metalness={0.7} roughness={0.35} />
+        </mesh>
+        {/* Backpack details */}
+        <mesh position={[0, 0.55, -0.75]}>
+          <cylinderGeometry args={[0.1, 0.1, 0.25, 16]} />
+          <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.15} />
+        </mesh>
+
         {/* Jetpack thrusters */}
-        <mesh position={[-0.15, -0.4, -0.35]}>
-          <cylinderGeometry args={[0.08, 0.1, 0.2, 8]} />
-          <meshStandardMaterial color="#333333" metalness={0.8} />
+        <mesh position={[-0.22, -0.25, -0.65]}>
+          <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
+          <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
         </mesh>
-        <mesh position={[0.15, -0.4, -0.35]}>
-          <cylinderGeometry args={[0.08, 0.1, 0.2, 8]} />
-          <meshStandardMaterial color="#333333" metalness={0.8} />
+        <mesh position={[0.22, -0.25, -0.65]}>
+          <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
+          <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
         </mesh>
+
+        {/* Jetpack flames */}
+        <Particles
+          position={[-0.22, -0.4, -0.65]}
+          count={40}
+          color="#66ddff"
+          size={0.05}
+          spread={0.1}
+          speed={isMoving ? 3 : 1.2}
+          type="flame"
+          active={true}
+        />
+        <Particles
+          position={[0.22, -0.4, -0.65]}
+          count={40}
+          color="#66ddff"
+          size={0.05}
+          spread={0.1}
+          speed={isMoving ? 3 : 1.2}
+          type="flame"
+          active={true}
+        />
+
         {/* Arms */}
-        <mesh position={[-0.5, 0.1, 0]} rotation={[0, 0, 0.5]}>
-          <capsuleGeometry args={[0.12, 0.4, 8, 8]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.3} />
-        </mesh>
-        <mesh position={[0.5, 0.1, 0]} rotation={[0, 0, -0.5]}>
-          <capsuleGeometry args={[0.12, 0.4, 8, 8]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.3} />
-        </mesh>
+        <group position={[-0.75, 0.35, 0]}>
+          <mesh rotation={[0, 0, Math.PI / 4.5]}>
+            <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
+            <primitive object={suitMaterial} attach="material" />
+          </mesh>
+          <mesh position={[-0.25, -0.15, 0]}>
+            <sphereGeometry args={[0.14, 16, 16]} />
+            <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
+          </mesh>
+          <mesh position={[-0.4, -0.35, 0]} rotation={[0, 0, Math.PI / 6]}>
+            <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
+            <primitive object={suitMaterial} attach="material" />
+          </mesh>
+          <mesh position={[-0.55, -0.5, 0]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
+          </mesh>
+        </group>
+        
+        <group position={[0.75, 0.35, 0]}>
+          <mesh rotation={[0, 0, -Math.PI / 4.5]}>
+            <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
+            <primitive object={suitMaterial} attach="material" />
+          </mesh>
+          <mesh position={[0.25, -0.15, 0]}>
+            <sphereGeometry args={[0.14, 16, 16]} />
+            <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
+          </mesh>
+          <mesh position={[0.4, -0.35, 0]} rotation={[0, 0, -Math.PI / 6]}>
+            <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
+            <primitive object={suitMaterial} attach="material" />
+          </mesh>
+          <mesh position={[0.55, -0.5, 0]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
+          </mesh>
+        </group>
+
         {/* Legs */}
-        <mesh position={[-0.2, -0.7, 0]}>
-          <capsuleGeometry args={[0.12, 0.5, 8, 8]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.3} />
+        <mesh position={[-0.25, -0.8, 0]}>
+          <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
+          <primitive object={suitMaterial} attach="material" />
         </mesh>
-        <mesh position={[0.2, -0.7, 0]}>
-          <capsuleGeometry args={[0.12, 0.5, 8, 8]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.3} />
+        <mesh position={[0.25, -0.8, 0]}>
+          <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
+          <primitive object={suitMaterial} attach="material" />
         </mesh>
+        
+        {/* Boots */}
+        <mesh position={[-0.25, -1.35, 0.08]}>
+          <boxGeometry args={[0.22, 0.18, 0.35]} />
+          <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
+        </mesh>
+        <mesh position={[0.25, -1.35, 0.08]}>
+          <boxGeometry args={[0.22, 0.18, 0.35]} />
+          <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
+        </mesh>
+
+        <pointLight position={[0, 0, 1]} color="#ffffff" intensity={0.5} distance={4} />
+        <pointLight position={[0, -0.5, -0.8]} color="#66ddff" intensity={isMoving ? 2 : 0.5} distance={4} />
       </group>
     );
   }
 
   return (
-    <group ref={shipRef} scale={2}>
-      {/* Rocket body */}
-      <mesh>
-        <cylinderGeometry args={[0.4, 0.6, 2.5, 16]} />
-        <meshStandardMaterial color="#e8e8e8" metalness={0.8} roughness={0.2} />
-      </mesh>
-      {/* Red stripe */}
+    <group ref={shipRef} scale={1.8}>
+      {/* Main rocket body */}
       <mesh position={[0, 0.5, 0]}>
-        <cylinderGeometry args={[0.42, 0.42, 0.3, 16]} />
-        <meshStandardMaterial color="#ff3333" metalness={0.6} roughness={0.3} />
+        <cylinderGeometry args={[0.5, 0.7, 3, 32]} />
+        <primitive object={rocketBodyMaterial} attach="material" />
       </mesh>
-      {/* Blue stripe */}
-      <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.48, 0.48, 0.2, 16]} />
-        <meshStandardMaterial color="#3366ff" metalness={0.6} roughness={0.3} />
-      </mesh>
-      {/* Nose cone */}
-      <mesh position={[0, 1.6, 0]}>
-        <coneGeometry args={[0.4, 1, 16]} />
-        <meshStandardMaterial color="#ff3333" metalness={0.6} roughness={0.3} />
-      </mesh>
-      {/* Window */}
-      <mesh position={[0, 0.7, 0.38]}>
-        <circleGeometry args={[0.15, 16]} />
-        <meshBasicMaterial color="#66ccff" />
-      </mesh>
-      <mesh position={[0, 0.7, 0.36]}>
-        <ringGeometry args={[0.13, 0.17, 16]} />
-        <meshBasicMaterial color="#888888" />
-      </mesh>
-      {/* Fins - 4 fins */}
-      {[0, 90, 180, 270].map((angle, i) => (
-        <mesh key={i} position={[Math.sin(angle * Math.PI / 180) * 0.55, -1, Math.cos(angle * Math.PI / 180) * 0.55]} rotation={[0.2, -angle * Math.PI / 180, 0]}>
-          <boxGeometry args={[0.15, 0.7, 0.5]} />
-          <meshStandardMaterial color={i % 2 === 0 ? "#ff3333" : "#3366ff"} metalness={0.6} roughness={0.3} />
+      
+      {/* Body details - rivets/panels */}
+      {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+        <mesh
+          key={`rivet-${i}`}
+          position={[
+            Math.cos((angle * Math.PI) / 180) * 0.52,
+            0.8,
+            Math.sin((angle * Math.PI) / 180) * 0.52,
+          ]}
+        >
+          <sphereGeometry args={[0.03, 8, 8]} />
+          <meshStandardMaterial color="#888888" metalness={1} roughness={0.3} />
         </mesh>
       ))}
-      {/* Engine nozzle */}
-      <mesh position={[0, -1.4, 0]}>
-        <cylinderGeometry args={[0.25, 0.35, 0.3, 16]} />
-        <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.1} />
+      
+      {/* Accent stripe band */}
+      <mesh position={[0, 1, 0]}>
+        <cylinderGeometry args={[0.52, 0.52, 0.25, 32]} />
+        <primitive object={rocketAccentMaterial} attach="material" />
       </mesh>
+      <mesh position={[0, 0.3, 0]}>
+        <cylinderGeometry args={[0.62, 0.62, 0.2, 32]} />
+        <primitive object={rocketGoldMaterial} attach="material" />
+      </mesh>
+
+      {/* Nose cone with better shape */}
+      <mesh position={[0, 2.5, 0]}>
+        <coneGeometry args={[0.5, 1.2, 32]} />
+        <primitive object={rocketGoldMaterial} attach="material" />
+      </mesh>
+      {/* Nose tip */}
+      <mesh position={[0, 3.2, 0]}>
+        <coneGeometry args={[0.12, 0.3, 16]} />
+        <primitive object={rocketAccentMaterial} attach="material" />
+      </mesh>
+
+      {/* Windows - multiple portholes */}
+      {[0, 120, 240].map((angle, i) => (
+        <group key={`window-${i}`} rotation={[0, (angle * Math.PI) / 180, 0]}>
+          <mesh position={[0, 1.3, 0.48]}>
+            <circleGeometry args={[0.15, 32]} />
+            <meshPhysicalMaterial 
+              color="#88ddff" 
+              metalness={0.3} 
+              roughness={0.1}
+              emissive="#44aaff"
+              emissiveIntensity={0.5}
+              transparent
+              opacity={0.9}
+            />
+          </mesh>
+          {/* Window frame */}
+          <mesh position={[0, 1.3, 0.47]}>
+            <ringGeometry args={[0.15, 0.19, 32]} />
+            <meshStandardMaterial color="#666666" metalness={0.9} roughness={0.2} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Fins - more detailed */}
+      {[0, 90, 180, 270].map((angle, i) => (
+        <group key={`fin-${i}`} rotation={[0, (angle * Math.PI) / 180, 0]}>
+          <mesh position={[0.65, -0.5, 0]} rotation={[0, 0, 0.15]}>
+            <boxGeometry args={[0.4, 0.8, 0.06]} />
+            <meshStandardMaterial 
+              color="#ffd700" 
+              metalness={0.85} 
+              roughness={0.2}
+              emissive="#ff9500"
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+          {/* Fin edge detail */}
+          <mesh position={[0.85, -0.7, 0]} rotation={[0, 0, 0.3]}>
+            <boxGeometry args={[0.08, 0.5, 0.08]} />
+            <meshStandardMaterial color="#444444" metalness={0.9} roughness={0.1} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Engine section */}
+      <mesh position={[0, -0.9, 0]}>
+        <cylinderGeometry args={[0.55, 0.7, 0.4, 32]} />
+        <meshStandardMaterial color="#222222" metalness={0.95} roughness={0.1} />
+      </mesh>
+      
+      {/* Engine nozzle - bell shape */}
+      <mesh position={[0, -1.3, 0]}>
+        <cylinderGeometry args={[0.35, 0.55, 0.5, 32]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.98} roughness={0.05} />
+      </mesh>
+      <mesh position={[0, -1.35, 0]}>
+        <cylinderGeometry args={[0.3, 0.35, 0.15, 32]} />
+        <meshStandardMaterial color="#ff4400" metalness={0.5} roughness={0.4} emissive="#ff2200" emissiveIntensity={0.3} />
+      </mesh>
+
+      {/* Flame - layered for realism */}
+      <mesh position={[0, -1.7, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.35, 0.9, 32]} />
+        <meshBasicMaterial color="#ff6600" transparent opacity={isMoving ? 0.85 : 0.5} />
+      </mesh>
+      <mesh position={[0, -1.85, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.2, 0.7, 32]} />
+        <meshBasicMaterial color="#ffaa00" transparent opacity={isMoving ? 0.9 : 0.6} />
+      </mesh>
+      <mesh position={[0, -1.95, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.1, 0.5, 16]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={isMoving ? 0.95 : 0.7} />
+      </mesh>
+
+      {/* Flame particles */}
+      <Particles
+        position={[0, -1.4, 0]}
+        count={100}
+        color="#ff6600"
+        size={0.1}
+        spread={0.35}
+        speed={isMoving ? 5 : 2.5}
+        type="flame"
+        active={true}
+      />
+      <Particles
+        position={[0, -1.4, 0]}
+        count={60}
+        color="#ffff00"
+        size={0.07}
+        spread={0.2}
+        speed={isMoving ? 6 : 3}
+        type="flame"
+        active={true}
+      />
+
+      <pointLight position={[0, -1, 0]} color="#ff6600" intensity={isMoving ? 5 : 2.5} distance={6} />
+      <pointLight position={[0, 1, 1]} color="#ffffff" intensity={0.5} distance={3} />
     </group>
   );
 };
