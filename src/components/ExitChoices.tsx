@@ -1,6 +1,6 @@
 import { Suspense, useState, useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars, OrbitControls } from "@react-three/drei";
+import { OrbitControls, Line } from "@react-three/drei";
 import * as THREE from "three";
 import ExitModels from "./ExitModels";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,986 +9,323 @@ interface ExitChoicesProps {
   onSelect: (vehicle: "rocket" | "astronaut") => void;
 }
 
-// Enhanced animated nebula with shader effects
-const NebulaCloud = ({ 
-  position, 
-  color, 
-  scale = 1,
-  rotationSpeed = 0.02 
-}: { 
-  position: [number, number, number]; 
-  color: string; 
-  scale?: number;
-  rotationSpeed?: number;
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
+// Planet data matching GalaxyExploration
+const PLANETS_DATA = [
+  { id: 0, name: "Pyralis", orbitRadius: 22, size: 2.8, color: "#ff7755", orbitSpeed: 0.25, rotationSpeed: 1.8, spotColor: "#ffaa88", glowColor: "#ff9966", hasSatellite: true, initialAngle: 0 },
+  { id: 1, name: "Aquaris", orbitRadius: 32, size: 4, color: "#55aaff", orbitSpeed: 0.18, rotationSpeed: 1.4, spotColor: "#88ccff", glowColor: "#77bbff", hasRing: true, ringColor: "#8899bb", initialAngle: Math.PI * 0.5 },
+  { id: 2, name: "Verdania", orbitRadius: 44, size: 3.5, color: "#66ff88", orbitSpeed: 0.22, rotationSpeed: 2.5, spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI },
+  { id: 3, name: "Solarius", orbitRadius: 58, size: 7, color: "#ffbb55", orbitSpeed: 0.08, rotationSpeed: 0.6, spotColor: "#ffdd88", glowColor: "#ffcc66", hasRing: true, ringColor: "#ddaa66", hasSatellite: true, initialAngle: Math.PI * 1.3 },
+  { id: 4, name: "Nebulora", orbitRadius: 75, size: 5.5, color: "#bb77ff", orbitSpeed: 0.06, rotationSpeed: 0.8, spotColor: "#dd99ff", glowColor: "#cc88ff", hasSatellite: true, initialAngle: Math.PI * 0.7 },
+  { id: 5, name: "Rosaria", orbitRadius: 92, size: 3, color: "#ff77aa", orbitSpeed: 0.12, rotationSpeed: 1.5, spotColor: "#ff99cc", glowColor: "#ff88bb", initialAngle: Math.PI * 1.8 },
+  { id: 6, name: "Cryonia", orbitRadius: 110, size: 6, color: "#77ffff", orbitSpeed: 0.04, rotationSpeed: 0.5, spotColor: "#99ffff", glowColor: "#88ffff", hasRing: true, ringColor: "#66cccc", hasSatellite: true, initialAngle: Math.PI * 0.3 },
+];
 
-  const shaderMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        color1: { value: new THREE.Color(color) },
-        color2: { value: new THREE.Color(color).multiplyScalar(0.3) },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float time;
-        uniform vec3 color1;
-        uniform vec3 color2;
-        varying vec2 vUv;
-        
-        float noise(vec2 p) {
-          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
-        }
-        
-        float fbm(vec2 p) {
-          float f = 0.0;
-          f += 0.5 * noise(p); p *= 2.01;
-          f += 0.25 * noise(p); p *= 2.02;
-          f += 0.125 * noise(p); p *= 2.03;
-          f += 0.0625 * noise(p);
-          return f;
-        }
-        
-        void main() {
-          vec2 uv = vUv - 0.5;
-          float dist = length(uv);
-          
-          vec2 q = vec2(fbm(uv + time * 0.1), fbm(uv + vec2(1.0)));
-          vec2 r = vec2(fbm(uv + q + time * 0.05), fbm(uv + q + vec2(2.0)));
-          float f = fbm(uv + r);
-          
-          float alpha = smoothstep(0.6, 0.0, dist) * (0.4 + 0.3 * f);
-          vec3 color = mix(color1, color2, f + dist);
-          
-          gl_FragColor = vec4(color, alpha * 0.5);
-        }
-      `,
-      transparent: true,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-  }, [color]);
-
-  useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.time.value = state.clock.elapsedTime;
-    }
-    if (meshRef.current) {
-      meshRef.current.rotation.z += rotationSpeed * 0.01;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef} position={position} scale={scale}>
-      <planeGeometry args={[30, 30, 1, 1]} />
-      <primitive object={shaderMaterial} ref={materialRef} attach="material" />
-    </mesh>
-  );
-};
-
-// Animated nebula system with multiple layers
-const NebulaEffect = () => {
-  return (
-    <group position={[0, 0, -100]}>
-      {/* Primary nebulae */}
-      <NebulaCloud position={[-50, 20, -30]} color="#ff44aa" scale={4} rotationSpeed={0.015} />
-      <NebulaCloud position={[60, -10, -50]} color="#4488ff" scale={5} rotationSpeed={-0.02} />
-      <NebulaCloud position={[0, 40, -40]} color="#aa44ff" scale={3.5} rotationSpeed={0.018} />
-      <NebulaCloud position={[-40, -30, -60]} color="#44ffaa" scale={4.5} rotationSpeed={-0.012} />
-      <NebulaCloud position={[50, 35, -70]} color="#ffaa44" scale={3} rotationSpeed={0.025} />
-      
-      {/* Distant nebulae for depth */}
-      <NebulaCloud position={[-80, 0, -100]} color="#ff6699" scale={8} rotationSpeed={0.008} />
-      <NebulaCloud position={[80, 20, -120]} color="#6699ff" scale={7} rotationSpeed={-0.01} />
-    </group>
-  );
-};
-
-// Shooting stars effect (point-based, no planes)
-const ShootingStars = () => {
+// Blinking Stars Background - matching GalaxyExploration
+const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
   const starsRef = useRef<THREE.Points>(null);
   
-  const { positions, velocities } = useMemo(() => {
-    const count = 20;
-    const pos = new Float32Array(count * 3);
-    const vel = [];
-    
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] = -80 + Math.random() * 40;
-      pos[i * 3 + 1] = 30 + Math.random() * 30;
-      pos[i * 3 + 2] = -60 - Math.random() * 40;
-      vel.push({
-        x: 2 + Math.random(),
-        y: -1.5 - Math.random() * 0.5,
-        delay: i * 0.5,
-      });
-    }
-    
-    return { positions: pos, velocities: vel };
-  }, []);
-
-  useFrame((state) => {
-    if (!starsRef.current) return;
-    const posArray = starsRef.current.geometry.attributes.position.array as Float32Array;
-    const time = state.clock.elapsedTime;
-    
-    for (let i = 0; i < 20; i++) {
-      const cycleTime = (time + velocities[i].delay) % 4;
-      if (cycleTime < 1.5) {
-        posArray[i * 3] += velocities[i].x * 0.5;
-        posArray[i * 3 + 1] += velocities[i].y * 0.5;
-      } else if (cycleTime > 3.8) {
-        posArray[i * 3] = -80 + Math.random() * 40;
-        posArray[i * 3 + 1] = 30 + Math.random() * 30;
-        posArray[i * 3 + 2] = -60 - Math.random() * 40;
-      }
-    }
-    starsRef.current.geometry.attributes.position.needsUpdate = true;
-  });
-
-  return (
-    <points ref={starsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={20} array={positions} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={3}
-        color="#ffffff"
-        transparent
-        opacity={0.9}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
-};
-
-// Cosmic dust particles
-const CosmicDust = () => {
-  const dustRef = useRef<THREE.Points>(null);
-  
-  const { positions, colors, sizes } = useMemo(() => {
-    const count = 5000;
-    const pos = new Float32Array(count * 3);
-    const col = new Float32Array(count * 3);
-    const siz = new Float32Array(count);
-    
-    const colorOptions = [
-      new THREE.Color("#ffffff"),
-      new THREE.Color("#aaccff"),
-      new THREE.Color("#ffccaa"),
-      new THREE.Color("#ccaaff"),
-      new THREE.Color("#aaffcc"),
-    ];
-    
-    for (let i = 0; i < count; i++) {
-      const radius = 30 + Math.random() * 200;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      
-      pos[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      pos[i * 3 + 2] = radius * Math.cos(phi) - 50;
-      
-      const color = colorOptions[Math.floor(Math.random() * colorOptions.length)];
-      col[i * 3] = color.r;
-      col[i * 3 + 1] = color.g;
-      col[i * 3 + 2] = color.b;
-      
-      siz[i] = Math.random() * 2 + 0.5;
-    }
-    
-    return { positions: pos, colors: col, sizes: siz };
-  }, []);
-
-  useFrame((state) => {
-    if (dustRef.current) {
-      dustRef.current.rotation.y = state.clock.elapsedTime * 0.01;
-      dustRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.005) * 0.1;
-    }
-  });
-
-  return (
-    <points ref={dustRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={5000} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={5000} array={colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={1.2}
-        vertexColors
-        transparent
-        opacity={0.9}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
-};
-
-// Glowing cosmic ring effect
-const CosmicRing = ({ radius, color, speed = 0.1 }: { radius: number; color: string; speed?: number }) => {
-  const ringRef = useRef<THREE.Mesh>(null);
-  
-  useFrame((state) => {
-    if (ringRef.current) {
-      ringRef.current.rotation.x = Math.PI / 2 + Math.sin(state.clock.elapsedTime * speed) * 0.2;
-      ringRef.current.rotation.z = state.clock.elapsedTime * speed * 0.5;
-    }
-  });
-
-  return (
-    <mesh ref={ringRef} position={[0, 0, -80]}>
-      <torusGeometry args={[radius, 0.3, 16, 100]} />
-      <meshBasicMaterial 
-        color={color} 
-        transparent 
-        opacity={0.15}
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
-  );
-};
-
-// Spiral Galaxy Arms
-const SpiralGalaxyArms = () => {
-  const armsRef = useRef<THREE.Points>(null);
-  
-  const { positions, colors, sizes } = useMemo(() => {
-    const count = 15000;
-    const pos = new Float32Array(count * 3);
-    const col = new Float32Array(count * 3);
-    const siz = new Float32Array(count);
-    
-    const armCount = 4;
-    const spiralTightness = 0.3;
-    
-    for (let i = 0; i < count; i++) {
-      const arm = i % armCount;
-      const armAngle = (arm / armCount) * Math.PI * 2;
-      
-      const distance = Math.random() * 120 + 20;
-      const spiralAngle = distance * spiralTightness + armAngle;
-      const spread = (Math.random() - 0.5) * 15 * (distance / 80);
-      
-      pos[i * 3] = Math.cos(spiralAngle) * distance + spread;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 8;
-      pos[i * 3 + 2] = Math.sin(spiralAngle) * distance + spread - 100;
-      
-      // Color gradient from center (warm) to edge (cool)
-      const t = distance / 140;
-      const r = 1 - t * 0.3 + Math.random() * 0.2;
-      const g = 0.7 + t * 0.2 + Math.random() * 0.1;
-      const b = 0.5 + t * 0.5 + Math.random() * 0.2;
-      
-      col[i * 3] = Math.min(1, r);
-      col[i * 3 + 1] = Math.min(1, g);
-      col[i * 3 + 2] = Math.min(1, b);
-      
-      siz[i] = Math.random() * 1.5 + 0.5;
-    }
-    
-    return { positions: pos, colors: col, sizes: siz };
-  }, []);
-
-  useFrame((state) => {
-    if (armsRef.current) {
-      armsRef.current.rotation.y = state.clock.elapsedTime * 0.008;
-    }
-  });
-
-  return (
-    <points ref={armsRef} position={[0, 20, -120]} rotation={[0.8, 0, 0.2]}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={15000} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={15000} array={colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={1.8}
-        vertexColors
-        transparent
-        opacity={0.7}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
-};
-
-// Pulsating bright stars
-const PulsatingStars = () => {
-  const starsRef = useRef<THREE.Points>(null);
-  
-  const { positions, baseColors } = useMemo(() => {
-    const count = 200;
-    const pos = new Float32Array(count * 3);
-    const cols = new Float32Array(count * 3);
-    
-    for (let i = 0; i < count; i++) {
-      const radius = 40 + Math.random() * 180;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      
-      pos[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      pos[i * 3 + 2] = radius * Math.cos(phi) - 60;
-      
-      // Bright star colors
-      const colorType = Math.random();
-      if (colorType < 0.3) {
-        cols[i * 3] = 1; cols[i * 3 + 1] = 0.9; cols[i * 3 + 2] = 0.7; // Warm
-      } else if (colorType < 0.6) {
-        cols[i * 3] = 0.7; cols[i * 3 + 1] = 0.8; cols[i * 3 + 2] = 1; // Cool
-      } else {
-        cols[i * 3] = 1; cols[i * 3 + 1] = 1; cols[i * 3 + 2] = 1; // White
-      }
-    }
-    
-    return { positions: pos, baseColors: cols };
-  }, []);
-
-  useFrame((state) => {
-    if (starsRef.current) {
-      const material = starsRef.current.material as THREE.PointsMaterial;
-      material.size = 3 + Math.sin(state.clock.elapsedTime * 2) * 0.8;
-    }
-  });
-
-  return (
-    <points ref={starsRef}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={200} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={200} array={baseColors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={3}
-        vertexColors
-        transparent
-        opacity={0.9}
-        sizeAttenuation
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
-  );
-};
-
-// Glowing Comet with tail
-const GlowingComet = () => {
-  const cometRef = useRef<THREE.Group>(null);
-  const tailRef = useRef<THREE.Points>(null);
-  
-  const tailParticles = useMemo(() => {
-    const count = 500;
+  const { positions, sizes, phases, colors } = useMemo(() => {
     const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    
-    for (let i = 0; i < count; i++) {
-      const t = i / count;
-      positions[i * 3] = -t * 25;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 2 * (1 - t * 0.5);
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 2 * (1 - t * 0.5);
-      
-      colors[i * 3] = 0.6 + (1 - t) * 0.4;
-      colors[i * 3 + 1] = 0.8 + (1 - t) * 0.2;
-      colors[i * 3 + 2] = 1;
-    }
-    
-    return { positions, colors };
-  }, []);
-
-  useFrame((state) => {
-    if (cometRef.current) {
-      const time = state.clock.elapsedTime;
-      const cycle = (time * 0.15) % 1;
-      
-      cometRef.current.position.x = -100 + cycle * 250;
-      cometRef.current.position.y = 40 - cycle * 60;
-      cometRef.current.position.z = -80;
-      
-      cometRef.current.rotation.z = -0.4;
-    }
-  });
-
-  return (
-    <group ref={cometRef}>
-      {/* Comet head */}
-      <mesh>
-        <sphereGeometry args={[1.2, 16, 16]} />
-        <meshBasicMaterial color="#aaddff" />
-      </mesh>
-      {/* Inner glow */}
-      <mesh>
-        <sphereGeometry args={[2, 16, 16]} />
-        <meshBasicMaterial color="#88ccff" transparent opacity={0.5} blending={THREE.AdditiveBlending} />
-      </mesh>
-      {/* Outer glow */}
-      <mesh>
-        <sphereGeometry args={[3.5, 16, 16]} />
-        <meshBasicMaterial color="#4488ff" transparent opacity={0.2} blending={THREE.AdditiveBlending} />
-      </mesh>
-      {/* Tail */}
-      <points ref={tailRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={500} array={tailParticles.positions} itemSize={3} />
-          <bufferAttribute attach="attributes-color" count={500} array={tailParticles.colors} itemSize={3} />
-        </bufferGeometry>
-        <pointsMaterial
-          size={2}
-          vertexColors
-          transparent
-          opacity={0.6}
-          sizeAttenuation
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </points>
-    </group>
-  );
-};
-
-// Galaxy Core Glow
-const GalaxyCoreGlow = () => {
-  const coreRef = useRef<THREE.Mesh>(null);
-  
-  useFrame((state) => {
-    if (coreRef.current) {
-      coreRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 0.5) * 0.1);
-    }
-  });
-
-  return (
-    <group position={[0, 20, -180]}>
-      <mesh ref={coreRef}>
-        <sphereGeometry args={[15, 32, 32]} />
-        <meshBasicMaterial color="#ffeecc" transparent opacity={0.4} blending={THREE.AdditiveBlending} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[25, 32, 32]} />
-        <meshBasicMaterial color="#ffcc88" transparent opacity={0.2} blending={THREE.AdditiveBlending} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[40, 32, 32]} />
-        <meshBasicMaterial color="#ff9944" transparent opacity={0.08} blending={THREE.AdditiveBlending} />
-      </mesh>
-      <pointLight color="#ffdd88" intensity={5} distance={200} />
-    </group>
-  );
-};
-
-// Mini Galaxy - matches the original galaxy exploration style
-const MiniGalaxy = () => {
-  const galaxyRef = useRef<THREE.Group>(null);
-  const sunRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-  const starsRef = useRef<THREE.Points>(null);
-
-  // Create orbital paths and mini planets data
-  const planetsData = useMemo(
-    () => [
-      { orbitRadius: 8, size: 0.8, color: "#ff7755", speed: 0.4, initialAngle: 0 },
-      { orbitRadius: 12, size: 1.2, color: "#55aaff", speed: 0.3, initialAngle: Math.PI * 0.5, hasRing: true },
-      { orbitRadius: 17, size: 1, color: "#66ff88", speed: 0.35, initialAngle: Math.PI },
-      { orbitRadius: 22, size: 2, color: "#ffbb55", speed: 0.15, initialAngle: Math.PI * 1.3, hasRing: true },
-      { orbitRadius: 28, size: 1.6, color: "#bb77ff", speed: 0.12, initialAngle: Math.PI * 0.7 },
-      { orbitRadius: 34, size: 0.9, color: "#ff77aa", speed: 0.2, initialAngle: Math.PI * 1.8 },
-      { orbitRadius: 40, size: 1.8, color: "#77ffff", speed: 0.08, initialAngle: Math.PI * 0.3, hasRing: true },
-    ],
-    [],
-  );
-
-  // Star field
-  const { starPositions, starColors, starSizes } = useMemo(() => {
-    const count = 3000;
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
-
-    const starColorOptions = [
+    const phases = new Float32Array(count);
+    const colors = new Float32Array(count * 3);
+    
+    const starColors = [
       [1, 1, 1],
       [1, 0.9, 0.8],
       [0.8, 0.9, 1],
       [1, 0.8, 0.6],
+      [0.9, 0.95, 1],
     ];
-
+    
     for (let i = 0; i < count; i++) {
-      const radius = 50 + Math.random() * 150;
+      const radius = 150 + Math.random() * 350;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-
+      
       positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
-
-      const colorIdx = Math.floor(Math.random() * starColorOptions.length);
-      colors[i * 3] = starColorOptions[colorIdx][0];
-      colors[i * 3 + 1] = starColorOptions[colorIdx][1];
-      colors[i * 3 + 2] = starColorOptions[colorIdx][2];
-
-      sizes[i] = Math.random() * 2 + 0.5;
+      
+      sizes[i] = Math.random() * 3 + 1;
+      phases[i] = Math.random() * Math.PI * 2;
+      
+      const colorIdx = Math.floor(Math.random() * starColors.length);
+      colors[i * 3] = starColors[colorIdx][0];
+      colors[i * 3 + 1] = starColors[colorIdx][1];
+      colors[i * 3 + 2] = starColors[colorIdx][2];
     }
-
-    return { starPositions: positions, starColors: colors, starSizes: sizes };
-  }, []);
-
-  // Planet positions ref for animation
-  const planetRefs = useRef<THREE.Group[]>([]);
+    
+    return { positions, sizes, phases, colors };
+  }, [count]);
 
   useFrame((state) => {
-    const time = state.clock.elapsedTime;
-
-    if (galaxyRef.current) {
-      galaxyRef.current.rotation.y = time * 0.02;
-    }
-
-    if (sunRef.current) {
-      sunRef.current.rotation.y = time * 0.1;
-    }
-
-    if (glowRef.current) {
-      glowRef.current.scale.setScalar(1 + Math.sin(time * 1.5) * 0.1);
-    }
-
-    // Animate planets
-    planetRefs.current.forEach((planet, i) => {
-      if (planet && planetsData[i]) {
-        const { orbitRadius, speed, initialAngle } = planetsData[i];
-        const angle = time * speed + initialAngle;
-        planet.position.x = Math.cos(angle) * orbitRadius;
-        planet.position.z = Math.sin(angle) * orbitRadius;
+    if (starsRef.current) {
+      const time = state.clock.elapsedTime;
+      const sizesAttr = starsRef.current.geometry.attributes.size as THREE.BufferAttribute;
+      
+      for (let i = 0; i < count; i++) {
+        const blink = Math.sin(time * (0.5 + (i % 10) * 0.1) + phases[i]) * 0.5 + 0.5;
+        sizesAttr.array[i] = sizes[i] * (0.4 + blink * 0.6);
       }
-    });
-  });
-
-  return (
-    <group ref={galaxyRef} position={[0, 5, -50]} rotation={[0.3, 0, 0.1]}>
-      {/* Central Sun */}
-      <mesh ref={sunRef}>
-        <sphereGeometry args={[3, 32, 32]} />
-        <meshBasicMaterial color="#ffee66" />
-      </mesh>
-
-      {/* Sun glow layers */}
-      <mesh ref={glowRef}>
-        <sphereGeometry args={[3.5, 32, 32]} />
-        <meshBasicMaterial color="#ffcc00" transparent opacity={0.5} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[4.2, 32, 32]} />
-        <meshBasicMaterial color="#ff9900" transparent opacity={0.3} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[5.5, 32, 32]} />
-        <meshBasicMaterial color="#ff6600" transparent opacity={0.15} />
-      </mesh>
-
-      {/* Orbital paths */}
-      {planetsData.map((planet, i) => (
-        <mesh key={`orbit-${i}`} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.orbitRadius - 0.05, planet.orbitRadius + 0.05, 128]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.15} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-
-      {/* Planets */}
-      {planetsData.map((planet, i) => (
-        <group key={`planet-${i}`}>
-          <group
-            ref={(el) => {
-              if (el) planetRefs.current[i] = el;
-            }}
-            position={[planet.orbitRadius, 0, 0]}
-          >
-            <mesh>
-              <sphereGeometry args={[planet.size, 32, 32]} />
-              <meshStandardMaterial color={planet.color} emissive={planet.color} emissiveIntensity={0.2} />
-            </mesh>
-            {planet.hasRing && (
-              <mesh rotation={[Math.PI / 2.5, 0, 0]}>
-                <ringGeometry args={[planet.size * 1.4, planet.size * 2, 32]} />
-                <meshBasicMaterial color={planet.color} transparent opacity={0.5} side={THREE.DoubleSide} />
-              </mesh>
-            )}
-          </group>
-        </group>
-      ))}
-
-      {/* Background stars */}
-      <points ref={starsRef}>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={3000} array={starPositions} itemSize={3} />
-          <bufferAttribute attach="attributes-color" count={3000} array={starColors} itemSize={3} />
-        </bufferGeometry>
-        <pointsMaterial
-          size={1.5}
-          vertexColors
-          transparent
-          opacity={0.8}
-          sizeAttenuation
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
-
-      {/* Sun light */}
-      <pointLight color="#ffdd44" intensity={3} distance={100} />
-    </group>
-  );
-};
-
-// Detailed planet with texture effects
-const DetailedPlanet = ({ 
-  position, 
-  size, 
-  color, 
-  emissiveColor,
-  hasRing = false, 
-  ringColor,
-  rotationSpeed = 0.001 
-}: { 
-  position: [number, number, number]; 
-  size: number; 
-  color: string; 
-  emissiveColor?: string;
-  hasRing?: boolean; 
-  ringColor?: string;
-  rotationSpeed?: number;
-}) => {
-  const planetRef = useRef<THREE.Mesh>(null);
-  const atmosphereRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (planetRef.current) {
-      planetRef.current.rotation.y += rotationSpeed;
-    }
-    if (atmosphereRef.current) {
-      atmosphereRef.current.rotation.y -= rotationSpeed * 0.5;
+      sizesAttr.needsUpdate = true;
     }
   });
 
   return (
-    <group position={position}>
-      {/* Main planet body */}
-      <mesh ref={planetRef}>
-        <sphereGeometry args={[size, 64, 64]} />
-        <meshStandardMaterial 
-          color={color}
-          emissive={emissiveColor || color}
-          emissiveIntensity={0.15}
-          roughness={0.8}
-          metalness={0.2}
-        />
-      </mesh>
-
-      {/* Atmosphere glow */}
-      <mesh ref={atmosphereRef} scale={1.05}>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshBasicMaterial 
-          color={emissiveColor || color} 
-          transparent 
-          opacity={0.15} 
-          side={THREE.BackSide}
-        />
-      </mesh>
-
-      {/* Outer glow */}
-      <mesh scale={1.15}>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshBasicMaterial 
-          color={emissiveColor || color} 
-          transparent 
-          opacity={0.08} 
-          side={THREE.BackSide}
-        />
-      </mesh>
-
-      {/* Ring if applicable */}
-      {hasRing && (
-        <mesh rotation={[Math.PI / 2.5, 0, 0]}>
-          <ringGeometry args={[size * 1.4, size * 2.2, 64]} />
-          <meshBasicMaterial 
-            color={ringColor || color} 
-            transparent 
-            opacity={0.6} 
-            side={THREE.DoubleSide} 
-          />
-        </mesh>
-      )}
-
-      {/* Surface details - darker spots */}
-      {Array.from({ length: 6 }).map((_, i) => {
-        const theta = (i / 6) * Math.PI * 2;
-        const phi = 0.3 + Math.random() * 0.4 * Math.PI;
-        const x = size * 0.95 * Math.sin(phi) * Math.cos(theta);
-        const y = size * 0.95 * Math.cos(phi);
-        const z = size * 0.95 * Math.sin(phi) * Math.sin(theta);
-        const spotSize = size * (0.15 + Math.random() * 0.2);
-        
-        return (
-          <mesh key={i} position={[x, y, z]}>
-            <sphereGeometry args={[spotSize, 16, 16]} />
-            <meshBasicMaterial 
-              color={new THREE.Color(color).multiplyScalar(0.6)} 
-              transparent 
-              opacity={0.4} 
-            />
-          </mesh>
-        );
-      })}
-    </group>
-  );
-};
-
-// Sun glow pulsing effect (replaces corona with plane geometries)
-const SunPulse = () => {
-  const pulseRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (pulseRef.current) {
-      const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.15;
-      pulseRef.current.scale.setScalar(scale);
-    }
-  });
-
-  return (
-    <mesh ref={pulseRef}>
-      <sphereGeometry args={[9, 32, 32]} />
-      <meshBasicMaterial 
-        color="#ffcc00" 
-        transparent 
-        opacity={0.25} 
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
-  );
-};
-
-// Asteroid belt between Mars and Jupiter
-const AsteroidBelt = ({ innerRadius, outerRadius }: { innerRadius: number; outerRadius: number }) => {
-  const asteroidsRef = useRef<THREE.Points>(null);
-
-  const { positions, sizes } = useMemo(() => {
-    const count = 500;
-    const pos = new Float32Array(count * 3);
-    const siz = new Float32Array(count);
-
-    for (let i = 0; i < count; i++) {
-      const radius = innerRadius + Math.random() * (outerRadius - innerRadius);
-      const angle = Math.random() * Math.PI * 2;
-      const y = (Math.random() - 0.5) * 2;
-
-      pos[i * 3] = Math.cos(angle) * radius;
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = Math.sin(angle) * radius;
-
-      siz[i] = Math.random() * 0.5 + 0.2;
-    }
-
-    return { positions: pos, sizes: siz };
-  }, [innerRadius, outerRadius]);
-
-  useFrame((state) => {
-    if (asteroidsRef.current) {
-      asteroidsRef.current.rotation.y = state.clock.elapsedTime * 0.01;
-    }
-  });
-
-  return (
-    <points ref={asteroidsRef}>
+    <points ref={starsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={500} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-size" count={count} array={sizes} itemSize={1} />
+        <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial 
-        size={0.4} 
-        color="#8b7355" 
-        transparent 
-        opacity={0.8}
+      <pointsMaterial
+        size={2}
+        vertexColors
+        transparent
+        opacity={0.9}
         sizeAttenuation
+        blending={THREE.AdditiveBlending}
       />
     </points>
   );
 };
 
-// Enhanced solar system with sun in center and orbiting planets
-const SolarSystem = () => {
-  const systemRef = useRef<THREE.Group>(null);
-  const planetGroupRefs = useRef<THREE.Group[]>([]);
+// Central Sun/Galaxy Core - matching GalaxyExploration
+const GalaxyCore = () => {
   const sunRef = useRef<THREE.Mesh>(null);
-
-  const planetsData = useMemo(() => [
-    { orbitRadius: 15, size: 1.5, color: "#8b7355", emissiveColor: "#a08060", speed: 0.2, name: "Mercury", tilt: 0.03 },
-    { orbitRadius: 22, size: 2.5, color: "#e6b800", emissiveColor: "#ffd700", speed: 0.15, name: "Venus", tilt: 0.05 },
-    { orbitRadius: 30, size: 3, color: "#1e90ff", emissiveColor: "#4fc3f7", speed: 0.12, name: "Earth", hasMoon: true, tilt: 0.1 },
-    { orbitRadius: 40, size: 2, color: "#cd5c5c", emissiveColor: "#ff6347", speed: 0.09, name: "Mars", tilt: 0.08 },
-    { orbitRadius: 58, size: 6, color: "#daa520", emissiveColor: "#f4a460", speed: 0.05, hasRing: false, name: "Jupiter", hasStripes: true, tilt: 0.02 },
-    { orbitRadius: 75, size: 5, color: "#f5deb3", emissiveColor: "#ffe4b5", speed: 0.035, hasRing: true, ringColor: "#d4a574", name: "Saturn", tilt: 0.15 },
-    { orbitRadius: 92, size: 3.5, color: "#40e0d0", emissiveColor: "#7fffd4", speed: 0.02, hasRing: true, ringColor: "#48d1cc", name: "Uranus", tilt: 0.5 },
-  ], []);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const glow2Ref = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     
-    // Rotate sun
     if (sunRef.current) {
-      sunRef.current.rotation.y = time * 0.02;
+      sunRef.current.rotation.y = time * 0.08;
     }
-    
-    // Rotate each planet around the sun
-    planetGroupRefs.current.forEach((group, i) => {
-      if (group && planetsData[i]) {
-        const angle = time * planetsData[i].speed;
-        group.rotation.y = angle;
-      }
-    });
+    if (glowRef.current) {
+      glowRef.current.scale.setScalar(1 + Math.sin(time * 1.5) * 0.08);
+    }
+    if (glow2Ref.current) {
+      glow2Ref.current.scale.setScalar(1 + Math.sin(time * 2 + 1) * 0.05);
+      glow2Ref.current.rotation.y = time * 0.02;
+    }
   });
 
   return (
-    <group ref={systemRef} position={[0, 5, -55]} rotation={[0.35, 0, 0.05]}>
-      {/* Central Sun - multi-layered for depth */}
+    <group>
       <mesh ref={sunRef}>
-        <sphereGeometry args={[7, 64, 64]} />
-        <meshBasicMaterial color="#fff5cc" />
+        <sphereGeometry args={[8, 64, 64]} />
+        <meshBasicMaterial color="#ffee66" />
       </mesh>
       
-      {/* Sun surface texture layer */}
-      <mesh>
-        <sphereGeometry args={[7.1, 64, 64]} />
-        <meshBasicMaterial color="#ffdd44" transparent opacity={0.6} />
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[9, 32, 32]} />
+        <meshBasicMaterial color="#ffcc00" transparent opacity={0.5} />
       </mesh>
       
-      {/* Sun glow layers - multiple for depth */}
-      <mesh>
-        <sphereGeometry args={[8, 32, 32]} />
-        <meshBasicMaterial color="#ffcc00" transparent opacity={0.5} blending={THREE.AdditiveBlending} />
+      <mesh ref={glow2Ref}>
+        <sphereGeometry args={[10.5, 32, 32]} />
+        <meshBasicMaterial color="#ff9900" transparent opacity={0.3} />
       </mesh>
-      <mesh>
-        <sphereGeometry args={[9.5, 32, 32]} />
-        <meshBasicMaterial color="#ff9933" transparent opacity={0.35} blending={THREE.AdditiveBlending} />
-      </mesh>
-      <mesh>
-        <sphereGeometry args={[11, 32, 32]} />
-        <meshBasicMaterial color="#ff6600" transparent opacity={0.2} blending={THREE.AdditiveBlending} />
-      </mesh>
+      
       <mesh>
         <sphereGeometry args={[13, 32, 32]} />
-        <meshBasicMaterial color="#ff3300" transparent opacity={0.1} blending={THREE.AdditiveBlending} />
+        <meshBasicMaterial color="#ff6600" transparent opacity={0.15} />
       </mesh>
-
-      {/* Sun pulse glow */}
-      <SunPulse />
-
-      {/* Sun light - warm and intense */}
-      <pointLight color="#fff8e0" intensity={4} distance={250} />
-      <pointLight color="#ffaa00" intensity={2} distance={150} />
-
-      {/* Orbital paths with gradient effect */}
-      {planetsData.map((planet, i) => (
-        <group key={`orbit-group-${i}`}>
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[planet.orbitRadius - 0.08, planet.orbitRadius + 0.08, 256]} />
-            <meshBasicMaterial 
-              color={planet.emissiveColor} 
-              transparent 
-              opacity={0.12} 
-              side={THREE.DoubleSide}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-          {/* Outer glow for orbit */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[planet.orbitRadius - 0.3, planet.orbitRadius + 0.3, 128]} />
-            <meshBasicMaterial 
-              color={planet.emissiveColor} 
-              transparent 
-              opacity={0.05} 
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        </group>
-      ))}
-
-      {/* Asteroid belt between Mars and Jupiter */}
-      <AsteroidBelt innerRadius={47} outerRadius={52} />
-
-      {/* Orbiting planets */}
-      {planetsData.map((planet, i) => (
-        <group 
-          key={`planet-orbit-${i}`}
-          ref={(el) => {
-            if (el) planetGroupRefs.current[i] = el;
-          }}
-        >
-          <group position={[planet.orbitRadius, 0, 0]} rotation={[planet.tilt, 0, 0]}>
-            <DetailedPlanet 
-              position={[0, 0, 0]}
-              size={planet.size}
-              color={planet.color}
-              emissiveColor={planet.emissiveColor}
-              hasRing={planet.hasRing}
-              ringColor={planet.ringColor}
-              rotationSpeed={0.003}
-            />
-            
-            {/* Moon for Earth */}
-            {planet.hasMoon && (
-              <group>
-                <mesh position={[planet.size + 2, 0, 0]}>
-                  <sphereGeometry args={[0.6, 32, 32]} />
-                  <meshStandardMaterial color="#cccccc" emissive="#888888" emissiveIntensity={0.2} />
-                </mesh>
-              </group>
-            )}
-
-            {/* Point light for each planet glow */}
-            <pointLight color={planet.emissiveColor} intensity={0.3} distance={planet.size * 4} />
-          </group>
-        </group>
-      ))}
-
-      {/* Background star dust particles */}
-      <points>
-        <bufferGeometry>
-          <bufferAttribute 
-            attach="attributes-position" 
-            count={1000} 
-            array={useMemo(() => {
-              const arr = new Float32Array(1000 * 3);
-              for (let i = 0; i < 1000; i++) {
-                const radius = 100 + Math.random() * 100;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                arr[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-                arr[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-                arr[i * 3 + 2] = radius * Math.cos(phi);
-              }
-              return arr;
-            }, [])} 
-            itemSize={3} 
-          />
-        </bufferGeometry>
-        <pointsMaterial 
-          size={0.8} 
-          color="#ffffff" 
-          transparent 
-          opacity={0.6}
-          sizeAttenuation
-          blending={THREE.AdditiveBlending}
-        />
-      </points>
+      
+      <mesh>
+        <sphereGeometry args={[18, 32, 32]} />
+        <meshBasicMaterial color="#ff4400" transparent opacity={0.08} />
+      </mesh>
+      
+      <pointLight color="#ffdd44" intensity={5} distance={200} />
+      <pointLight color="#ff8800" intensity={2} distance={100} />
     </group>
   );
 };
+
+// Orbital Path - matching GalaxyExploration
+const OrbitalPath = ({ radius, color = "#ffffff" }: { radius: number; color?: string }) => {
+  const points = useMemo(() => {
+    const pts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 128; i++) {
+      const angle = (i / 128) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius));
+    }
+    return pts;
+  }, [radius]);
+
+  return (
+    <Line
+      points={points}
+      color={color}
+      lineWidth={1.5}
+      transparent
+      opacity={0.25}
+    />
+  );
+};
+
+// Satellite orbiting a planet
+const Satellite = ({ orbitRadius, speed, size = 0.3 }: { orbitRadius: number; speed: number; size?: number }) => {
+  const satelliteRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (satelliteRef.current) {
+      const time = state.clock.elapsedTime * speed;
+      satelliteRef.current.position.x = Math.cos(time) * orbitRadius;
+      satelliteRef.current.position.z = Math.sin(time) * orbitRadius;
+      satelliteRef.current.position.y = Math.sin(time * 2) * 0.5;
+    }
+  });
+
+  return (
+    <group ref={satelliteRef}>
+      <mesh>
+        <sphereGeometry args={[size, 16, 16]} />
+        <meshStandardMaterial color="#cccccc" metalness={0.6} roughness={0.4} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[size * 1.3, 16, 16]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.2} />
+      </mesh>
+      <pointLight color="#ffffff" intensity={0.5} distance={4} />
+    </group>
+  );
+};
+
+// Planet Component - matching GalaxyExploration style
+const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const planetRef = useRef<THREE.Mesh>(null);
+  const atmosphereRef = useRef<THREE.Mesh>(null);
+
+  const spotTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    
+    if (ctx) {
+      const gradient = ctx.createLinearGradient(0, 0, 512, 256);
+      gradient.addColorStop(0, planet.color);
+      gradient.addColorStop(0.3, planet.spotColor || planet.color);
+      gradient.addColorStop(0.7, planet.color);
+      gradient.addColorStop(1, planet.spotColor || planet.color);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 512, 256);
+      
+      ctx.fillStyle = planet.spotColor || "rgba(255,255,255,0.25)";
+      for (let i = 0; i < 15; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 256;
+        const r = Math.random() * 40 + 15;
+        ctx.beginPath();
+        ctx.ellipse(x, y, r, r * 0.5, Math.random() * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      for (let i = 0; i < 5; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 256;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 25, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    return texture;
+  }, [planet.color, planet.spotColor]);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    const angle = time * planet.orbitSpeed + planet.initialAngle;
+    
+    if (groupRef.current) {
+      groupRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
+      groupRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
+    }
+    
+    if (planetRef.current) {
+      planetRef.current.rotation.y = time * planet.rotationSpeed;
+    }
+    
+    if (atmosphereRef.current) {
+      atmosphereRef.current.rotation.y = time * planet.rotationSpeed * 0.5;
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      <mesh ref={planetRef}>
+        <sphereGeometry args={[planet.size, 64, 64]} />
+        <meshStandardMaterial 
+          map={spotTexture}
+          emissive={planet.color}
+          emissiveIntensity={0.15}
+          metalness={0.15}
+          roughness={0.75}
+        />
+      </mesh>
+      
+      <mesh ref={atmosphereRef}>
+        <sphereGeometry args={[planet.size * 1.05, 32, 32]} />
+        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.2} />
+      </mesh>
+      
+      <mesh>
+        <sphereGeometry args={[planet.size * 1.15, 32, 32]} />
+        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.1} />
+      </mesh>
+      
+      {planet.hasRing && (
+        <>
+          <mesh rotation={[Math.PI / 2.8, 0.1, 0]}>
+            <ringGeometry args={[planet.size * 1.5, planet.size * 2.2, 128]} />
+            <meshBasicMaterial color={planet.ringColor || planet.color} transparent opacity={0.6} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2.8, 0.1, 0]}>
+            <ringGeometry args={[planet.size * 2.2, planet.size * 2.5, 128]} />
+            <meshBasicMaterial color={planet.ringColor || planet.color} transparent opacity={0.3} side={THREE.DoubleSide} />
+          </mesh>
+        </>
+      )}
+      
+      {planet.hasSatellite && (
+        <Satellite orbitRadius={planet.size * 2.5} speed={1.5} size={planet.size * 0.2} />
+      )}
+      
+      <pointLight color={planet.color} intensity={0.3} distance={planet.size * 5} />
+    </group>
+  );
+};
+
+// Galaxy Scene matching GalaxyExploration
+const GalaxyScene = () => {
+  return (
+    <group position={[0, 5, -60]}>
+      {/* Central Galaxy Core/Sun */}
+      <GalaxyCore />
+      
+      {/* Orbital Paths */}
+      {PLANETS_DATA.map((planet) => (
+        <OrbitalPath key={`orbit-${planet.id}`} radius={planet.orbitRadius} color={planet.glowColor} />
+      ))}
+      
+      {/* Planets */}
+      {PLANETS_DATA.map((planet) => (
+        <GalaxyPlanet key={`planet-${planet.id}`} planet={planet} />
+      ))}
+    </group>
+  );
+};
+
+
+
 
 // Space station interior with transparent walls
 const StationInterior = () => {
@@ -1154,40 +491,14 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           {/* Fog for depth */}
           <fog attach="fog" args={["#0a0a1a", 15, 80]} />
 
-          {/* Solar system with sun and orbiting planets */}
-          <SolarSystem />
+          {/* Galaxy Scene matching GalaxyExploration */}
+          <GalaxyScene />
 
           {/* Space station interior with transparent walls */}
           <StationInterior />
-
-          {/* Mini Galaxy visible through window */}
-          <MiniGalaxy />
-
-          {/* Enhanced nebula clouds with shader effects */}
-          <NebulaEffect />
           
-          {/* Spiral galaxy arms in background */}
-          <SpiralGalaxyArms />
-          
-          {/* Galaxy core glow */}
-          <GalaxyCoreGlow />
-          
-          {/* Pulsating bright stars */}
-          <PulsatingStars />
-          
-          {/* Glowing comet */}
-          <GlowingComet />
-          
-          {/* Shooting stars */}
-          <ShootingStars />
-          
-          {/* Cosmic rings for added depth */}
-          <CosmicRing radius={60} color="#ff44aa" speed={0.08} />
-          <CosmicRing radius={80} color="#4488ff" speed={0.05} />
-          <CosmicRing radius={100} color="#aa44ff" speed={0.03} />
-          
-          {/* Background stars - enhanced with more density */}
-          <Stars radius={400} depth={150} count={12000} factor={6} saturation={0.8} fade speed={0.3} />
+          {/* Blinking stars background - matching GalaxyExploration */}
+          <BlinkingStars count={5000} />
 
           {/* Vehicle selection models */}
           <group position={[0, -2, 0]}>
