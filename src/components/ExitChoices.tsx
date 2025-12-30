@@ -285,6 +285,233 @@ const CosmicRing = ({ radius, color, speed = 0.1 }: { radius: number; color: str
   );
 };
 
+// Spiral Galaxy Arms
+const SpiralGalaxyArms = () => {
+  const armsRef = useRef<THREE.Points>(null);
+  
+  const { positions, colors, sizes } = useMemo(() => {
+    const count = 15000;
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const siz = new Float32Array(count);
+    
+    const armCount = 4;
+    const spiralTightness = 0.3;
+    
+    for (let i = 0; i < count; i++) {
+      const arm = i % armCount;
+      const armAngle = (arm / armCount) * Math.PI * 2;
+      
+      const distance = Math.random() * 120 + 20;
+      const spiralAngle = distance * spiralTightness + armAngle;
+      const spread = (Math.random() - 0.5) * 15 * (distance / 80);
+      
+      pos[i * 3] = Math.cos(spiralAngle) * distance + spread;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 8;
+      pos[i * 3 + 2] = Math.sin(spiralAngle) * distance + spread - 100;
+      
+      // Color gradient from center (warm) to edge (cool)
+      const t = distance / 140;
+      const r = 1 - t * 0.3 + Math.random() * 0.2;
+      const g = 0.7 + t * 0.2 + Math.random() * 0.1;
+      const b = 0.5 + t * 0.5 + Math.random() * 0.2;
+      
+      col[i * 3] = Math.min(1, r);
+      col[i * 3 + 1] = Math.min(1, g);
+      col[i * 3 + 2] = Math.min(1, b);
+      
+      siz[i] = Math.random() * 1.5 + 0.5;
+    }
+    
+    return { positions: pos, colors: col, sizes: siz };
+  }, []);
+
+  useFrame((state) => {
+    if (armsRef.current) {
+      armsRef.current.rotation.y = state.clock.elapsedTime * 0.008;
+    }
+  });
+
+  return (
+    <points ref={armsRef} position={[0, 20, -120]} rotation={[0.8, 0, 0.2]}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={15000} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={15000} array={colors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={1.8}
+        vertexColors
+        transparent
+        opacity={0.7}
+        sizeAttenuation
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
+  );
+};
+
+// Pulsating bright stars
+const PulsatingStars = () => {
+  const starsRef = useRef<THREE.Points>(null);
+  
+  const { positions, baseColors } = useMemo(() => {
+    const count = 200;
+    const pos = new Float32Array(count * 3);
+    const cols = new Float32Array(count * 3);
+    
+    for (let i = 0; i < count; i++) {
+      const radius = 40 + Math.random() * 180;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      
+      pos[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = radius * Math.cos(phi) - 60;
+      
+      // Bright star colors
+      const colorType = Math.random();
+      if (colorType < 0.3) {
+        cols[i * 3] = 1; cols[i * 3 + 1] = 0.9; cols[i * 3 + 2] = 0.7; // Warm
+      } else if (colorType < 0.6) {
+        cols[i * 3] = 0.7; cols[i * 3 + 1] = 0.8; cols[i * 3 + 2] = 1; // Cool
+      } else {
+        cols[i * 3] = 1; cols[i * 3 + 1] = 1; cols[i * 3 + 2] = 1; // White
+      }
+    }
+    
+    return { positions: pos, baseColors: cols };
+  }, []);
+
+  useFrame((state) => {
+    if (starsRef.current) {
+      const material = starsRef.current.material as THREE.PointsMaterial;
+      material.size = 3 + Math.sin(state.clock.elapsedTime * 2) * 0.8;
+    }
+  });
+
+  return (
+    <points ref={starsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={200} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={200} array={baseColors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={3}
+        vertexColors
+        transparent
+        opacity={0.9}
+        sizeAttenuation
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
+  );
+};
+
+// Glowing Comet with tail
+const GlowingComet = () => {
+  const cometRef = useRef<THREE.Group>(null);
+  const tailRef = useRef<THREE.Points>(null);
+  
+  const tailParticles = useMemo(() => {
+    const count = 500;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    
+    for (let i = 0; i < count; i++) {
+      const t = i / count;
+      positions[i * 3] = -t * 25;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 2 * (1 - t * 0.5);
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 2 * (1 - t * 0.5);
+      
+      colors[i * 3] = 0.6 + (1 - t) * 0.4;
+      colors[i * 3 + 1] = 0.8 + (1 - t) * 0.2;
+      colors[i * 3 + 2] = 1;
+    }
+    
+    return { positions, colors };
+  }, []);
+
+  useFrame((state) => {
+    if (cometRef.current) {
+      const time = state.clock.elapsedTime;
+      const cycle = (time * 0.15) % 1;
+      
+      cometRef.current.position.x = -100 + cycle * 250;
+      cometRef.current.position.y = 40 - cycle * 60;
+      cometRef.current.position.z = -80;
+      
+      cometRef.current.rotation.z = -0.4;
+    }
+  });
+
+  return (
+    <group ref={cometRef}>
+      {/* Comet head */}
+      <mesh>
+        <sphereGeometry args={[1.2, 16, 16]} />
+        <meshBasicMaterial color="#aaddff" />
+      </mesh>
+      {/* Inner glow */}
+      <mesh>
+        <sphereGeometry args={[2, 16, 16]} />
+        <meshBasicMaterial color="#88ccff" transparent opacity={0.5} blending={THREE.AdditiveBlending} />
+      </mesh>
+      {/* Outer glow */}
+      <mesh>
+        <sphereGeometry args={[3.5, 16, 16]} />
+        <meshBasicMaterial color="#4488ff" transparent opacity={0.2} blending={THREE.AdditiveBlending} />
+      </mesh>
+      {/* Tail */}
+      <points ref={tailRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={500} array={tailParticles.positions} itemSize={3} />
+          <bufferAttribute attach="attributes-color" count={500} array={tailParticles.colors} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial
+          size={2}
+          vertexColors
+          transparent
+          opacity={0.6}
+          sizeAttenuation
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+    </group>
+  );
+};
+
+// Galaxy Core Glow
+const GalaxyCoreGlow = () => {
+  const coreRef = useRef<THREE.Mesh>(null);
+  
+  useFrame((state) => {
+    if (coreRef.current) {
+      coreRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 0.5) * 0.1);
+    }
+  });
+
+  return (
+    <group position={[0, 20, -180]}>
+      <mesh ref={coreRef}>
+        <sphereGeometry args={[15, 32, 32]} />
+        <meshBasicMaterial color="#ffeecc" transparent opacity={0.4} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[25, 32, 32]} />
+        <meshBasicMaterial color="#ffcc88" transparent opacity={0.2} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh>
+        <sphereGeometry args={[40, 32, 32]} />
+        <meshBasicMaterial color="#ff9944" transparent opacity={0.08} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <pointLight color="#ffdd88" intensity={5} distance={200} />
+    </group>
+  );
+};
+
 // Mini Galaxy - matches the original galaxy exploration style
 const MiniGalaxy = () => {
   const galaxyRef = useRef<THREE.Group>(null);
@@ -986,9 +1213,20 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           {/* Enhanced nebula clouds with shader effects */}
           <NebulaEffect />
           
+          {/* Spiral galaxy arms in background */}
+          <SpiralGalaxyArms />
+          
+          {/* Galaxy core glow */}
+          <GalaxyCoreGlow />
+          
+          {/* Pulsating bright stars */}
+          <PulsatingStars />
+          
+          {/* Glowing comet */}
+          <GlowingComet />
+          
           {/* Shooting stars */}
           <ShootingStars />
-          
           
           {/* Cosmic rings for added depth */}
           <CosmicRing radius={60} color="#ff44aa" speed={0.08} />
@@ -996,7 +1234,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           <CosmicRing radius={100} color="#aa44ff" speed={0.03} />
           
           {/* Background stars - enhanced with more density */}
-          <Stars radius={300} depth={100} count={8000} factor={5} saturation={0.7} fade speed={0.5} />
+          <Stars radius={400} depth={150} count={12000} factor={6} saturation={0.8} fade speed={0.3} />
 
           {/* Vehicle selection models */}
           <group position={[0, -2, 0]}>
