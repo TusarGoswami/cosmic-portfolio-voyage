@@ -9,37 +9,279 @@ interface ExitChoicesProps {
   onSelect: (vehicle: "rocket" | "astronaut") => void;
 }
 
-// Animated nebula clouds
-const NebulaEffect = () => {
-  const nebulaRef = useRef<THREE.Group>(null);
+// Enhanced animated nebula with shader effects
+const NebulaCloud = ({ 
+  position, 
+  color, 
+  scale = 1,
+  rotationSpeed = 0.02 
+}: { 
+  position: [number, number, number]; 
+  color: string; 
+  scale?: number;
+  rotationSpeed?: number;
+}) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+  const shaderMaterial = useMemo(() => {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        color1: { value: new THREE.Color(color) },
+        color2: { value: new THREE.Color(color).multiplyScalar(0.3) },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        uniform vec3 color1;
+        uniform vec3 color2;
+        varying vec2 vUv;
+        
+        float noise(vec2 p) {
+          return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+        }
+        
+        float fbm(vec2 p) {
+          float f = 0.0;
+          f += 0.5 * noise(p); p *= 2.01;
+          f += 0.25 * noise(p); p *= 2.02;
+          f += 0.125 * noise(p); p *= 2.03;
+          f += 0.0625 * noise(p);
+          return f;
+        }
+        
+        void main() {
+          vec2 uv = vUv - 0.5;
+          float dist = length(uv);
+          
+          vec2 q = vec2(fbm(uv + time * 0.1), fbm(uv + vec2(1.0)));
+          vec2 r = vec2(fbm(uv + q + time * 0.05), fbm(uv + q + vec2(2.0)));
+          float f = fbm(uv + r);
+          
+          float alpha = smoothstep(0.6, 0.0, dist) * (0.4 + 0.3 * f);
+          vec3 color = mix(color1, color2, f + dist);
+          
+          gl_FragColor = vec4(color, alpha * 0.5);
+        }
+      `,
+      transparent: true,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+  }, [color]);
 
   useFrame((state) => {
-    const time = state.clock.elapsedTime;
-    if (nebulaRef.current) {
-      nebulaRef.current.children.forEach((child, i) => {
-        if (child instanceof THREE.Mesh) {
-          child.rotation.z = time * 0.02 * (i % 2 === 0 ? 1 : -1);
-          child.material.opacity = 0.15 + Math.sin(time * 0.5 + i) * 0.05;
-        }
-      });
+    if (materialRef.current) {
+      materialRef.current.uniforms.time.value = state.clock.elapsedTime;
+    }
+    if (meshRef.current) {
+      meshRef.current.rotation.z += rotationSpeed * 0.01;
     }
   });
 
   return (
-    <group ref={nebulaRef} position={[0, 0, -80]}>
-      <mesh position={[-30, 10, -20]}>
-        <sphereGeometry args={[25, 32, 32]} />
-        <meshBasicMaterial color="#7c4dff" transparent opacity={0.15} />
-      </mesh>
-      <mesh position={[35, -15, -30]}>
-        <sphereGeometry args={[30, 32, 32]} />
-        <meshBasicMaterial color="#ff6699" transparent opacity={0.12} />
-      </mesh>
-      <mesh position={[0, 25, -40]}>
-        <sphereGeometry args={[20, 32, 32]} />
-        <meshBasicMaterial color="#4fc3f7" transparent opacity={0.1} />
-      </mesh>
+    <mesh ref={meshRef} position={position} scale={scale}>
+      <planeGeometry args={[30, 30, 1, 1]} />
+      <primitive object={shaderMaterial} ref={materialRef} attach="material" />
+    </mesh>
+  );
+};
+
+// Animated nebula system with multiple layers
+const NebulaEffect = () => {
+  return (
+    <group position={[0, 0, -100]}>
+      {/* Primary nebulae */}
+      <NebulaCloud position={[-50, 20, -30]} color="#ff44aa" scale={4} rotationSpeed={0.015} />
+      <NebulaCloud position={[60, -10, -50]} color="#4488ff" scale={5} rotationSpeed={-0.02} />
+      <NebulaCloud position={[0, 40, -40]} color="#aa44ff" scale={3.5} rotationSpeed={0.018} />
+      <NebulaCloud position={[-40, -30, -60]} color="#44ffaa" scale={4.5} rotationSpeed={-0.012} />
+      <NebulaCloud position={[50, 35, -70]} color="#ffaa44" scale={3} rotationSpeed={0.025} />
+      
+      {/* Distant nebulae for depth */}
+      <NebulaCloud position={[-80, 0, -100]} color="#ff6699" scale={8} rotationSpeed={0.008} />
+      <NebulaCloud position={[80, 20, -120]} color="#6699ff" scale={7} rotationSpeed={-0.01} />
     </group>
+  );
+};
+
+// Shooting stars effect
+const ShootingStars = () => {
+  const shootingStarsRef = useRef<THREE.Group>(null);
+  const starRefs = useRef<THREE.Mesh[]>([]);
+  const trailRefs = useRef<THREE.Mesh[]>([]);
+  
+  const starsData = useMemo(() => 
+    Array.from({ length: 8 }, (_, i) => ({
+      delay: i * 1.5,
+      startX: -80 + Math.random() * 40,
+      startY: 30 + Math.random() * 30,
+      startZ: -60 - Math.random() * 40,
+      speed: 0.8 + Math.random() * 0.4,
+      angle: Math.PI / 4 + (Math.random() - 0.5) * 0.3,
+    })),
+  []);
+
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    
+    starsData.forEach((star, i) => {
+      const starMesh = starRefs.current[i];
+      const trailMesh = trailRefs.current[i];
+      if (!starMesh || !trailMesh) return;
+      
+      const cycleTime = (time + star.delay) % 6;
+      const progress = cycleTime / 1.5;
+      
+      if (progress < 1) {
+        const moveX = progress * 100 * Math.cos(star.angle);
+        const moveY = -progress * 100 * Math.sin(star.angle);
+        
+        starMesh.position.set(
+          star.startX + moveX,
+          star.startY + moveY,
+          star.startZ
+        );
+        starMesh.visible = true;
+        starMesh.scale.setScalar(1 - progress * 0.6);
+        
+        trailMesh.position.copy(starMesh.position);
+        trailMesh.position.x -= 4 * Math.cos(star.angle);
+        trailMesh.position.y += 4 * Math.sin(star.angle);
+        trailMesh.visible = true;
+        trailMesh.scale.set(1 - progress * 0.3, 1, 1);
+        (trailMesh.material as THREE.MeshBasicMaterial).opacity = 0.6 * (1 - progress);
+      } else {
+        starMesh.visible = false;
+        trailMesh.visible = false;
+      }
+    });
+  });
+
+  return (
+    <group ref={shootingStarsRef}>
+      {starsData.map((star, i) => (
+        <group key={i}>
+          <mesh 
+            ref={(el) => { if (el) starRefs.current[i] = el; }}
+            visible={false}
+          >
+            <sphereGeometry args={[0.3, 8, 8]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh 
+            ref={(el) => { if (el) trailRefs.current[i] = el; }}
+            rotation={[0, 0, -star.angle]}
+            visible={false}
+          >
+            <planeGeometry args={[12, 0.4]} />
+            <meshBasicMaterial 
+              color="#aaddff" 
+              transparent 
+              opacity={0.6}
+              blending={THREE.AdditiveBlending}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+// Cosmic dust particles
+const CosmicDust = () => {
+  const dustRef = useRef<THREE.Points>(null);
+  
+  const { positions, colors, sizes } = useMemo(() => {
+    const count = 5000;
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const siz = new Float32Array(count);
+    
+    const colorOptions = [
+      new THREE.Color("#ffffff"),
+      new THREE.Color("#aaccff"),
+      new THREE.Color("#ffccaa"),
+      new THREE.Color("#ccaaff"),
+      new THREE.Color("#aaffcc"),
+    ];
+    
+    for (let i = 0; i < count; i++) {
+      const radius = 30 + Math.random() * 200;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      
+      pos[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = radius * Math.cos(phi) - 50;
+      
+      const color = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+      col[i * 3] = color.r;
+      col[i * 3 + 1] = color.g;
+      col[i * 3 + 2] = color.b;
+      
+      siz[i] = Math.random() * 2 + 0.5;
+    }
+    
+    return { positions: pos, colors: col, sizes: siz };
+  }, []);
+
+  useFrame((state) => {
+    if (dustRef.current) {
+      dustRef.current.rotation.y = state.clock.elapsedTime * 0.01;
+      dustRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.005) * 0.1;
+    }
+  });
+
+  return (
+    <points ref={dustRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={5000} array={positions} itemSize={3} />
+        <bufferAttribute attach="attributes-color" count={5000} array={colors} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={1.2}
+        vertexColors
+        transparent
+        opacity={0.9}
+        sizeAttenuation
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
+  );
+};
+
+// Glowing cosmic ring effect
+const CosmicRing = ({ radius, color, speed = 0.1 }: { radius: number; color: string; speed?: number }) => {
+  const ringRef = useRef<THREE.Mesh>(null);
+  
+  useFrame((state) => {
+    if (ringRef.current) {
+      ringRef.current.rotation.x = Math.PI / 2 + Math.sin(state.clock.elapsedTime * speed) * 0.2;
+      ringRef.current.rotation.z = state.clock.elapsedTime * speed * 0.5;
+    }
+  });
+
+  return (
+    <mesh ref={ringRef} position={[0, 0, -80]}>
+      <torusGeometry args={[radius, 0.3, 16, 100]} />
+      <meshBasicMaterial 
+        color={color} 
+        transparent 
+        opacity={0.15}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
   );
 };
 
@@ -741,10 +983,22 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           {/* Mini Galaxy visible through window */}
           <MiniGalaxy />
 
-          {/* Nebula clouds */}
+          {/* Enhanced nebula clouds with shader effects */}
           <NebulaEffect />
-          {/* Background stars - enhanced */}
-          <Stars radius={200} depth={80} count={5000} factor={4} saturation={0.5} fade speed={0.3} />
+          
+          {/* Shooting stars */}
+          <ShootingStars />
+          
+          {/* Cosmic dust particles */}
+          <CosmicDust />
+          
+          {/* Cosmic rings for added depth */}
+          <CosmicRing radius={60} color="#ff44aa" speed={0.08} />
+          <CosmicRing radius={80} color="#4488ff" speed={0.05} />
+          <CosmicRing radius={100} color="#aa44ff" speed={0.03} />
+          
+          {/* Background stars - enhanced with more density */}
+          <Stars radius={300} depth={100} count={8000} factor={5} saturation={0.7} fade speed={0.5} />
 
           {/* Vehicle selection models */}
           <group position={[0, -2, 0]}>
