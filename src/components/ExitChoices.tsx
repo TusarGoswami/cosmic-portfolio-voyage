@@ -113,87 +113,63 @@ const NebulaEffect = () => {
   );
 };
 
-// Shooting stars effect
+// Shooting stars effect (point-based, no planes)
 const ShootingStars = () => {
-  const shootingStarsRef = useRef<THREE.Group>(null);
-  const starRefs = useRef<THREE.Mesh[]>([]);
-  const trailRefs = useRef<THREE.Mesh[]>([]);
+  const starsRef = useRef<THREE.Points>(null);
   
-  const starsData = useMemo(() => 
-    Array.from({ length: 8 }, (_, i) => ({
-      delay: i * 1.5,
-      startX: -80 + Math.random() * 40,
-      startY: 30 + Math.random() * 30,
-      startZ: -60 - Math.random() * 40,
-      speed: 0.8 + Math.random() * 0.4,
-      angle: Math.PI / 4 + (Math.random() - 0.5) * 0.3,
-    })),
-  []);
+  const { positions, velocities } = useMemo(() => {
+    const count = 20;
+    const pos = new Float32Array(count * 3);
+    const vel = [];
+    
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = -80 + Math.random() * 40;
+      pos[i * 3 + 1] = 30 + Math.random() * 30;
+      pos[i * 3 + 2] = -60 - Math.random() * 40;
+      vel.push({
+        x: 2 + Math.random(),
+        y: -1.5 - Math.random() * 0.5,
+        delay: i * 0.5,
+      });
+    }
+    
+    return { positions: pos, velocities: vel };
+  }, []);
 
   useFrame((state) => {
+    if (!starsRef.current) return;
+    const posArray = starsRef.current.geometry.attributes.position.array as Float32Array;
     const time = state.clock.elapsedTime;
     
-    starsData.forEach((star, i) => {
-      const starMesh = starRefs.current[i];
-      const trailMesh = trailRefs.current[i];
-      if (!starMesh || !trailMesh) return;
-      
-      const cycleTime = (time + star.delay) % 6;
-      const progress = cycleTime / 1.5;
-      
-      if (progress < 1) {
-        const moveX = progress * 100 * Math.cos(star.angle);
-        const moveY = -progress * 100 * Math.sin(star.angle);
-        
-        starMesh.position.set(
-          star.startX + moveX,
-          star.startY + moveY,
-          star.startZ
-        );
-        starMesh.visible = true;
-        starMesh.scale.setScalar(1 - progress * 0.6);
-        
-        trailMesh.position.copy(starMesh.position);
-        trailMesh.position.x -= 4 * Math.cos(star.angle);
-        trailMesh.position.y += 4 * Math.sin(star.angle);
-        trailMesh.visible = true;
-        trailMesh.scale.set(1 - progress * 0.3, 1, 1);
-        (trailMesh.material as THREE.MeshBasicMaterial).opacity = 0.6 * (1 - progress);
-      } else {
-        starMesh.visible = false;
-        trailMesh.visible = false;
+    for (let i = 0; i < 20; i++) {
+      const cycleTime = (time + velocities[i].delay) % 4;
+      if (cycleTime < 1.5) {
+        posArray[i * 3] += velocities[i].x * 0.5;
+        posArray[i * 3 + 1] += velocities[i].y * 0.5;
+      } else if (cycleTime > 3.8) {
+        posArray[i * 3] = -80 + Math.random() * 40;
+        posArray[i * 3 + 1] = 30 + Math.random() * 30;
+        posArray[i * 3 + 2] = -60 - Math.random() * 40;
       }
-    });
+    }
+    starsRef.current.geometry.attributes.position.needsUpdate = true;
   });
 
   return (
-    <group ref={shootingStarsRef}>
-      {starsData.map((star, i) => (
-        <group key={i}>
-          <mesh 
-            ref={(el) => { if (el) starRefs.current[i] = el; }}
-            visible={false}
-          >
-            <sphereGeometry args={[0.3, 8, 8]} />
-            <meshBasicMaterial color="#ffffff" />
-          </mesh>
-          <mesh 
-            ref={(el) => { if (el) trailRefs.current[i] = el; }}
-            rotation={[0, 0, -star.angle]}
-            visible={false}
-          >
-            <planeGeometry args={[12, 0.4]} />
-            <meshBasicMaterial 
-              color="#aaddff" 
-              transparent 
-              opacity={0.6}
-              blending={THREE.AdditiveBlending}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        </group>
-      ))}
-    </group>
+    <points ref={starsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={20} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial
+        size={3}
+        color="#ffffff"
+        transparent
+        opacity={0.9}
+        sizeAttenuation
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
+    </points>
   );
 };
 
@@ -774,50 +750,27 @@ const DetailedPlanet = ({
   );
 };
 
-// Animated sun corona/flare effect
-const SunCorona = () => {
-  const coronaRef = useRef<THREE.Group>(null);
-  const flareRefs = useRef<THREE.Mesh[]>([]);
+// Sun glow pulsing effect (replaces corona with plane geometries)
+const SunPulse = () => {
+  const pulseRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
-    const time = state.clock.elapsedTime;
-    if (coronaRef.current) {
-      coronaRef.current.rotation.z = time * 0.05;
+    if (pulseRef.current) {
+      const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.15;
+      pulseRef.current.scale.setScalar(scale);
     }
-    flareRefs.current.forEach((flare, i) => {
-      if (flare && flare.material) {
-        const scale = 1 + Math.sin(time * 2 + i * 0.5) * 0.3;
-        flare.scale.setScalar(scale);
-        const mat = flare.material as THREE.MeshBasicMaterial;
-        mat.opacity = 0.3 + Math.sin(time * 3 + i) * 0.15;
-      }
-    });
   });
 
   return (
-    <group ref={coronaRef}>
-      {/* Corona rays */}
-      {Array.from({ length: 12 }).map((_, i) => {
-        const angle = (i / 12) * Math.PI * 2;
-        return (
-          <mesh
-            key={`ray-${i}`}
-            ref={(el) => { if (el) flareRefs.current[i] = el; }}
-            position={[Math.cos(angle) * 10, Math.sin(angle) * 10, 0]}
-            rotation={[0, 0, angle + Math.PI / 2]}
-          >
-            <planeGeometry args={[2, 8]} />
-            <meshBasicMaterial 
-              color="#ffaa00" 
-              transparent 
-              opacity={0.3} 
-              side={THREE.DoubleSide}
-              blending={THREE.AdditiveBlending}
-            />
-          </mesh>
-        );
-      })}
-    </group>
+    <mesh ref={pulseRef}>
+      <sphereGeometry args={[9, 32, 32]} />
+      <meshBasicMaterial 
+        color="#ffcc00" 
+        transparent 
+        opacity={0.25} 
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
   );
 };
 
@@ -932,8 +885,8 @@ const SolarSystem = () => {
         <meshBasicMaterial color="#ff3300" transparent opacity={0.1} blending={THREE.AdditiveBlending} />
       </mesh>
 
-      {/* Sun corona flares */}
-      <SunCorona />
+      {/* Sun pulse glow */}
+      <SunPulse />
 
       {/* Sun light - warm and intense */}
       <pointLight color="#fff8e0" intensity={4} distance={250} />
