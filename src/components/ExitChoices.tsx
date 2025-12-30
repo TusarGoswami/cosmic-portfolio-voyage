@@ -989,8 +989,6 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           {/* Shooting stars */}
           <ShootingStars />
           
-          {/* Cosmic dust particles */}
-          <CosmicDust />
           
           {/* Cosmic rings for added depth */}
           <CosmicRing radius={60} color="#ff44aa" speed={0.08} />
