@@ -899,66 +899,112 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
   );
 };
 
-// Camera that follows the ship - TRUE third person view
+// Free look camera state - independent from ship rotation
+const cameraState = {
+  yaw: 0,
+  pitch: 0,
+};
+
+// Camera that follows the ship with independent free look
 interface FollowCameraProps {
   shipPositionRef: React.MutableRefObject<THREE.Vector3>;
   shipRotationRef: React.MutableRefObject<THREE.Euler>;
   isOrbiting: boolean;
+  orbitingPlanetPos: THREE.Vector3 | null;
 }
 
-const FollowCamera = ({ shipPositionRef, shipRotationRef, isOrbiting }: FollowCameraProps) => {
-  const { camera } = useThree();
+const FollowCamera = ({ shipPositionRef, shipRotationRef, isOrbiting, orbitingPlanetPos }: FollowCameraProps) => {
+  const { camera, gl } = useThree();
   const smoothCameraPos = useRef(new THREE.Vector3(30, 10, 40));
   const smoothLookAt = useRef(new THREE.Vector3(30, 5, 30));
   const initialized = useRef(false);
+  const mouse = useMouseControls();
+
+  // Request pointer lock on click
+  useEffect(() => {
+    const handleClick = () => {
+      if (!mouse.isLocked()) {
+        mouse.requestPointerLock(gl.domElement);
+      }
+    };
+    gl.domElement.addEventListener('click', handleClick);
+    return () => gl.domElement.removeEventListener('click', handleClick);
+  }, [gl, mouse]);
 
   useFrame(() => {
-    // Read current values from refs (always up-to-date)
-    const shipPos = shipPositionRef.current;
-    const shipRot = shipRotationRef.current;
-    
-    // Camera offset - behind and above the ship
-    const cameraDistance = 18;
-    const cameraHeight = 8;
-    
-    // Calculate camera position based on ship's facing direction (Y rotation and X pitch)
-    // This makes the camera rotate with the mouse/view direction
-    const pitchFactor = Math.cos(shipRot.x);
-    const verticalOffset = cameraHeight - Math.sin(shipRot.x) * cameraDistance * 0.5;
-    
-    const behindOffset = new THREE.Vector3(
-      Math.sin(shipRot.y) * cameraDistance * pitchFactor,
-      verticalOffset,
-      Math.cos(shipRot.y) * cameraDistance * pitchFactor
-    );
-    
-    // Target camera position is ship position + offset (behind the ship)
-    const targetCameraPos = shipPos.clone().add(behindOffset);
-    
-    // Look ahead of the ship in the direction it's facing (not just at the ship)
-    const lookAheadDistance = 15;
-    const forward = new THREE.Vector3(
-      -Math.sin(shipRot.y) * lookAheadDistance,
-      -Math.sin(shipRot.x) * lookAheadDistance * 0.5,
-      -Math.cos(shipRot.y) * lookAheadDistance
-    );
-    const targetLookAt = shipPos.clone().add(forward);
-    
-    // Initialize camera position immediately on first frame
-    if (!initialized.current) {
-      smoothCameraPos.current.copy(targetCameraPos);
-      smoothLookAt.current.copy(targetLookAt);
-      initialized.current = true;
+    // Handle mouse look for camera (free look)
+    if (mouse.isLocked() && !isOrbiting) {
+      const mouseMovement = mouse.consumeMouseMovement();
+      const mouseSensitivity = 0.003;
+      
+      // Update camera yaw and pitch independently
+      cameraState.yaw -= mouseMovement.x * mouseSensitivity;
+      cameraState.pitch -= mouseMovement.y * mouseSensitivity;
+      cameraState.pitch = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, cameraState.pitch));
     }
     
-    // Smooth camera follow - faster lerp for responsive feel
-    const lerpSpeed = isOrbiting ? 0.08 : 0.12;
-    smoothCameraPos.current.lerp(targetCameraPos, lerpSpeed);
-    smoothLookAt.current.lerp(targetLookAt, lerpSpeed * 1.2);
+    const shipPos = shipPositionRef.current;
     
-    // Apply camera position and look at
-    camera.position.copy(smoothCameraPos.current);
-    camera.lookAt(smoothLookAt.current);
+    if (isOrbiting && orbitingPlanetPos) {
+      // When orbiting: camera stays fixed, looking at the vehicle
+      const cameraDistance = 25;
+      const cameraHeight = 12;
+      
+      // Fixed camera position relative to the planet
+      const targetCameraPos = new THREE.Vector3(
+        orbitingPlanetPos.x + cameraDistance,
+        orbitingPlanetPos.y + cameraHeight,
+        orbitingPlanetPos.z + cameraDistance
+      );
+      
+      // Smooth camera position
+      const lerpSpeed = 0.05;
+      smoothCameraPos.current.lerp(targetCameraPos, lerpSpeed);
+      
+      // Always look at the ship
+      smoothLookAt.current.lerp(shipPos, 0.1);
+      
+      camera.position.copy(smoothCameraPos.current);
+      camera.lookAt(smoothLookAt.current);
+    } else {
+      // Free flight: camera follows ship but rotates independently with mouse
+      const cameraDistance = 18;
+      const cameraHeight = 8;
+      
+      // Camera offset based on FREE LOOK rotation (not ship rotation)
+      const pitchFactor = Math.cos(cameraState.pitch);
+      const verticalOffset = cameraHeight - Math.sin(cameraState.pitch) * cameraDistance * 0.5;
+      
+      const behindOffset = new THREE.Vector3(
+        Math.sin(cameraState.yaw) * cameraDistance * pitchFactor,
+        verticalOffset,
+        Math.cos(cameraState.yaw) * cameraDistance * pitchFactor
+      );
+      
+      const targetCameraPos = shipPos.clone().add(behindOffset);
+      
+      // Look at position in front of camera view direction
+      const lookAheadDistance = 15;
+      const forward = new THREE.Vector3(
+        -Math.sin(cameraState.yaw) * lookAheadDistance,
+        -Math.sin(cameraState.pitch) * lookAheadDistance * 0.5,
+        -Math.cos(cameraState.yaw) * lookAheadDistance
+      );
+      const targetLookAt = shipPos.clone().add(forward);
+      
+      if (!initialized.current) {
+        smoothCameraPos.current.copy(targetCameraPos);
+        smoothLookAt.current.copy(targetLookAt);
+        initialized.current = true;
+      }
+      
+      const lerpSpeed = 0.12;
+      smoothCameraPos.current.lerp(targetCameraPos, lerpSpeed);
+      smoothLookAt.current.lerp(targetLookAt, lerpSpeed * 1.2);
+      
+      camera.position.copy(smoothCameraPos.current);
+      camera.lookAt(smoothLookAt.current);
+    }
   });
 
   return null;
@@ -986,25 +1032,13 @@ const GalaxyScene = ({
   onShipPositionUpdate,
   onPlanetClick
 }: GalaxySceneProps) => {
-  const { gl } = useThree();
   const keys = useKeyboardControls();
-  const mouse = useMouseControls();
   const shipPosition = useRef(new THREE.Vector3(30, 5, 30));
   const shipVelocity = useRef(new THREE.Vector3());
   const shipRotation = useRef(new THREE.Euler(0, 0, 0));
   const orbitAngle = useRef(0);
+  const orbitingPlanetPosRef = useRef<THREE.Vector3 | null>(null);
   const [, forceUpdate] = useState(0);
-
-  // Handle click to lock pointer
-  useEffect(() => {
-    const handleClick = () => {
-      if (!mouse.isLocked()) {
-        mouse.requestPointerLock(gl.domElement);
-      }
-    };
-    gl.domElement.addEventListener('click', handleClick);
-    return () => gl.domElement.removeEventListener('click', handleClick);
-  }, [gl, mouse]);
 
   const getPlanetPosition = useCallback((planet: PlanetData, time: number) => {
     const angle = planet.initialAngle + time * planet.orbitSpeed;
@@ -1027,25 +1061,38 @@ const GalaxyScene = ({
     // If orbiting, handle orbit mechanics
     if (orbitingPlanet) {
       const planetPos = getPlanetPosition(orbitingPlanet, time);
+      orbitingPlanetPosRef.current = planetPos.clone();
       const orbitDistance = orbitingPlanet.size + orbitingPlanet.orbitCaptureRadius * 0.6;
       
       // Check for escape input
       const escaping = keys.current.forward || keys.current.backward || keys.current.left || keys.current.right;
       
       if (escaping) {
-        // Escape velocity
+        // Escape velocity based on camera direction
+        const forward = new THREE.Vector3(
+          -Math.sin(cameraState.yaw),
+          0,
+          -Math.cos(cameraState.yaw)
+        );
+        const right = new THREE.Vector3(
+          Math.cos(cameraState.yaw),
+          0,
+          -Math.sin(cameraState.yaw)
+        );
+        
         const escapeDir = new THREE.Vector3();
-        if (keys.current.forward) escapeDir.z -= 1;
-        if (keys.current.backward) escapeDir.z += 1;
-        if (keys.current.left) escapeDir.x -= 1;
-        if (keys.current.right) escapeDir.x += 1;
+        if (keys.current.forward) escapeDir.add(forward);
+        if (keys.current.backward) escapeDir.sub(forward);
+        if (keys.current.left) escapeDir.sub(right);
+        if (keys.current.right) escapeDir.add(right);
         escapeDir.normalize().multiplyScalar(maxSpeed * 1.5);
         
         shipVelocity.current.copy(escapeDir);
         shipPosition.current.add(escapeDir.clone().multiplyScalar(delta * 60));
+        orbitingPlanetPosRef.current = null;
         onOrbitCapture(null);
       } else {
-        // Continue orbiting
+        // Continue orbiting - vehicle moves but camera stays fixed
         orbitAngle.current += 0.02;
         shipPosition.current.set(
           planetPos.x + Math.cos(orbitAngle.current) * orbitDistance,
@@ -1053,7 +1100,7 @@ const GalaxyScene = ({
           planetPos.z + Math.sin(orbitAngle.current) * orbitDistance
         );
         
-        // Face the direction of orbit
+        // Face the direction of orbit (vehicle rotates, not camera)
         const tangent = new THREE.Vector3(
           -Math.sin(orbitAngle.current),
           0,
@@ -1061,25 +1108,30 @@ const GalaxyScene = ({
         );
         shipRotation.current.y = Math.atan2(tangent.x, tangent.z);
       }
-    } else {
-      // Free flight controls - mouse look
-      const mouseMovement = mouse.consumeMouseMovement();
-      const mouseSensitivity = 0.003;
+      orbitingPlanetPosRef.current = null;
       
-      if (mouse.isLocked()) {
-        // Horizontal look (yaw)
-        shipRotation.current.y -= mouseMovement.x * mouseSensitivity;
-        // Vertical look (pitch) - clamped to prevent flipping
-        shipRotation.current.x -= mouseMovement.y * mouseSensitivity;
-        shipRotation.current.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, shipRotation.current.x));
+      // Movement based on CAMERA direction (free look)
+      const forward = new THREE.Vector3(
+        -Math.sin(cameraState.yaw),
+        0,
+        -Math.cos(cameraState.yaw)
+      );
+      
+      // Update ship rotation to face movement direction (smooth)
+      if (keys.current.forward || keys.current.backward) {
+        const targetRotation = keys.current.forward ? cameraState.yaw : cameraState.yaw + Math.PI;
+        const angleDiff = targetRotation - shipRotation.current.y;
+        // Normalize angle difference
+        const normalizedDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
+        shipRotation.current.y += normalizedDiff * 0.1;
       }
       
-      // Keyboard rotation as fallback
-      if (keys.current.left) shipRotation.current.y += rotationSpeed;
-      if (keys.current.right) shipRotation.current.y -= rotationSpeed;
-      
-      const forward = new THREE.Vector3(0, 0, -1);
-      forward.applyEuler(shipRotation.current);
+      if (keys.current.forward) {
+        shipVelocity.current.add(forward.clone().multiplyScalar(acceleration * delta * 60));
+      }
+      if (keys.current.backward) {
+        shipVelocity.current.add(forward.clone().multiplyScalar(-acceleration * 0.5 * delta * 60));
+      }
       
       if (keys.current.forward) {
         shipVelocity.current.add(forward.clone().multiplyScalar(acceleration * delta * 60));
@@ -1203,11 +1255,12 @@ const GalaxyScene = ({
         vehicle={vehicle}
       />
       
-      {/* Follow Camera */}
+      {/* Follow Camera with free look */}
       <FollowCamera 
         shipPositionRef={shipPosition}
         shipRotationRef={shipRotation}
         isOrbiting={orbitingPlanet !== null}
+        orbitingPlanetPos={orbitingPlanetPosRef.current}
       />
       
       {/* Nebula fog */}
