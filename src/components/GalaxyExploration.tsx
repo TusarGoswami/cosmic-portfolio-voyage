@@ -1108,6 +1108,8 @@ const GalaxyScene = ({
         );
         shipRotation.current.y = Math.atan2(tangent.x, tangent.z);
       }
+    } else {
+      // Free flight mode - NOT orbiting
       orbitingPlanetPosRef.current = null;
       
       // Movement based on CAMERA direction (free look)
@@ -1115,6 +1117,11 @@ const GalaxyScene = ({
         -Math.sin(cameraState.yaw),
         0,
         -Math.cos(cameraState.yaw)
+      );
+      const right = new THREE.Vector3(
+        Math.cos(cameraState.yaw),
+        0,
+        -Math.sin(cameraState.yaw)
       );
       
       // Update ship rotation to face movement direction (smooth)
@@ -1126,18 +1133,18 @@ const GalaxyScene = ({
         shipRotation.current.y += normalizedDiff * 0.1;
       }
       
+      // Apply movement input
       if (keys.current.forward) {
         shipVelocity.current.add(forward.clone().multiplyScalar(acceleration * delta * 60));
       }
       if (keys.current.backward) {
         shipVelocity.current.add(forward.clone().multiplyScalar(-acceleration * 0.5 * delta * 60));
       }
-      
-      if (keys.current.forward) {
-        shipVelocity.current.add(forward.clone().multiplyScalar(acceleration * delta * 60));
+      if (keys.current.left) {
+        shipVelocity.current.add(right.clone().multiplyScalar(-acceleration * delta * 60));
       }
-      if (keys.current.backward) {
-        shipVelocity.current.add(forward.clone().multiplyScalar(-acceleration * 0.5 * delta * 60));
+      if (keys.current.right) {
+        shipVelocity.current.add(right.clone().multiplyScalar(acceleration * delta * 60));
       }
       if (keys.current.up) {
         shipVelocity.current.y += acceleration * 1.2 * delta * 60;
