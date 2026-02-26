@@ -72,7 +72,7 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
                 strokeDashoffset: pathLength * (1 - loadingProgress / 100),
               }}
             />
-            
+
             {/* Inner border (slightly smaller) */}
             <motion.path
               d="M 48 8 L 252 8 L 216 92 L 8 92 Z"
@@ -127,7 +127,7 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
                 whileTap={{ scale: 0.95 }}
               >
                 <span className="relative z-10">Start</span>
-                
+
                 {/* Glow effect on hover */}
                 <motion.div
                   className="absolute inset-0 bg-accent/0 group-hover:bg-accent/10 transition-colors duration-300"

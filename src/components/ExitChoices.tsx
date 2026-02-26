@@ -4,6 +4,7 @@ import { OrbitControls, Line } from "@react-three/drei";
 import * as THREE from "three";
 import ExitModels from "./ExitModels";
 import { motion, AnimatePresence } from "framer-motion";
+import StarField from "./StarField";
 
 interface ExitChoicesProps {
   onSelect: (vehicle: "rocket" | "astronaut") => void;
@@ -21,15 +22,15 @@ const PLANETS_DATA = [
 ];
 
 // Blinking Stars Background - matching GalaxyExploration
-const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
+const BlinkingStars = ({ count = 2000 }: { count?: number }) => {
   const starsRef = useRef<THREE.Points>(null);
-  
+
   const { positions, sizes, phases, colors } = useMemo(() => {
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const phases = new Float32Array(count);
     const colors = new Float32Array(count * 3);
-    
+
     const starColors = [
       [1, 1, 1],
       [1, 0.9, 0.8],
@@ -37,25 +38,25 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
       [1, 0.8, 0.6],
       [0.9, 0.95, 1],
     ];
-    
+
     for (let i = 0; i < count; i++) {
       const radius = 150 + Math.random() * 350;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      
+
       positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
-      
+
       sizes[i] = Math.random() * 3 + 1;
       phases[i] = Math.random() * Math.PI * 2;
-      
+
       const colorIdx = Math.floor(Math.random() * starColors.length);
       colors[i * 3] = starColors[colorIdx][0];
       colors[i * 3 + 1] = starColors[colorIdx][1];
       colors[i * 3 + 2] = starColors[colorIdx][2];
     }
-    
+
     return { positions, sizes, phases, colors };
   }, [count]);
 
@@ -63,7 +64,7 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
     if (starsRef.current) {
       const time = state.clock.elapsedTime;
       const sizesAttr = starsRef.current.geometry.attributes.size as THREE.BufferAttribute;
-      
+
       for (let i = 0; i < count; i++) {
         const blink = Math.sin(time * (0.5 + (i % 10) * 0.1) + phases[i]) * 0.5 + 0.5;
         sizesAttr.array[i] = sizes[i] * (0.4 + blink * 0.6);
@@ -99,7 +100,7 @@ const GalaxyCore = () => {
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    
+
     if (sunRef.current) {
       sunRef.current.rotation.y = time * 0.08;
     }
@@ -118,27 +119,27 @@ const GalaxyCore = () => {
         <sphereGeometry args={[8, 64, 64]} />
         <meshBasicMaterial color="#ffee66" />
       </mesh>
-      
+
       <mesh ref={glowRef}>
         <sphereGeometry args={[9, 32, 32]} />
         <meshBasicMaterial color="#ffcc00" transparent opacity={0.5} />
       </mesh>
-      
+
       <mesh ref={glow2Ref}>
         <sphereGeometry args={[10.5, 32, 32]} />
         <meshBasicMaterial color="#ff9900" transparent opacity={0.3} />
       </mesh>
-      
+
       <mesh>
         <sphereGeometry args={[13, 32, 32]} />
         <meshBasicMaterial color="#ff6600" transparent opacity={0.15} />
       </mesh>
-      
+
       <mesh>
         <sphereGeometry args={[18, 32, 32]} />
         <meshBasicMaterial color="#ff4400" transparent opacity={0.08} />
       </mesh>
-      
+
       <pointLight color="#ffdd44" intensity={5} distance={200} />
       <pointLight color="#ff8800" intensity={2} distance={100} />
     </group>
@@ -206,7 +207,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
     canvas.width = 512;
     canvas.height = 256;
     const ctx = canvas.getContext("2d");
-    
+
     if (ctx) {
       const gradient = ctx.createLinearGradient(0, 0, 512, 256);
       gradient.addColorStop(0, planet.color);
@@ -215,7 +216,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
       gradient.addColorStop(1, planet.spotColor || planet.color);
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 512, 256);
-      
+
       ctx.fillStyle = planet.spotColor || "rgba(255,255,255,0.25)";
       for (let i = 0; i < 15; i++) {
         const x = Math.random() * 512;
@@ -225,7 +226,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
         ctx.ellipse(x, y, r, r * 0.5, Math.random() * Math.PI, 0, Math.PI * 2);
         ctx.fill();
       }
-      
+
       ctx.fillStyle = "rgba(255,255,255,0.15)";
       for (let i = 0; i < 5; i++) {
         const x = Math.random() * 512;
@@ -235,7 +236,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
         ctx.fill();
       }
     }
-    
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     return texture;
@@ -244,16 +245,16 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     const angle = time * planet.orbitSpeed + planet.initialAngle;
-    
+
     if (groupRef.current) {
       groupRef.current.position.x = Math.cos(angle) * planet.orbitRadius;
       groupRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
     }
-    
+
     if (planetRef.current) {
       planetRef.current.rotation.y = time * planet.rotationSpeed;
     }
-    
+
     if (atmosphereRef.current) {
       atmosphereRef.current.rotation.y = time * planet.rotationSpeed * 0.5;
     }
@@ -263,7 +264,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
     <group ref={groupRef}>
       <mesh ref={planetRef}>
         <sphereGeometry args={[planet.size, 64, 64]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           map={spotTexture}
           emissive={planet.color}
           emissiveIntensity={0.15}
@@ -271,17 +272,17 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
           roughness={0.75}
         />
       </mesh>
-      
+
       <mesh ref={atmosphereRef}>
         <sphereGeometry args={[planet.size * 1.05, 32, 32]} />
         <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.2} />
       </mesh>
-      
+
       <mesh>
         <sphereGeometry args={[planet.size * 1.15, 32, 32]} />
         <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.1} />
       </mesh>
-      
+
       {planet.hasRing && (
         <>
           <mesh rotation={[Math.PI / 2.8, 0.1, 0]}>
@@ -294,11 +295,11 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
           </mesh>
         </>
       )}
-      
+
       {planet.hasSatellite && (
         <Satellite orbitRadius={planet.size * 2.5} speed={1.5} size={planet.size * 0.2} />
       )}
-      
+
       <pointLight color={planet.color} intensity={0.3} distance={planet.size * 5} />
     </group>
   );
@@ -310,12 +311,12 @@ const GalaxyScene = () => {
     <group position={[0, 5, -60]}>
       {/* Central Galaxy Core/Sun */}
       <GalaxyCore />
-      
+
       {/* Orbital Paths */}
       {PLANETS_DATA.map((planet) => (
         <OrbitalPath key={`orbit-${planet.id}`} radius={planet.orbitRadius} color={planet.glowColor} />
       ))}
-      
+
       {/* Planets */}
       {PLANETS_DATA.map((planet) => (
         <GalaxyPlanet key={`planet-${planet.id}`} planet={planet} />
@@ -331,25 +332,13 @@ const GalaxyScene = () => {
 const StationInterior = () => {
   return (
     <group>
-      {/* Floor */}
+      {/* Floor - fully transparent */}
       <mesh position={[0, -3.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#1a1a2e" metalness={0.8} roughness={0.3} />
+        <meshStandardMaterial color="#0a0a18" transparent opacity={0.0} />
       </mesh>
 
-      {/* Floor grid lines */}
-      {Array.from({ length: 21 }).map((_, i) => (
-        <mesh key={`grid-x-${i}`} position={[-10 + i, -3.49, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[0.02, 20]} />
-          <meshBasicMaterial color="#4fc3f7" transparent opacity={0.3} />
-        </mesh>
-      ))}
-      {Array.from({ length: 21 }).map((_, i) => (
-        <mesh key={`grid-z-${i}`} position={[0, -3.49, -10 + i]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[20, 0.02]} />
-          <meshBasicMaterial color="#4fc3f7" transparent opacity={0.3} />
-        </mesh>
-      ))}
+      {/* Floor grid - removed for transparency */}
 
       {/* Ceiling - semi-transparent */}
       <mesh position={[0, 8, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -360,9 +349,9 @@ const StationInterior = () => {
       {/* LEFT WALL - Transparent glass */}
       <mesh position={[-10, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshPhysicalMaterial 
+        <meshPhysicalMaterial
           color="#1a2a4a"
-          transparent 
+          transparent
           opacity={0.1}
           metalness={0.1}
           roughness={0.05}
@@ -384,9 +373,9 @@ const StationInterior = () => {
       {/* RIGHT WALL - Transparent glass */}
       <mesh position={[10, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshPhysicalMaterial 
+        <meshPhysicalMaterial
           color="#1a2a4a"
-          transparent 
+          transparent
           opacity={0.1}
           metalness={0.1}
           roughness={0.05}
@@ -408,9 +397,9 @@ const StationInterior = () => {
       {/* BACK WALL - Transparent glass */}
       <mesh position={[0, 2, -10]}>
         <planeGeometry args={[20, 12]} />
-        <meshPhysicalMaterial 
+        <meshPhysicalMaterial
           color="#1a2a4a"
-          transparent 
+          transparent
           opacity={0.1}
           metalness={0.1}
           roughness={0.05}
@@ -453,12 +442,12 @@ const StationInterior = () => {
 
       {/* Ceiling lights - point lights only */}
       {Array.from({ length: 3 }).map((_, i) => (
-        <pointLight 
-          key={`ceiling-light-${i}`} 
-          position={[0, 7.5, -6 + i * 6]} 
-          color="#ffffff" 
-          intensity={0.6} 
-          distance={12} 
+        <pointLight
+          key={`ceiling-light-${i}`}
+          position={[0, 7.5, -6 + i * 6]}
+          color="#ffffff"
+          intensity={0.6}
+          distance={12}
         />
       ))}
 
@@ -476,6 +465,9 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
 
   return (
     <div className="w-full h-full absolute inset-0 overflow-hidden">
+      {/* CSS twinkling stars — same as start screen */}
+      <StarField />
+
       {/* Animated background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-background/20 pointer-events-none z-10" />
 
@@ -496,7 +488,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
 
           {/* Space station interior with transparent walls */}
           <StationInterior />
-          
+
           {/* Blinking stars background - matching GalaxyExploration */}
           <BlinkingStars count={5000} />
 
@@ -516,24 +508,45 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         </Suspense>
       </Canvas>
 
-      {/* Enhanced Title overlay with animation */}
+      {/* Title — centered horizontally at the top */}
       <motion.div
-        initial={{ opacity: 0, y: -30 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="absolute top-8 left-1/2 -translate-x-1/2 text-center pointer-events-none z-20"
+        className="absolute top-6 inset-x-0 flex flex-col items-center pointer-events-none z-20"
       >
-        <div className="relative">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-3 tracking-wider"></h1>
-          <motion.div
-            className="h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto"
-            initial={{ width: 0 }}
-            animate={{ width: "100%" }}
-            transition={{ duration: 1, delay: 0.3 }}
-          />
-        </div>
-        <p className="text-muted-foreground text-lg mt-3 tracking-wide">Choose your path through the cosmos</p>
+        <motion.h1
+          className="text-xl md:text-2xl font-bold tracking-[0.3em] uppercase"
+          style={{
+            background: "linear-gradient(90deg, #00e5ff, #ffffff, #a855f7)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            filter: "drop-shadow(0 0 12px rgba(0,229,255,0.5))",
+          }}
+        >
+          ✦ Choose Your Path ✦
+        </motion.h1>
+
+        <motion.div
+          className="mt-2 h-px w-48 rounded-full"
+          style={{ background: "linear-gradient(90deg, transparent, #00e5ff, #a855f7, transparent)" }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: 1, delay: 0.3 }}
+        />
+
+        <motion.p
+          className="mt-2 text-xs tracking-[0.25em] uppercase"
+          style={{ color: "rgba(160,160,200,0.7)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 1 }}
+        >
+          through the cosmos
+        </motion.p>
       </motion.div>
+
 
       {/* Corner decorative elements */}
       <div className="absolute top-4 left-4 w-16 h-16 border-l-2 border-t-2 border-cyan-500/50 pointer-events-none z-20" />
@@ -554,11 +567,10 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
             <div
               className={`
               relative overflow-hidden rounded-xl px-8 py-4 
-              ${
-                hovered === "rocket"
+              ${hovered === "rocket"
                   ? "bg-gradient-to-r from-emerald-900/80 to-cyan-900/80 border border-emerald-400/50"
                   : "bg-gradient-to-r from-pink-900/80 to-purple-900/80 border border-pink-400/50"
-              } 
+                } 
               backdrop-blur-md shadow-2xl
             `}
             >

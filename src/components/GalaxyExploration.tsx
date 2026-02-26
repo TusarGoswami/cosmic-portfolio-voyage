@@ -1,6 +1,6 @@
-import { Suspense, useRef, useMemo, useState, useCallback, useEffect } from "react";
+﻿import { Suspense, useRef, useMemo, useState, useCallback, useEffect } from "react";
 import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
-import { Line, Html } from "@react-three/drei";
+import { Line, Html, Text, Billboard } from "@react-three/drei";
 import * as THREE from "three";
 import Particles from "./Particles";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,57 +28,130 @@ interface PlanetData {
   moons: number;
   gravityRadius: number;
   orbitCaptureRadius: number;
+  // Portfolio fields
+  portfolioType?: "project" | "skills" | "education" | "achievements" | "about";
+  projectTitle?: string;
+  projectSubtitle?: string;
+  githubUrl?: string;
+  liveUrl?: string;
+  techStack?: string[];
+  period?: string;
+  bullets?: string[];
 }
 
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// TUSAR GOSWAMI'S PORTFOLIO DATA
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PLANETS_DATA: PlanetData[] = [
   {
-    id: 0, name: "Pyralis", orbitRadius: 22, size: 2.8, color: "#ff7755", orbitSpeed: 0.25, rotationSpeed: 1.8,
-    spotColor: "#ffaa88", glowColor: "#ff9966", hasSatellite: true, initialAngle: 0,
-    description: "A volcanic world with rivers of molten lava and intense heat.",
-    facts: ["Orbital period: 88 days", "Surface temp: 450°C", "Volcanic activity: Extreme"],
-    moons: 1, gravityRadius: 12, orbitCaptureRadius: 6
+    id: 0, name: "Head-2-Code", orbitRadius: 22, size: 2.8, color: "#00e5ff", orbitSpeed: 0.25, rotationSpeed: 1.8,
+    spotColor: "#88f5ff", glowColor: "#00c8e0", hasSatellite: true, initialAngle: 0,
+    description: "MERN-Based Competitive Coding Platform with real-time code execution and battles.",
+    facts: ["Stack: React, Redux, Node.js, MongoDB", "Judge0 API integration", "JWT Auth + REST APIs"],
+    moons: 3, gravityRadius: 12, orbitCaptureRadius: 6,
+    portfolioType: "project",
+    projectTitle: "Head-2-Code",
+    projectSubtitle: "MERN-Based Coding Platform",
+    githubUrl: "https://github.com/TusarGoswami",
+    period: "Oct 2025 â€“ Jan 2026",
+    techStack: ["ReactJS", "Redux", "NodeJS", "ExpressJS", "MongoDB", "Judge0 API", "Tailwind CSS"],
+    bullets: [
+      "Architected a scalable backend using NodeJS, ExpressJS, MongoDB, and Judge0 API with JWT authentication for secure multi-language code execution.",
+      "Enables learners to write & execute programs via online compiler, participate in 1v1 coding battles, and consume structured video-learning modules.",
+      "Constructed a React/Redux interface with interactive editor, competitive programming console, and solution-review pipeline."
+    ]
   },
   {
-    id: 1, name: "Aquaris", orbitRadius: 32, size: 4, color: "#55aaff", orbitSpeed: 0.18, rotationSpeed: 1.4,
-    spotColor: "#88ccff", glowColor: "#77bbff", hasRing: true, ringColor: "#8899bb", initialAngle: Math.PI * 0.5,
-    description: "An ocean world with crystalline ice rings and deep underwater cities.",
-    facts: ["Orbital period: 210 days", "97% water surface", "Ring composition: Ice crystals"],
-    moons: 3, gravityRadius: 15, orbitCaptureRadius: 7
+    id: 1, name: "Velo-Rapido", orbitRadius: 35, size: 3.8, color: "#ff7700", orbitSpeed: 0.18, rotationSpeed: 1.4,
+    spotColor: "#ffaa55", glowColor: "#ff9900", hasRing: true, ringColor: "#cc6600", initialAngle: Math.PI * 0.5,
+    description: "Premium Bike Rental System with real-time tracking and admin control hub.",
+    facts: ["Stack: PHP, MySQL, JS, Tailwind", "40% operational efficiency boost", "30% data redundancy reduction"],
+    moons: 2, gravityRadius: 15, orbitCaptureRadius: 7,
+    portfolioType: "project",
+    projectTitle: "Velo-Rapido",
+    projectSubtitle: "Premium Bike Rental System",
+    githubUrl: "https://github.com/TusarGoswami",
+    period: "Feb 2025 â€“ May 2025",
+    techStack: ["HTML", "CSS", "JavaScript", "MySQL", "PHP", "Tailwind CSS"],
+    bullets: [
+      "Developed an end-to-end rental ecosystem with secure authentication, reservation checkout, and real-time vehicle tracking.",
+      "Engineered an admin control hub for fleet management, booking supervision, maintenance ticketing, and damage-report auditing â€” improving efficiency by 40%.",
+      "Structured a fully normalized MySQL database schema (3NF) reducing data redundancy by 30% and improving data integrity."
+    ]
   },
   {
-    id: 2, name: "Verdania", orbitRadius: 44, size: 3.5, color: "#66ff88", orbitSpeed: 0.22, rotationSpeed: 2.5,
-    spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI,
-    description: "A lush paradise planet covered in bioluminescent forests.",
-    facts: ["Orbital period: 365 days", "85% forest coverage", "Biodiversity: Extreme"],
-    moons: 2, gravityRadius: 14, orbitCaptureRadius: 6.5
+    id: 2, name: "AI Optimizer", orbitRadius: 48, size: 3.2, color: "#aa44ff", orbitSpeed: 0.22, rotationSpeed: 2.5,
+    spotColor: "#cc88ff", glowColor: "#bb66ff", hasSatellite: true, initialAngle: Math.PI,
+    description: "LinkedIn Optimizer Pro â€“ AI-powered profile diagnostics and enhancement assistant.",
+    facts: ["Stack: Python, Flask, JS, Tailwind", "AI keyword enrichment & scoring", "PDF/Excel export reports"],
+    moons: 1, gravityRadius: 14, orbitCaptureRadius: 6.5,
+    portfolioType: "project",
+    projectTitle: "LinkedIn Optimizer Pro",
+    projectSubtitle: "AI Chatbot Assistant",
+    githubUrl: "https://github.com/TusarGoswami",
+    period: "Mar 2025 â€“ Apr 2025",
+    techStack: ["Python", "Flask", "JavaScript", "Tailwind CSS", "FPDF"],
+    bullets: [
+      "Created an AI-powered LinkedIn optimization utility delivering real-time profile diagnostics and personalized enhancement strategies.",
+      "Integrated intelligent AI modules for keyword enrichment, headline scoring, summary analytics, and networking insights.",
+      "Released an interactive chatbot with dynamic insights, data visualizations, and exportable PDF/Excel reports."
+    ]
   },
   {
-    id: 3, name: "Solarius", orbitRadius: 58, size: 7, color: "#ffbb55", orbitSpeed: 0.08, rotationSpeed: 0.6,
-    spotColor: "#ffdd88", glowColor: "#ffcc66", hasRing: true, ringColor: "#ddaa66", hasSatellite: true, initialAngle: Math.PI * 1.3,
-    description: "The golden giant with massive storms and floating cloud cities.",
-    facts: ["Orbital period: 12 years", "Great Storm: 400 years old", "Atmosphere: Metallic hydrogen"],
-    moons: 67, gravityRadius: 25, orbitCaptureRadius: 12
+    id: 3, name: "Skills Core", orbitRadius: 62, size: 6.5, color: "#ffd700", orbitSpeed: 0.08, rotationSpeed: 0.6,
+    spotColor: "#ffee88", glowColor: "#ffcc00", hasRing: true, ringColor: "#ddaa00", hasSatellite: true, initialAngle: Math.PI * 1.3,
+    description: "Tusar's Technical Skills Hub â€” Languages, Frameworks, Tools & Core CS.",
+    facts: ["7 languages: Python, Java, C++, JS...", "React, Node, Flutter, Redux", "LeetCode Top 15% Globally"],
+    moons: 0, gravityRadius: 25, orbitCaptureRadius: 12,
+    portfolioType: "skills",
+    projectTitle: "Technical Skills",
+    projectSubtitle: "Languages, Frameworks & Tools",
+    period: "2023 â€“ Present",
+    techStack: ["Python", "Java", "C", "C++", "JavaScript", "PHP", "Dart"],
+    bullets: [
+      "Frameworks & Libraries: ReactJS, Redux, NodeJS, ExpressJS, Flutter, Tailwind CSS, RESTful APIs, JWT Authentication",
+      "Tools & Platforms: MySQL, MongoDB, Git, GitHub, Postman, Vercel, Figma",
+      "Core CS Fundamentals: DSA, OOP, DBMS, OS, CN, System Design",
+      "Soft Skills: Problem-Solving, Team Collaboration, Leadership, Adaptability"
+    ]
   },
   {
-    id: 4, name: "Nebulora", orbitRadius: 75, size: 5.5, color: "#bb77ff", orbitSpeed: 0.06, rotationSpeed: 0.8,
-    spotColor: "#dd99ff", glowColor: "#cc88ff", hasSatellite: true, initialAngle: Math.PI * 0.7,
-    description: "A mystical purple world surrounded by cosmic dust clouds.",
-    facts: ["Orbital period: 30 years", "Nebula density: High", "Magnetic field: Extreme"],
-    moons: 24, gravityRadius: 20, orbitCaptureRadius: 10
+    id: 4, name: "LPU Planet", orbitRadius: 80, size: 5, color: "#66ff88", orbitSpeed: 0.06, rotationSpeed: 0.8,
+    spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI * 0.7,
+    description: "Lovely Professional University â€“ B.Tech CSE. CGPA: 7.45.",
+    facts: ["B.Tech CSE @ LPU, Punjab", "CGPA: 7.45 | Aug 2023 â€“ Present", "Flutter Training Certification"],
+    moons: 2, gravityRadius: 20, orbitCaptureRadius: 10,
+    portfolioType: "education",
+    projectTitle: "Education & Training",
+    projectSubtitle: "Lovely Professional University",
+    period: "Aug 2023 â€“ Present",
+    techStack: ["Flutter", "Dart", "Material UI", "URL Launcher"],
+    bullets: [
+      "Bachelor of Technology â€“ Computer Science and Engineering; CGPA: 7.45 | Lovely Professional University, Punjab",
+      "Mobile Application Development Using Flutter â€“ LPU Training (Junâ€“Jul 2025): Designed a complete university management mobile app.",
+      "Intermediate: 80.4% | Mandalkuli Netaji Vidyapith, West Bengal (2022â€“23)",
+      "Matriculation: 90.0% | Mandalkuli Netaji Vidyapith, West Bengal (2020â€“21)"
+    ]
   },
   {
-    id: 5, name: "Rosaria", orbitRadius: 92, size: 3, color: "#ff77aa", orbitSpeed: 0.12, rotationSpeed: 1.5,
-    spotColor: "#ff99cc", glowColor: "#ff88bb", initialAngle: Math.PI * 1.8,
-    description: "The rose planet known for its crystalline pink deserts.",
-    facts: ["Orbital period: 15 years", "Crystal formations: Abundant", "Surface: Silicon dioxide"],
-    moons: 0, gravityRadius: 12, orbitCaptureRadius: 6
-  },
-  {
-    id: 6, name: "Cryonia", orbitRadius: 110, size: 6, color: "#77ffff", orbitSpeed: 0.04, rotationSpeed: 0.5,
-    spotColor: "#99ffff", glowColor: "#88ffff", hasRing: true, ringColor: "#66cccc", hasSatellite: true, initialAngle: Math.PI * 0.3,
-    description: "An ice giant at the edge of the system with aurora displays.",
-    facts: ["Orbital period: 84 years", "Surface temp: -224°C", "Aurora frequency: Constant"],
-    moons: 42, gravityRadius: 22, orbitCaptureRadius: 11
+    id: 5, name: "Achievements", orbitRadius: 100, size: 4.5, color: "#ff4488", orbitSpeed: 0.04, rotationSpeed: 0.5,
+    spotColor: "#ff77aa", glowColor: "#ff5599", hasRing: true, ringColor: "#cc2266", hasSatellite: true, initialAngle: Math.PI * 0.3,
+    description: "Achievements, Certifications & Competitive Programming milestones.",
+    facts: ["LeetCode Global Top 15%", "5â˜… Java & C++ on HackerRank", "300+ problems solved"],
+    moons: 0, gravityRadius: 22, orbitCaptureRadius: 11,
+    portfolioType: "achievements",
+    projectTitle: "Achievements & Certs",
+    projectSubtitle: "Competitive Programming & Certifications",
+    period: "2023 â€“ Present",
+    githubUrl: "https://github.com/TusarGoswami",
+    techStack: ["LeetCode", "HackerRank", "CodeChef", "GeeksforGeeks", "NPTEL"],
+    bullets: [
+      "ðŸ† Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
+      "â­ Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks",
+      "ðŸ“œ ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM â€“ Infosys Springboard (Aug 2025)",
+      "ðŸ“œ Mobile Application Development Using Flutter â€“ Lovely Professional University (Jul 2025)",
+      "ðŸ“œ Cloud Computing â€“ NPTEL IIT Kharagpur (Apr 2025)"
+    ]
   },
 ];
 
@@ -516,6 +589,33 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
       {planet.hasSatellite && (
         <Satellite orbitRadius={planet.size * 2.5} speed={1.5} size={planet.size * 0.2} />
       )}
+
+      {/* 3D Planet Name Label - Always faces camera */}
+      <Billboard position={[0, planet.size + 2.5, 0]}>
+        <Text
+          fontSize={1.8}
+          color={planet.color}
+          anchorX="center"
+          anchorY="bottom"
+          outlineWidth={0.06}
+          outlineColor="#000000"
+        >
+          {planet.portfolioType ? planet.portfolioType.toUpperCase() : planet.name.toUpperCase()}
+        </Text>
+        {planet.projectTitle && (
+          <Text
+            position={[0, -0.8, 0]}
+            fontSize={0.8}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="top"
+            outlineWidth={0.04}
+            outlineColor="#000000"
+          >
+            {planet.projectTitle}
+          </Text>
+        )}
+      </Billboard>
 
       <pointLight color={planet.color} intensity={isHovered ? 0.8 : 0.3} distance={planet.size * 5} />
     </group>
@@ -1276,120 +1376,285 @@ const GalaxyScene = ({
   );
 };
 
-// Planet Detail Panel
+// â”€â”€ Comet Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const Comet = ({ seed }: { seed: number }) => {
+  const ref = useRef<THREE.Mesh>(null);
+  const trailRef = useRef<THREE.Mesh>(null);
+  const progress = useRef(Math.random());
+  const startPos = useMemo(() => new THREE.Vector3(
+    (Math.random() - 0.5) * 300,
+    (Math.random() - 0.5) * 80,
+    (Math.random() - 0.5) * 300
+  ), [seed]);
+  const endPos = useMemo(() => new THREE.Vector3(
+    startPos.x + (Math.random() - 0.5) * 200,
+    startPos.y + (Math.random() - 0.5) * 40,
+    startPos.z + (Math.random() - 0.5) * 200
+  ), [startPos, seed]);
+
+  useFrame((_, delta) => {
+    progress.current += delta * 0.12;
+    if (progress.current > 1) progress.current = 0;
+    const t = progress.current;
+    const pos = startPos.clone().lerp(endPos, t);
+    if (ref.current) ref.current.position.copy(pos);
+    if (trailRef.current) {
+      trailRef.current.position.copy(pos.clone().lerp(startPos, 0.08));
+    }
+  });
+
+  return (
+    <group>
+      <mesh ref={ref}>
+        <sphereGeometry args={[0.25, 8, 8]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <mesh ref={trailRef}>
+        <sphereGeometry args={[0.15, 8, 8]} />
+        <meshBasicMaterial color="#aaddff" transparent opacity={0.5} />
+      </mesh>
+    </group>
+  );
+};
+
+// â”€â”€ Planet Detail Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface PlanetDetailProps {
   planet: PlanetData;
   onClose: () => void;
 }
 
+const typeIcon: Record<string, string> = {
+  project: "ðŸš€",
+  skills: "âš¡",
+  education: "ðŸŽ“",
+  achievements: "ðŸ†",
+  about: "ðŸ‘¨â€ðŸ’»",
+};
+
+const typeLabel: Record<string, string> = {
+  project: "PROJECT",
+  skills: "SKILLS",
+  education: "EDUCATION",
+  achievements: "ACHIEVEMENTS",
+  about: "ABOUT",
+};
+
 const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
+  const icon = planet.portfolioType ? typeIcon[planet.portfolioType] : "ðŸª";
+  const label = planet.portfolioType ? typeLabel[planet.portfolioType] : "PLANET";
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ duration: 0.3 }}
-      className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-md z-50"
+      initial={{ opacity: 0, scale: 0.85, y: 30 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.85, y: 30 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="absolute inset-0 flex items-center justify-center z-50 px-4"
+      style={{ background: "rgba(5,5,20,0.85)", backdropFilter: "blur(12px)" }}
     >
-      <div className="w-[600px] max-w-[90vw] bg-card/95 backdrop-blur-md rounded-2xl border border-border/30 overflow-hidden shadow-2xl">
+      <div
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border shadow-2xl"
+        style={{
+          background: `linear-gradient(135deg, #0d0d25 60%, ${planet.color}22)`,
+          borderColor: `${planet.color}55`,
+          boxShadow: `0 0 60px ${planet.color}33`,
+        }}
+      >
+        {/* Header */}
         <div
-          className="p-8 relative"
-          style={{
-            background: `linear-gradient(135deg, ${planet.color}44, transparent)`,
-          }}
+          className="p-6 relative"
+          style={{ background: `linear-gradient(135deg, ${planet.color}33, transparent)` }}
         >
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-background/50 hover:bg-background/80 transition-colors text-xl"
+            className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-lg font-bold transition-all hover:scale-110"
+            style={{ background: `${planet.color}33`, color: planet.color }}
           >
-            ×
+            âœ•
           </button>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <div
-              className="w-24 h-24 rounded-full shadow-lg flex-shrink-0"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-3xl flex-shrink-0"
               style={{
-                background: `radial-gradient(circle at 30% 30%, ${planet.color}, ${planet.color}88)`,
-                boxShadow: `0 0 40px ${planet.color}66`,
+                background: `radial-gradient(circle at 35% 35%, ${planet.color}, ${planet.color}55)`,
+                boxShadow: `0 0 30px ${planet.color}66`,
               }}
-            />
+            >
+              {icon}
+            </div>
             <div>
-              <h2 className="text-3xl font-bold text-foreground">{planet.name}</h2>
-              <p className="text-muted-foreground mt-2">{planet.description}</p>
+              <span
+                className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border mb-2 inline-block"
+                style={{ color: planet.color, borderColor: `${planet.color}55`, background: `${planet.color}15` }}
+              >
+                {label}
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                {planet.projectTitle || planet.name}
+              </h2>
+              {planet.projectSubtitle && (
+                <p className="text-sm mt-0.5" style={{ color: `${planet.color}cc` }}>
+                  {planet.projectSubtitle}
+                </p>
+              )}
+              {planet.period && (
+                <p className="text-xs text-gray-400 mt-1">ðŸ“… {planet.period}</p>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="p-8 space-y-6">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-background/50 rounded-lg p-4 text-center">
-              <div className="text-muted-foreground text-xs uppercase tracking-wider">Size</div>
-              <div className="text-foreground text-2xl font-bold">{planet.size.toFixed(1)}x</div>
-            </div>
-            <div className="bg-background/50 rounded-lg p-4 text-center">
-              <div className="text-muted-foreground text-xs uppercase tracking-wider">Moons</div>
-              <div className="text-foreground text-2xl font-bold">{planet.moons}</div>
-            </div>
-            <div className="bg-background/50 rounded-lg p-4 text-center">
-              <div className="text-muted-foreground text-xs uppercase tracking-wider">Orbit</div>
-              <div className="text-foreground text-2xl font-bold">{planet.orbitRadius}AU</div>
-            </div>
-          </div>
+        <div className="p-6 space-y-5">
+          {/* Description */}
+          <p className="text-gray-300 text-sm leading-relaxed">{planet.description}</p>
 
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Quick Facts</h3>
-            <ul className="space-y-2">
-              {planet.facts.map((fact, index) => (
-                <li key={index} className="flex items-start gap-3">
+          {/* Bullets */}
+          {planet.bullets && planet.bullets.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: planet.color }}>
+                Key Highlights
+              </h3>
+              <ul className="space-y-2">
+                {planet.bullets.map((b, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: planet.color }} />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Tech Stack */}
+          {planet.techStack && planet.techStack.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: planet.color }}>
+                Tech Stack
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {planet.techStack.map((tech) => (
                   <span
-                    className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
-                    style={{ backgroundColor: planet.color }}
-                  />
-                  <span className="text-muted-foreground">{fact}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+                    key={tech}
+                    className="px-2.5 py-1 text-xs rounded-full font-medium border"
+                    style={{
+                      background: `${planet.color}18`,
+                      borderColor: `${planet.color}44`,
+                      color: planet.color,
+                    }}
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
-          <div className="flex flex-wrap gap-2">
-            {planet.hasRing && (
-              <span className="px-3 py-1.5 text-sm rounded-full bg-accent/20 text-accent border border-accent/30">
-                Has Rings
-              </span>
+          {/* Links */}
+          <div className="flex flex-wrap gap-3 pt-2">
+            {planet.githubUrl && (
+              <a
+                href={planet.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105"
+                style={{ background: planet.color, color: "#000" }}
+              >
+                <span>â¬¡</span> GitHub
+              </a>
             )}
-            {planet.moons > 10 && (
-              <span className="px-3 py-1.5 text-sm rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                Many Moons
-              </span>
+            {planet.liveUrl && (
+              <a
+                href={planet.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all hover:scale-105"
+                style={{ borderColor: planet.color, color: planet.color }}
+              >
+                ðŸŒ Live Demo
+              </a>
             )}
-            {planet.hasSatellite && (
-              <span className="px-3 py-1.5 text-sm rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                Satellite
-              </span>
-            )}
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-white/20 text-white/70 hover:border-white/50 transition-all ml-auto"
+            >
+              Continue Exploring â†’
+            </button>
           </div>
-
-          <button
-            onClick={onClose}
-            className="w-full py-3 rounded-lg bg-accent hover:bg-accent/80 text-accent-foreground font-medium transition-colors"
-          >
-            Continue Exploring
-          </button>
         </div>
       </div>
     </motion.div>
   );
 };
 
+// â”€â”€ Mobile Touch Joystick â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+interface MobileJoystickProps {
+  onMove: (dx: number, dy: number) => void;
+}
+
+const MobileJoystick = ({ onMove }: MobileJoystickProps) => {
+  const baseRef = useRef<HTMLDivElement>(null);
+  const knobRef = useRef<HTMLDivElement>(null);
+  const touchId = useRef<number | null>(null);
+  const basePos = useRef({ x: 0, y: 0 });
+  const maxRadius = 40;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (touchId.current !== null) return;
+    const t = e.changedTouches[0];
+    touchId.current = t.identifier;
+    const rect = baseRef.current!.getBoundingClientRect();
+    basePos.current = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const t = Array.from(e.changedTouches).find(t => t.identifier === touchId.current);
+    if (!t || !knobRef.current) return;
+    const dx = t.clientX - basePos.current.x;
+    const dy = t.clientY - basePos.current.y;
+    const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxRadius);
+    const angle = Math.atan2(dy, dx);
+    const clampedX = Math.cos(angle) * dist;
+    const clampedY = Math.sin(angle) * dist;
+    knobRef.current.style.transform = `translate(${clampedX}px, ${clampedY}px)`;
+    onMove(clampedX / maxRadius, clampedY / maxRadius);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const t = Array.from(e.changedTouches).find(t => t.identifier === touchId.current);
+    if (!t) return;
+    touchId.current = null;
+    if (knobRef.current) knobRef.current.style.transform = "translate(0px, 0px)";
+    onMove(0, 0);
+  };
+
+  return (
+    <div
+      ref={baseRef}
+      className="w-24 h-24 rounded-full flex items-center justify-center touch-none"
+      style={{ background: "rgba(255,255,255,0.08)", border: "2px solid rgba(255,255,255,0.18)" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div
+        ref={knobRef}
+        className="w-10 h-10 rounded-full transition-none"
+        style={{ background: "rgba(255,255,255,0.35)", border: "2px solid rgba(255,255,255,0.6)" }}
+      />
+    </div>
+  );
+};
+
+// â”€â”€ Main GalaxyExploration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
   const [nearPlanet, setNearPlanet] = useState<PlanetData | null>(null);
   const [orbitingPlanet, setOrbitingPlanet] = useState<PlanetData | null>(null);
   const [viewingPlanet, setViewingPlanet] = useState<PlanetData | null>(null);
   const [collisionFlash, setCollisionFlash] = useState(false);
 
-  const handleShipPositionUpdate = useCallback(() => {
-    // No-op, minimap removed
-  }, []);
+
+  const handleShipPositionUpdate = useCallback(() => { }, []);
 
   const handleAsteroidCollision = useCallback(() => {
     setCollisionFlash(true);
@@ -1397,9 +1662,7 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
   }, []);
 
   const handleEnterPlanet = useCallback(() => {
-    if (orbitingPlanet) {
-      setViewingPlanet(orbitingPlanet);
-    }
+    if (orbitingPlanet) setViewingPlanet(orbitingPlanet);
   }, [orbitingPlanet]);
 
   const handlePlanetClick = useCallback((planet: PlanetData) => {
@@ -1411,23 +1674,18 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
   }, []);
 
   return (
-    <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#0d0d25] to-[#050515]">
-      {/* Collision flash overlay */}
+    <div className="w-full h-full absolute inset-0 bg-[#05050f]">
+      {/* Collision flash */}
       <AnimatePresence>
         {collisionFlash && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }}
             className="absolute inset-0 bg-red-500 z-40 pointer-events-none"
           />
         )}
       </AnimatePresence>
 
-      <Canvas
-        camera={{ position: [50, 20, 50], fov: 60 }}
-        gl={{ antialias: true }}
-      >
+      <Canvas camera={{ position: [50, 20, 50], fov: 60 }} gl={{ antialias: true }}>
         <Suspense fallback={null}>
           <GalaxyScene
             vehicle={vehicle}
@@ -1439,97 +1697,91 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
             onShipPositionUpdate={handleShipPositionUpdate}
             onPlanetClick={handlePlanetClick}
           />
+          {/* Comets */}
+          {[0, 1, 2, 3, 4].map(i => <Comet key={i} seed={i} />)}
         </Suspense>
       </Canvas>
 
-      {/* HUD */}
-      <div className="absolute top-6 left-6 pointer-events-none">
-        <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-md rounded-xl px-5 py-4 border border-accent/30 shadow-lg shadow-accent/10">
-          <h2 className="text-foreground text-2xl font-bold mb-1 bg-gradient-to-r from-accent to-primary bg-clip-text text-transparent">Galaxy Explorer</h2>
-          <p className="text-muted-foreground text-sm">
-            {vehicle === "rocket" ? "🚀" : "🧑‍🚀"} Flying as {vehicle === "rocket" ? "Rocket" : "Astronaut"}
-          </p>
-        </div>
+      {/* ── TOP RIGHT: Social Links ── */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto">
+        <a href="https://github.com/TusarGoswami" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition-all hover:scale-105"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
+          ⬡ GitHub
+        </a>
+        <a href="https://www.linkedin.com/in/tusar027/" target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-blue-300 transition-all hover:scale-105"
+          style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)" }}>
+          in LinkedIn
+        </a>
+        <a href="mailto:tusargoswami0027@gmail.com"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-300 transition-all hover:scale-105"
+          style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}>
+          ✉ Email
+        </a>
       </div>
 
 
-      {/* Controls info */}
-      <div className="absolute bottom-6 left-6 pointer-events-none">
-        <div className="bg-gradient-to-br from-background/80 to-background/60 backdrop-blur-md rounded-xl px-5 py-4 border border-border/30 shadow-lg">
-          <p className="text-foreground text-sm font-medium mb-2">Controls</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            <span>W / ↑</span><span>Thrust Forward</span>
-            <span>S / ↓</span><span>Brake</span>
-            <span>A / ←</span><span>Turn Left</span>
-            <span>D / →</span><span>Turn Right</span>
-            <span>Space</span><span>Rise</span>
-            <span>Shift</span><span>Descend</span>
-            <span>Mouse</span><span>Look Around</span>
+
+      {/* â”€â”€ Planet Legend (bottom center) â”€â”€ */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none hidden md:flex gap-3">
+        {PLANETS_DATA.map(p => (
+          <div key={p.id} className="flex items-center gap-1.5 text-xs text-gray-400">
+            <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
+            {p.name}
           </div>
-          <p className="text-accent text-xs mt-3 font-medium">Click to enable mouse look • ESC to release</p>
-        </div>
+        ))}
       </div>
 
       {/* Near planet indicator */}
       <AnimatePresence>
         {nearPlanet && !orbitingPlanet && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="absolute top-44 right-6 pointer-events-none"
+            className="absolute top-32 right-4 md:top-44 md:right-6 pointer-events-none"
           >
-            <div
-              className="backdrop-blur-md rounded-xl px-5 py-4 border shadow-lg"
+            <div className="backdrop-blur-md rounded-xl px-4 py-3 border shadow-lg"
               style={{
-                background: `linear-gradient(135deg, ${nearPlanet.color}33, transparent)`,
+                background: `linear-gradient(135deg, ${nearPlanet.color}22, transparent)`,
                 borderColor: `${nearPlanet.color}55`,
                 boxShadow: `0 0 20px ${nearPlanet.color}33`,
-              }}
-            >
-              <p className="text-muted-foreground text-xs uppercase tracking-wider">Approaching</p>
-              <p className="text-foreground text-xl font-bold">{nearPlanet.name}</p>
-              <p className="text-muted-foreground text-sm mt-1">Gravity field detected</p>
+              }}>
+              <p className="text-gray-400 text-xs uppercase tracking-wider">Approaching</p>
+              <p className="text-white text-lg font-bold">{nearPlanet.name}</p>
+              <p className="text-gray-400 text-xs mt-0.5">{nearPlanet.portfolioType ? typeLabel[nearPlanet.portfolioType] : "Gravity detected"}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Orbiting indicator with enter button */}
+      {/* Orbiting indicator */}
       <AnimatePresence>
         {orbitingPlanet && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
           >
-            <div
-              className="backdrop-blur-md rounded-2xl px-8 py-6 border shadow-2xl text-center"
+            <div className="backdrop-blur-md rounded-2xl px-6 py-5 border shadow-2xl text-center"
               style={{
                 background: `linear-gradient(135deg, ${orbitingPlanet.color}44, ${orbitingPlanet.color}11)`,
                 borderColor: `${orbitingPlanet.color}66`,
                 boxShadow: `0 0 40px ${orbitingPlanet.color}44`,
-              }}
-            >
-              <p className="text-muted-foreground text-sm uppercase tracking-wider mb-1">Orbiting</p>
-              <p className="text-foreground text-3xl font-bold mb-4">{orbitingPlanet.name}</p>
-
+              }}>
+              <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Orbiting</p>
+              <p className="text-white text-2xl font-bold mb-1">{orbitingPlanet.projectTitle || orbitingPlanet.name}</p>
+              {orbitingPlanet.period && (
+                <p className="text-xs mb-3" style={{ color: `${orbitingPlanet.color}cc` }}>{orbitingPlanet.period}</p>
+              )}
               <button
                 onClick={handleEnterPlanet}
-                className="px-6 py-3 rounded-lg font-medium transition-all hover:scale-105"
-                style={{
-                  background: orbitingPlanet.color,
-                  color: '#000',
-                  boxShadow: `0 0 20px ${orbitingPlanet.color}88`,
-                }}
+                className="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:scale-105"
+                style={{ background: orbitingPlanet.color, color: '#000', boxShadow: `0 0 20px ${orbitingPlanet.color}88` }}
               >
-                Enter Planet
+                {orbitingPlanet.portfolioType === "project" ? "View Project âš¡" : "Explore â†’"}
               </button>
-
-              <p className="text-muted-foreground text-xs mt-4">
-                Press W/A/S/D or Arrow keys to escape orbit
-              </p>
+              <p className="text-gray-500 text-xs mt-3">Press WASD / arrows to escape orbit</p>
             </div>
           </motion.div>
         )}
@@ -1541,16 +1793,7 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
           <PlanetDetail planet={viewingPlanet} onClose={handleClosePlanetView} />
         )}
       </AnimatePresence>
-
-      {/* Instructions */}
-      <div className="absolute bottom-6 right-6 pointer-events-none">
-        <div className="bg-gradient-to-br from-background/70 to-background/50 backdrop-blur-md rounded-xl px-5 py-3 border border-border/30">
-          <p className="text-muted-foreground text-sm">
-            ⚠️ Asteroid belt ahead! Navigate carefully.
-          </p>
-        </div>
-      </div>
-    </div>
+    </div >
   );
 };
 
