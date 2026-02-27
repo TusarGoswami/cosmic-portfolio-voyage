@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0d1a2e"/>
+      <stop offset="100%" stop-color="#05050f"/>
+    </radialGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#0088cc"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="31" fill="url(#bg)" stroke="#00e5ff" stroke-width="1.2" stroke-opacity="0.6"/>
+
+  <!-- Outer glow ring -->
+  <circle cx="32" cy="32" r="30" fill="none" stroke="#00e5ff" stroke-width="0.5" stroke-opacity="0.3"/>
+
+  <!-- TG letters -->
+  <text
+    x="32" y="42"
+    font-family="'Orbitron', 'Arial Black', sans-serif"
+    font-size="26"
+    font-weight="900"
+    text-anchor="middle"
+    fill="url(#textGrad)"
+    filter="url(#glow)"
+    letter-spacing="-1"
+  >TG</text>
+</svg>
