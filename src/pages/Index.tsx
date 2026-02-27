@@ -34,6 +34,15 @@ const Index = () => {
     setPhase("space");
   }, []);
 
+  // Back navigation handlers
+  const handleBackToStart = useCallback(() => {
+    setPhase("start");
+  }, []);
+
+  const handleBackToChoose = useCallback(() => {
+    setPhase("choose");
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-background overflow-hidden space-cursor">
       <CustomCursor />
@@ -123,15 +132,23 @@ const Index = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
+            {/* Back arrow button for choose screen */}
+            <button
+              onClick={handleBackToStart}
+              className="absolute top-4 left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:scale-105 pointer-events-auto"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}
+            >
+              ← Back
+            </button>
             <ExitChoices onSelect={handleSelect} />
           </motion.div>
         )}
 
         {phase === "launching" && selectedVehicle && (
-          <LaunchTransition 
+          <LaunchTransition
             key="launching"
-            vehicle={selectedVehicle} 
-            onComplete={handleLaunchComplete} 
+            vehicle={selectedVehicle}
+            onComplete={handleLaunchComplete}
           />
         )}
 
@@ -140,7 +157,7 @@ const Index = () => {
             key="space"
             className="relative z-10 w-full h-screen"
           >
-            <GalaxyExploration vehicle={selectedVehicle} />
+            <GalaxyExploration vehicle={selectedVehicle} onBack={handleBackToChoose} />
           </div>
         )}
       </AnimatePresence>

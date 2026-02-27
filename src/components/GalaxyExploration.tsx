@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface GalaxyExplorationProps {
   vehicle: "rocket" | "astronaut";
+  onBack?: () => void;
 }
 
 interface PlanetData {
@@ -39,74 +40,96 @@ interface PlanetData {
   bullets?: string[];
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // TUSAR GOSWAMI'S PORTFOLIO DATA
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// Sub-projects inside the Projects Hub planet
+interface ProjectEntry {
+  title: string;
+  subtitle: string;
+  period: string;
+  description: string;
+  techStack: string[];
+  bullets: string[];
+  githubUrl?: string;
+  color: string;
+}
+
+const PROJECTS: ProjectEntry[] = [
+  {
+    title: "Head-2-Code",
+    subtitle: "MERN-Based Coding Platform",
+    period: "Oct 2025 - Jan 2026",
+    description: "MERN Competitive Coding Platform with real-time code execution and 1v1 battles.",
+    techStack: ["ReactJS", "Redux", "NodeJS", "ExpressJS", "MongoDB", "JavaScript"],
+    bullets: [
+      "Architected a scalable backend using NodeJS, ExpressJS, MongoDB, and Judge0 API with JWT authentication.",
+      "Enables learners to write & execute programs via online compiler and participate in 1v1 coding battles.",
+      "Built a React/Redux interface with interactive editor, competitive programming console, and solution-review pipeline.",
+    ],
+    githubUrl: "https://github.com/TusarGoswami",
+    color: "#00e5ff",
+  },
+  {
+    title: "Velo-Rapido",
+    subtitle: "Premium Bike Rental System",
+    period: "Feb 2025 - May 2025",
+    description: "Premium Bike Rental System with real-time tracking and admin control hub.",
+    techStack: ["HTML", "CSS", "JavaScript", "MySQL", "PHP"],
+    bullets: [
+      "Developed an end-to-end rental ecosystem with secure authentication and real-time vehicle tracking.",
+      "Engineered an admin control hub for fleet management and maintenance ticketing - improving efficiency by 40%.",
+      "Structured a fully normalized MySQL database schema (3NF) reducing data redundancy by 30%.",
+    ],
+    githubUrl: "https://github.com/TusarGoswami",
+    color: "#ff7700",
+  },
+  {
+    title: "LinkedIn Optimizer Pro",
+    subtitle: "AI-Powered Profile Assistant",
+    period: "Mar 2025 - Apr 2025",
+    description: "AI-powered LinkedIn profile diagnostics and personalized enhancement assistant.",
+    techStack: ["Python", "Flask", "JavaScript"],
+    bullets: [
+      "Created an AI-powered LinkedIn optimization utility delivering real-time profile diagnostics.",
+      "Integrated AI modules for keyword enrichment, headline scoring, summary analytics, and networking insights.",
+      "Released an interactive chatbot with data visualizations and exportable PDF/Excel reports.",
+    ],
+    githubUrl: "https://github.com/TusarGoswami",
+    color: "#aa44ff",
+  },
+];
+
 const PLANETS_DATA: PlanetData[] = [
   {
-    id: 0, name: "Head-2-Code", orbitRadius: 22, size: 2.8, color: "#00e5ff", orbitSpeed: 0.25, rotationSpeed: 1.8,
-    spotColor: "#88f5ff", glowColor: "#00c8e0", hasSatellite: true, initialAngle: 0,
-    description: "MERN-Based Competitive Coding Platform with real-time code execution and battles.",
-    facts: ["Stack: React, Redux, Node.js, MongoDB", "Judge0 API integration", "JWT Auth + REST APIs"],
-    moons: 3, gravityRadius: 12, orbitCaptureRadius: 6,
+    id: 0, name: "Projects Hub", orbitRadius: 30, size: 4.5, color: "#00e5ff", orbitSpeed: 0.18, rotationSpeed: 1.5,
+    spotColor: "#88f5ff", glowColor: "#00c8e0", hasSatellite: true, hasRing: true, ringColor: "#0088aa", initialAngle: 0,
+    description: "Explore all of Tusar's software projects - MERN platforms, PHP systems & AI tools.",
+    facts: ["3 projects: MERN, PHP, Python", "Judge0 API & real-time features", "Full-stack & AI-powered"],
+    moons: 3, gravityRadius: 16, orbitCaptureRadius: 8,
     portfolioType: "project",
-    projectTitle: "Head-2-Code",
-    projectSubtitle: "MERN-Based Coding Platform",
+    projectTitle: "Projects Hub",
+    projectSubtitle: "All Software Projects",
     githubUrl: "https://github.com/TusarGoswami",
-    period: "Oct 2025 â€“ Jan 2026",
-    techStack: ["ReactJS", "Redux", "NodeJS", "ExpressJS", "MongoDB", "Judge0 API", "Tailwind CSS"],
+    period: "2025 - 2026",
+    techStack: ["ReactJS", "NodeJS", "Python", "PHP", "MongoDB", "MySQL", "JavaScript"],
     bullets: [
-      "Architected a scalable backend using NodeJS, ExpressJS, MongoDB, and Judge0 API with JWT authentication for secure multi-language code execution.",
-      "Enables learners to write & execute programs via online compiler, participate in 1v1 coding battles, and consume structured video-learning modules.",
-      "Constructed a React/Redux interface with interactive editor, competitive programming console, and solution-review pipeline."
+      "Head-2-Code: MERN competitive coding platform with Judge0 API and real-time 1v1 battles.",
+      "Velo-Rapido: Premium bike rental system with PHP/MySQL admin control hub.",
+      "LinkedIn Optimizer Pro: AI-powered profile diagnostics with Python/Flask chatbot.",
     ]
   },
   {
-    id: 1, name: "Velo-Rapido", orbitRadius: 35, size: 3.8, color: "#ff7700", orbitSpeed: 0.18, rotationSpeed: 1.4,
-    spotColor: "#ffaa55", glowColor: "#ff9900", hasRing: true, ringColor: "#cc6600", initialAngle: Math.PI * 0.5,
-    description: "Premium Bike Rental System with real-time tracking and admin control hub.",
-    facts: ["Stack: PHP, MySQL, JS, Tailwind", "40% operational efficiency boost", "30% data redundancy reduction"],
-    moons: 2, gravityRadius: 15, orbitCaptureRadius: 7,
-    portfolioType: "project",
-    projectTitle: "Velo-Rapido",
-    projectSubtitle: "Premium Bike Rental System",
-    githubUrl: "https://github.com/TusarGoswami",
-    period: "Feb 2025 â€“ May 2025",
-    techStack: ["HTML", "CSS", "JavaScript", "MySQL", "PHP", "Tailwind CSS"],
-    bullets: [
-      "Developed an end-to-end rental ecosystem with secure authentication, reservation checkout, and real-time vehicle tracking.",
-      "Engineered an admin control hub for fleet management, booking supervision, maintenance ticketing, and damage-report auditing â€” improving efficiency by 40%.",
-      "Structured a fully normalized MySQL database schema (3NF) reducing data redundancy by 30% and improving data integrity."
-    ]
-  },
-  {
-    id: 2, name: "AI Optimizer", orbitRadius: 48, size: 3.2, color: "#aa44ff", orbitSpeed: 0.22, rotationSpeed: 2.5,
-    spotColor: "#cc88ff", glowColor: "#bb66ff", hasSatellite: true, initialAngle: Math.PI,
-    description: "LinkedIn Optimizer Pro â€“ AI-powered profile diagnostics and enhancement assistant.",
-    facts: ["Stack: Python, Flask, JS, Tailwind", "AI keyword enrichment & scoring", "PDF/Excel export reports"],
-    moons: 1, gravityRadius: 14, orbitCaptureRadius: 6.5,
-    portfolioType: "project",
-    projectTitle: "LinkedIn Optimizer Pro",
-    projectSubtitle: "AI Chatbot Assistant",
-    githubUrl: "https://github.com/TusarGoswami",
-    period: "Mar 2025 â€“ Apr 2025",
-    techStack: ["Python", "Flask", "JavaScript", "Tailwind CSS", "FPDF"],
-    bullets: [
-      "Created an AI-powered LinkedIn optimization utility delivering real-time profile diagnostics and personalized enhancement strategies.",
-      "Integrated intelligent AI modules for keyword enrichment, headline scoring, summary analytics, and networking insights.",
-      "Released an interactive chatbot with dynamic insights, data visualizations, and exportable PDF/Excel reports."
-    ]
-  },
-  {
-    id: 3, name: "Skills Core", orbitRadius: 62, size: 6.5, color: "#ffd700", orbitSpeed: 0.08, rotationSpeed: 0.6,
+    id: 1, name: "Skills Core", orbitRadius: 55, size: 6.5, color: "#ffd700", orbitSpeed: 0.08, rotationSpeed: 0.6,
     spotColor: "#ffee88", glowColor: "#ffcc00", hasRing: true, ringColor: "#ddaa00", hasSatellite: true, initialAngle: Math.PI * 1.3,
-    description: "Tusar's Technical Skills Hub â€” Languages, Frameworks, Tools & Core CS.",
+    description: "Tusar's Technical Skills Hub - Languages, Frameworks, Tools & Core CS.",
     facts: ["7 languages: Python, Java, C++, JS...", "React, Node, Flutter, Redux", "LeetCode Top 15% Globally"],
     moons: 0, gravityRadius: 25, orbitCaptureRadius: 12,
     portfolioType: "skills",
     projectTitle: "Technical Skills",
     projectSubtitle: "Languages, Frameworks & Tools",
-    period: "2023 â€“ Present",
+    period: "2023 - Present",
     techStack: ["Python", "Java", "C", "C++", "JavaScript", "PHP", "Dart"],
     bullets: [
       "Frameworks & Libraries: ReactJS, Redux, NodeJS, ExpressJS, Flutter, Tailwind CSS, RESTful APIs, JWT Authentication",
@@ -116,41 +139,41 @@ const PLANETS_DATA: PlanetData[] = [
     ]
   },
   {
-    id: 4, name: "LPU Planet", orbitRadius: 80, size: 5, color: "#66ff88", orbitSpeed: 0.06, rotationSpeed: 0.8,
+    id: 2, name: "LPU Planet", orbitRadius: 75, size: 5, color: "#66ff88", orbitSpeed: 0.06, rotationSpeed: 0.8,
     spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI * 0.7,
-    description: "Lovely Professional University â€“ B.Tech CSE. CGPA: 7.45.",
-    facts: ["B.Tech CSE @ LPU, Punjab", "CGPA: 7.45 | Aug 2023 â€“ Present", "Flutter Training Certification"],
+    description: "Lovely Professional University - B.Tech CSE. CGPA: 7.45.",
+    facts: ["B.Tech CSE @ LPU, Punjab", "CGPA: 7.45 | Aug 2023 - Present", "Flutter Training Certification"],
     moons: 2, gravityRadius: 20, orbitCaptureRadius: 10,
     portfolioType: "education",
     projectTitle: "Education & Training",
     projectSubtitle: "Lovely Professional University",
-    period: "Aug 2023 â€“ Present",
-    techStack: ["Flutter", "Dart", "Material UI", "URL Launcher"],
+    period: "Aug 2023 - Present",
+    techStack: ["Flutter", "Dart", "Java", "C++", "Python"],
     bullets: [
-      "Bachelor of Technology â€“ Computer Science and Engineering; CGPA: 7.45 | Lovely Professional University, Punjab",
-      "Mobile Application Development Using Flutter â€“ LPU Training (Junâ€“Jul 2025): Designed a complete university management mobile app.",
-      "Intermediate: 80.4% | Mandalkuli Netaji Vidyapith, West Bengal (2022â€“23)",
-      "Matriculation: 90.0% | Mandalkuli Netaji Vidyapith, West Bengal (2020â€“21)"
+      "Bachelor of Technology - Computer Science and Engineering; CGPA: 7.45 | Lovely Professional University, Punjab",
+      "Mobile Application Development Using Flutter - LPU Training (Jun-Jul 2025): Designed a university management mobile app.",
+      "Intermediate: 80.4% | Mandalkuli Netaji Vidyapith, West Bengal (2022-23)",
+      "Matriculation: 90.0% | Mandalkuli Netaji Vidyapith, West Bengal (2020-21)"
     ]
   },
   {
-    id: 5, name: "Achievements", orbitRadius: 100, size: 4.5, color: "#ff4488", orbitSpeed: 0.04, rotationSpeed: 0.5,
+    id: 3, name: "Achievements", orbitRadius: 98, size: 4.5, color: "#ff4488", orbitSpeed: 0.04, rotationSpeed: 0.5,
     spotColor: "#ff77aa", glowColor: "#ff5599", hasRing: true, ringColor: "#cc2266", hasSatellite: true, initialAngle: Math.PI * 0.3,
     description: "Achievements, Certifications & Competitive Programming milestones.",
-    facts: ["LeetCode Global Top 15%", "5â˜… Java & C++ on HackerRank", "300+ problems solved"],
+    facts: ["LeetCode Global Top 15%", "5-star Java & C++ on HackerRank", "300+ problems solved"],
     moons: 0, gravityRadius: 22, orbitCaptureRadius: 11,
     portfolioType: "achievements",
     projectTitle: "Achievements & Certs",
     projectSubtitle: "Competitive Programming & Certifications",
-    period: "2023 â€“ Present",
+    period: "2023 - Present",
     githubUrl: "https://github.com/TusarGoswami",
     techStack: ["LeetCode", "HackerRank", "CodeChef", "GeeksforGeeks", "NPTEL"],
     bullets: [
-      "ðŸ† Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
-      "â­ Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks",
-      "ðŸ“œ ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM â€“ Infosys Springboard (Aug 2025)",
-      "ðŸ“œ Mobile Application Development Using Flutter â€“ Lovely Professional University (Jul 2025)",
-      "ðŸ“œ Cloud Computing â€“ NPTEL IIT Kharagpur (Apr 2025)"
+      "🏆 Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
+      "⭐ Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks",
+      "📜 ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM - Infosys Springboard (Aug 2025)",
+      "📜 Mobile Application Development Using Flutter - Lovely Professional University (Jul 2025)",
+      "📜 Cloud Computing - NPTEL IIT Kharagpur (Apr 2025)"
     ]
   },
 ];
@@ -1417,18 +1440,18 @@ const Comet = ({ seed }: { seed: number }) => {
   );
 };
 
-// â”€â”€ Planet Detail Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Planet Detail Panel -------------------------------------------
 interface PlanetDetailProps {
   planet: PlanetData;
   onClose: () => void;
 }
 
 const typeIcon: Record<string, string> = {
-  project: "ðŸš€",
-  skills: "âš¡",
-  education: "ðŸŽ“",
-  achievements: "ðŸ†",
-  about: "ðŸ‘¨â€ðŸ’»",
+  project: "🚀",
+  skills: "⚡",
+  education: "🎓",
+  achievements: "🏆",
+  about: "👨‍💻",
 };
 
 const typeLabel: Record<string, string> = {
@@ -1439,9 +1462,54 @@ const typeLabel: Record<string, string> = {
   about: "ABOUT",
 };
 
+// Map tech names to devicons CDN logo URLs
+const TECH_LOGOS: Record<string, string> = {
+  Python: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
+  JavaScript: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
+  Java: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
+  "C++": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg",
+  C: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg",
+  PHP: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg",
+  Dart: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dart/dart-original.svg",
+  Flutter: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flutter/flutter-original.svg",
+  ReactJS: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
+  Redux: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/redux/redux-original.svg",
+  NodeJS: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg",
+  ExpressJS: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg",
+  MongoDB: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg",
+  MySQL: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg",
+  Flask: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flask/flask-original.svg",
+  HTML: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg",
+  CSS: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg",
+  Git: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
+  GitHub: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
+  Figma: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",
+};
+
+const TechBadge = ({ tech, accentColor }: { tech: string; accentColor: string }) => {
+  const logo = TECH_LOGOS[tech];
+  return (
+    <span
+      className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-medium border"
+      style={{ background: `${accentColor}18`, borderColor: `${accentColor}44`, color: accentColor }}
+    >
+      {logo && (
+        <img src={logo} alt={tech} className="w-4 h-4 object-contain" style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.5))" }} />
+      )}
+      {tech}
+    </span>
+  );
+};
+
 const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
-  const icon = planet.portfolioType ? typeIcon[planet.portfolioType] : "ðŸª";
+  const [projectIdx, setProjectIdx] = useState(0);
+  const icon = planet.portfolioType ? typeIcon[planet.portfolioType] : "🪐";
   const label = planet.portfolioType ? typeLabel[planet.portfolioType] : "PLANET";
+  const isProjectsHub = planet.portfolioType === "project";
+  const currentProject = isProjectsHub ? PROJECTS[projectIdx] : null;
+  const displayColor = isProjectsHub && currentProject ? currentProject.color : planet.color;
+  const displayTechStack = isProjectsHub && currentProject ? currentProject.techStack : (planet.techStack || []);
+  const displayBullets = isProjectsHub && currentProject ? currentProject.bullets : (planet.bullets || []);
 
   return (
     <motion.div
@@ -1453,22 +1521,22 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
       style={{ background: "rgba(5,5,20,0.85)", backdropFilter: "blur(12px)" }}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border shadow-2xl"
+        className="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl border shadow-2xl"
         style={{
-          background: `linear-gradient(135deg, #0d0d25 60%, ${planet.color}22)`,
-          borderColor: `${planet.color}55`,
-          boxShadow: `0 0 60px ${planet.color}33`,
+          background: `linear-gradient(135deg, #0d0d25 60%, ${displayColor}22)`,
+          borderColor: `${displayColor}55`,
+          boxShadow: `0 0 60px ${displayColor}33`,
         }}
       >
         {/* Header */}
         <div
           className="p-6 relative"
-          style={{ background: `linear-gradient(135deg, ${planet.color}33, transparent)` }}
+          style={{ background: `linear-gradient(135deg, ${displayColor}33, transparent)` }}
         >
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-lg font-bold transition-all hover:scale-110"
-            style={{ background: `${planet.color}33`, color: planet.color }}
+            style={{ background: `${displayColor}33`, color: displayColor }}
           >
             âœ•
           </button>
@@ -1477,8 +1545,8 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
             <div
               className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-3xl flex-shrink-0"
               style={{
-                background: `radial-gradient(circle at 35% 35%, ${planet.color}, ${planet.color}55)`,
-                boxShadow: `0 0 30px ${planet.color}66`,
+                background: `radial-gradient(circle at 35% 35%, ${displayColor}, ${displayColor}55)`,
+                boxShadow: `0 0 30px ${displayColor}66`,
               }}
             >
               {icon}
@@ -1486,39 +1554,59 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
             <div>
               <span
                 className="text-xs font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border mb-2 inline-block"
-                style={{ color: planet.color, borderColor: `${planet.color}55`, background: `${planet.color}15` }}
+                style={{ color: displayColor, borderColor: `${displayColor}55`, background: `${displayColor}15` }}
               >
                 {label}
               </span>
               <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-                {planet.projectTitle || planet.name}
+                {isProjectsHub && currentProject ? currentProject.title : (planet.projectTitle || planet.name)}
               </h2>
-              {planet.projectSubtitle && (
-                <p className="text-sm mt-0.5" style={{ color: `${planet.color}cc` }}>
-                  {planet.projectSubtitle}
-                </p>
-              )}
-              {planet.period && (
-                <p className="text-xs text-gray-400 mt-1">ðŸ“… {planet.period}</p>
-              )}
+              <p className="text-sm mt-0.5" style={{ color: `${displayColor}cc` }}>
+                {isProjectsHub && currentProject ? currentProject.subtitle : planet.projectSubtitle}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                ðŸ“… {isProjectsHub && currentProject ? currentProject.period : planet.period}
+              </p>
             </div>
           </div>
+
+          {/* Projects carousel tabs */}
+          {isProjectsHub && (
+            <div className="flex gap-2 mt-4 flex-wrap">
+              {PROJECTS.map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => setProjectIdx(i)}
+                  className="px-3 py-1 rounded-full text-xs font-semibold border transition-all hover:scale-105"
+                  style={{
+                    background: i === projectIdx ? p.color : `${p.color}18`,
+                    borderColor: `${p.color}66`,
+                    color: i === projectIdx ? "#000" : p.color,
+                  }}
+                >
+                  {p.title}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="p-6 space-y-5">
           {/* Description */}
-          <p className="text-gray-300 text-sm leading-relaxed">{planet.description}</p>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            {isProjectsHub && currentProject ? currentProject.description : planet.description}
+          </p>
 
           {/* Bullets */}
-          {planet.bullets && planet.bullets.length > 0 && (
+          {displayBullets.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: planet.color }}>
+              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: displayColor }}>
                 Key Highlights
               </h3>
               <ul className="space-y-2">
-                {planet.bullets.map((b, i) => (
+                {displayBullets.map((b, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: planet.color }} />
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: displayColor }} />
                     {b}
                   </li>
                 ))}
@@ -1526,25 +1614,15 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
             </div>
           )}
 
-          {/* Tech Stack */}
-          {planet.techStack && planet.techStack.length > 0 && (
+          {/* Tech Stack with logos */}
+          {displayTechStack.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: planet.color }}>
+              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: displayColor }}>
                 Tech Stack
               </h3>
               <div className="flex flex-wrap gap-2">
-                {planet.techStack.map((tech) => (
-                  <span
-                    key={tech}
-                    className="px-2.5 py-1 text-xs rounded-full font-medium border"
-                    style={{
-                      background: `${planet.color}18`,
-                      borderColor: `${planet.color}44`,
-                      color: planet.color,
-                    }}
-                  >
-                    {tech}
-                  </span>
+                {displayTechStack.map((tech) => (
+                  <TechBadge key={tech} tech={tech} accentColor={displayColor} />
                 ))}
               </div>
             </div>
@@ -1552,15 +1630,16 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
 
           {/* Links */}
           <div className="flex flex-wrap gap-3 pt-2">
-            {planet.githubUrl && (
+            {(isProjectsHub && currentProject ? currentProject.githubUrl : planet.githubUrl) && (
               <a
-                href={planet.githubUrl}
+                href={isProjectsHub && currentProject ? currentProject.githubUrl : planet.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105"
-                style={{ background: planet.color, color: "#000" }}
+                style={{ background: displayColor, color: "#000" }}
               >
-                <span>â¬¡</span> GitHub
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" className="w-4 h-4" alt="GitHub" style={{ filter: "invert(1)" }} />
+                GitHub
               </a>
             )}
             {planet.liveUrl && (
@@ -1569,7 +1648,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all hover:scale-105"
-                style={{ borderColor: planet.color, color: planet.color }}
+                style={{ borderColor: displayColor, color: displayColor }}
               >
                 ðŸŒ Live Demo
               </a>
@@ -1647,12 +1726,11 @@ const MobileJoystick = ({ onMove }: MobileJoystickProps) => {
 };
 
 // â”€â”€ Main GalaxyExploration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
+const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
   const [nearPlanet, setNearPlanet] = useState<PlanetData | null>(null);
   const [orbitingPlanet, setOrbitingPlanet] = useState<PlanetData | null>(null);
   const [viewingPlanet, setViewingPlanet] = useState<PlanetData | null>(null);
   const [collisionFlash, setCollisionFlash] = useState(false);
-
 
   const handleShipPositionUpdate = useCallback(() => { }, []);
 
@@ -1697,17 +1775,27 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
             onShipPositionUpdate={handleShipPositionUpdate}
             onPlanetClick={handlePlanetClick}
           />
-          {/* Comets */}
           {[0, 1, 2, 3, 4].map(i => <Comet key={i} seed={i} />)}
         </Suspense>
       </Canvas>
 
-      {/* ── TOP RIGHT: Social Links ── */}
+      {/* â”€â”€ TOP LEFT: Back Button â”€â”€ */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="absolute top-4 left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:scale-105 pointer-events-auto"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}
+        >
+          â† Back
+        </button>
+      )}
+
+      {/* â”€â”€ TOP RIGHT: Social Links â”€â”€ */}
       <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto">
         <a href="https://github.com/TusarGoswami" target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition-all hover:scale-105"
           style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
-          ⬡ GitHub
+          â¬¡ GitHub
         </a>
         <a href="https://www.linkedin.com/in/tusar027/" target="_blank" rel="noopener noreferrer"
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-blue-300 transition-all hover:scale-105"
@@ -1717,11 +1805,9 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
         <a href="mailto:tusargoswami0027@gmail.com"
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-300 transition-all hover:scale-105"
           style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}>
-          ✉ Email
+          âœ‰ Email
         </a>
       </div>
-
-
 
       {/* â”€â”€ Planet Legend (bottom center) â”€â”€ */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none hidden md:flex gap-3">
@@ -1779,7 +1865,7 @@ const GalaxyExploration = ({ vehicle }: GalaxyExplorationProps) => {
                 className="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:scale-105"
                 style={{ background: orbitingPlanet.color, color: '#000', boxShadow: `0 0 20px ${orbitingPlanet.color}88` }}
               >
-                {orbitingPlanet.portfolioType === "project" ? "View Project âš¡" : "Explore â†’"}
+                {orbitingPlanet.portfolioType === "project" ? "View Projects âš¡" : "Explore â†’"}
               </button>
               <p className="text-gray-500 text-xs mt-3">Press WASD / arrows to escape orbit</p>
             </div>
