@@ -1653,7 +1653,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
               onClick={onClose}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-white/20 text-white/70 hover:border-white/50 transition-all ml-auto"
             >
-              Continue Exploring â†’
+              Continue Exploring
             </button>
           </div>
         </div>
