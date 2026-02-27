@@ -64,7 +64,7 @@ const PROJECTS: ProjectEntry[] = [
       "Enables learners to write & execute programs via online compiler and participate in 1v1 coding battles.",
       "Built a React/Redux interface with interactive editor, competitive programming console, and solution-review pipeline.",
     ],
-    githubUrl: "https://github.com/TusarGoswami",
+    githubUrl: "https://github.com/TusarGoswami/Head-2-Code",
     color: "#00e5ff",
   },
   {
@@ -78,7 +78,7 @@ const PROJECTS: ProjectEntry[] = [
       "Engineered an admin control hub for fleet management and maintenance ticketing - improving efficiency by 40%.",
       "Structured a fully normalized MySQL database schema (3NF) reducing data redundancy by 30%.",
     ],
-    githubUrl: "https://github.com/TusarGoswami",
+    githubUrl: "https://github.com/TusarGoswami/Bike_Rental",
     color: "#ff7700",
   },
   {
@@ -92,7 +92,7 @@ const PROJECTS: ProjectEntry[] = [
       "Integrated AI modules for keyword enrichment, headline scoring, summary analytics, and networking insights.",
       "Released an interactive chatbot with data visualizations and exportable PDF/Excel reports.",
     ],
-    githubUrl: "https://github.com/TusarGoswami",
+    githubUrl: "https://github.com/TusarGoswami/AI_chatbot_Linkedln_Profile_Optimizer",
     color: "#aa44ff",
   },
 ];
