@@ -165,11 +165,11 @@ const PLANETS_DATA: PlanetData[] = [
     githubUrl: "https://github.com/TusarGoswami",
     techStack: ["LeetCode", "HackerRank", "CodeChef", "GeeksforGeeks", "NPTEL"],
     bullets: [
-      "ðŸ† Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
-      "⭐ Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks",
-      "ðŸ“œ ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM - Infosys Springboard (Aug 2025)",
-      "ðŸ“œ Mobile Application Development Using Flutter - Lovely Professional University (Jul 2025)",
-      "ðŸ“œ Cloud Computing - NPTEL IIT Kharagpur (Apr 2025)"
+      "Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
+      "Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks",
+      "ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM - Infosys Springboard (Aug 2025)",
+      "Mobile Application Development Using Flutter - Lovely Professional University (Jul 2025)",
+      "Cloud Computing - NPTEL IIT Kharagpur (Apr 2025)"
     ]
   },
 ];
@@ -1395,7 +1395,6 @@ const GalaxyScene = ({
   );
 };
 
-// â”€â”€ Comet Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const Comet = ({ seed }: { seed: number }) => {
   const ref = useRef<THREE.Mesh>(null);
   const trailRef = useRef<THREE.Mesh>(null);
@@ -1533,8 +1532,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
             onClick={onClose}
             className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-lg font-bold transition-all hover:scale-110"
             style={{ background: `${displayColor}33`, color: displayColor }}
-          >
-            âœ•
+          > ❌
           </button>
 
           <div className="flex items-center gap-4">
