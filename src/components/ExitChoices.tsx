@@ -513,10 +513,10 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="absolute top-6 inset-x-0 flex flex-col items-center pointer-events-none z-20"
+        className="absolute top-14 sm:top-6 inset-x-0 flex flex-col items-center pointer-events-none z-20 px-4"
       >
         <motion.h1
-          className="text-xl md:text-2xl font-bold tracking-[0.3em] uppercase"
+          className="text-base sm:text-xl md:text-2xl font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-center"
           style={{
             background: "linear-gradient(90deg, #00e5ff, #ffffff, #a855f7)",
             WebkitBackgroundClip: "text",
@@ -529,7 +529,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         </motion.h1>
 
         <motion.div
-          className="mt-2 h-px w-48 rounded-full"
+          className="mt-2 h-px w-32 sm:w-48 rounded-full"
           style={{ background: "linear-gradient(90deg, transparent, #00e5ff, #a855f7, transparent)" }}
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
@@ -537,7 +537,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         />
 
         <motion.p
-          className="mt-2 text-xs tracking-[0.25em] uppercase"
+          className="mt-1 sm:mt-2 text-xs tracking-[0.15em] sm:tracking-[0.25em] uppercase"
           style={{ color: "rgba(160,160,200,0.7)" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -547,14 +547,13 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         </motion.p>
       </motion.div>
 
+      {/* Corner decorative elements — hide on very small screens */}
+      <div className="hidden sm:block absolute top-4 left-4 w-12 sm:w-16 h-12 sm:h-16 border-l-2 border-t-2 border-cyan-500/50 pointer-events-none z-20" />
+      <div className="hidden sm:block absolute top-4 right-4 w-12 sm:w-16 h-12 sm:h-16 border-r-2 border-t-2 border-pink-500/50 pointer-events-none z-20" />
+      <div className="hidden sm:block absolute bottom-4 left-4 w-12 sm:w-16 h-12 sm:h-16 border-l-2 border-b-2 border-cyan-500/50 pointer-events-none z-20" />
+      <div className="hidden sm:block absolute bottom-4 right-4 w-12 sm:w-16 h-12 sm:h-16 border-r-2 border-b-2 border-pink-500/50 pointer-events-none z-20" />
 
-      {/* Corner decorative elements */}
-      <div className="absolute top-4 left-4 w-16 h-16 border-l-2 border-t-2 border-cyan-500/50 pointer-events-none z-20" />
-      <div className="absolute top-4 right-4 w-16 h-16 border-r-2 border-t-2 border-pink-500/50 pointer-events-none z-20" />
-      <div className="absolute bottom-4 left-4 w-16 h-16 border-l-2 border-b-2 border-cyan-500/50 pointer-events-none z-20" />
-      <div className="absolute bottom-4 right-4 w-16 h-16 border-r-2 border-b-2 border-pink-500/50 pointer-events-none z-20" />
-
-      {/* Enhanced Hover hint with animations */}
+      {/* Hover hint — hidden on touch devices, shown on desktop hover */}
       <AnimatePresence>
         {hovered && (
           <motion.div
@@ -562,35 +561,28 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-16 left-1/2 -translate-x-1/2 text-center pointer-events-none z-20"
+            className="hidden sm:block absolute bottom-20 left-1/2 -translate-x-1/2 text-center pointer-events-none z-20"
           >
             <div
-              className={`
-              relative overflow-hidden rounded-xl px-8 py-4 
+              className={`relative overflow-hidden rounded-xl px-6 py-3 backdrop-blur-md shadow-2xl
               ${hovered === "rocket"
                   ? "bg-gradient-to-r from-emerald-900/80 to-cyan-900/80 border border-emerald-400/50"
                   : "bg-gradient-to-r from-pink-900/80 to-purple-900/80 border border-pink-400/50"
-                } 
-              backdrop-blur-md shadow-2xl
-            `}
+                }`}
             >
-              {/* Animated shine effect */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
                 animate={{ x: ["-100%", "100%"] }}
                 transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 1 }}
               />
-
-              <p className="text-foreground text-xl font-bold tracking-wide relative z-10">
+              <p className="text-foreground text-lg font-bold tracking-wide relative z-10">
                 {hovered === "rocket" ? "🚀 ROCKET" : "🧑‍🚀 ASTRONAUT"}
               </p>
-              <p
-                className={`text-sm mt-1 relative z-10 ${hovered === "rocket" ? "text-emerald-300" : "text-pink-300"}`}
-              >
+              <p className={`text-sm mt-1 relative z-10 ${hovered === "rocket" ? "text-emerald-300" : "text-pink-300"}`}>
                 {hovered === "rocket" ? "Fast & Powerful Navigation" : "Free & Agile Exploration"}
               </p>
               <motion.p
-                className="text-xs text-muted-foreground mt-2 relative z-10"
+                className="text-xs text-muted-foreground mt-1 relative z-10"
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               >
@@ -601,18 +593,43 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         )}
       </AnimatePresence>
 
-      {/* Bottom instruction bar */}
+      {/* Mobile tap labels — shown only on small screens */}
+      <div className="sm:hidden absolute bottom-28 inset-x-0 flex justify-around px-6 pointer-events-none z-20">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8 }}
+          className="flex flex-col items-center gap-1"
+        >
+          <span className="text-lg">🚀</span>
+          <span className="text-xs font-bold text-emerald-400 tracking-wider">ROCKET</span>
+          <span className="text-[10px] text-gray-400">Speed & Power</span>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.9 }}
+          className="flex flex-col items-center gap-1"
+        >
+          <span className="text-lg">🧑‍🚀</span>
+          <span className="text-xs font-bold text-pink-400 tracking-wider">ASTRONAUT</span>
+          <span className="text-[10px] text-gray-400">Freedom & Control</span>
+        </motion.div>
+      </div>
+
+      {/* Bottom instruction bar — stacks on mobile */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-8 text-muted-foreground text-sm pointer-events-none z-20"
+        className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row gap-1 sm:gap-8 text-muted-foreground text-xs sm:text-sm pointer-events-none z-20 items-center"
       >
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Rocket: Speed & Power</span>
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="hidden sm:inline">Rocket: Speed & Power</span>
+          <span className="sm:hidden">Tap a vehicle to begin</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-pink-400 animate-pulse" />
           <span>Astronaut: Freedom & Control</span>
         </div>

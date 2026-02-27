@@ -111,3 +111,53 @@
 .space-cursor * {
   cursor: none;
 }
+
+/* On touch devices, restore normal cursor behavior */
+@media (hover: none) and (pointer: coarse) {
+  .space-cursor,
+  .space-cursor * {
+    cursor: auto;
+  }
+}
+
+/* Prevent scroll/bounce on mobile — full screen app */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area support for notched phones (iPhone X+) */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent text selection on interactive 3D elements */
+canvas {
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Scrollable detail panel on all screen sizes */
+.planet-detail-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Responsive utility: hide scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -1721,91 +1721,93 @@ const MobileJoystick = ({ onMove }: MobileJoystickProps) => {
   );
 };
 
-// â”€â”€ Main GalaxyExploration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Main GalaxyExploration --
 const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
   const [nearPlanet, setNearPlanet] = useState<PlanetData | null>(null);
   const [orbitingPlanet, setOrbitingPlanet] = useState<PlanetData | null>(null);
   const [viewingPlanet, setViewingPlanet] = useState<PlanetData | null>(null);
   const [collisionFlash, setCollisionFlash] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const handleShipPositionUpdate = useCallback(() => { }, []);
-
   const handleAsteroidCollision = useCallback(() => {
     setCollisionFlash(true);
     setTimeout(() => setCollisionFlash(false), 200);
   }, []);
-
   const handleEnterPlanet = useCallback(() => {
     if (orbitingPlanet) setViewingPlanet(orbitingPlanet);
   }, [orbitingPlanet]);
-
   const handlePlanetClick = useCallback((planet: PlanetData) => {
     setViewingPlanet(planet);
   }, []);
-
   const handleClosePlanetView = useCallback(() => {
     setViewingPlanet(null);
   }, []);
+  const handleJoystickMove = useCallback((dx: number, dy: number) => {
+    keyState.forward = dy < -0.3;
+    keyState.backward = dy > 0.3;
+    keyState.left = dx < -0.3;
+    keyState.right = dx > 0.3;
+  }, []);
 
   return (
-    <div className="w-full h-full absolute inset-0 bg-[#05050f]">
-      {/* Collision flash */}
+    <div className="w-full h-full absolute inset-0 bg-[#05050f] overflow-hidden">
       <AnimatePresence>
         {collisionFlash && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-red-500 z-40 pointer-events-none"
-          />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-red-500 z-40 pointer-events-none" />
         )}
       </AnimatePresence>
 
       <Canvas camera={{ position: [50, 20, 50], fov: 60 }} gl={{ antialias: true }}>
         <Suspense fallback={null}>
-          <GalaxyScene
-            vehicle={vehicle}
-            onPlanetApproach={setNearPlanet}
-            onOrbitCapture={setOrbitingPlanet}
-            orbitingPlanet={orbitingPlanet}
-            showEnterButton={orbitingPlanet !== null}
-            onAsteroidCollision={handleAsteroidCollision}
-            onShipPositionUpdate={handleShipPositionUpdate}
-            onPlanetClick={handlePlanetClick}
-          />
+          <GalaxyScene vehicle={vehicle} onPlanetApproach={setNearPlanet} onOrbitCapture={setOrbitingPlanet}
+            orbitingPlanet={orbitingPlanet} showEnterButton={orbitingPlanet !== null}
+            onAsteroidCollision={handleAsteroidCollision} onShipPositionUpdate={handleShipPositionUpdate}
+            onPlanetClick={handlePlanetClick} />
           {[0, 1, 2, 3, 4].map(i => <Comet key={i} seed={i} />)}
         </Suspense>
       </Canvas>
 
-      {/* â”€â”€ TOP LEFT: Back Button â”€â”€ */}
+      {/* Back Button */}
       {onBack && (
-        <button
-          onClick={onBack}
-          className="absolute top-4 left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:scale-105 pointer-events-auto"
-          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}
-        >
-          â† Back
+        <button onClick={onBack}
+          className="absolute top-3 left-3 z-30 flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs font-semibold text-white transition-all hover:scale-105 pointer-events-auto"
+          style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}>
+          ← <span className="hidden sm:inline">Back</span>
         </button>
       )}
 
-      {/* â”€â”€ TOP RIGHT: Social Links â”€â”€ */}
-      <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-auto">
+      {/* Social Links — icon-only on mobile */}
+      <div className="absolute top-3 right-3 flex flex-col gap-1.5 pointer-events-auto z-30">
         <a href="https://github.com/TusarGoswami" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-white transition-all hover:scale-105"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium text-white transition-all hover:scale-105"
           style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}>
-          â¬¡ GitHub
+          <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" className="w-3.5 h-3.5" style={{ filter: "invert(1)" }} alt="GitHub" />
+          <span className="hidden sm:inline">GitHub</span>
         </a>
         <a href="https://www.linkedin.com/in/tusar027/" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-blue-300 transition-all hover:scale-105"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium text-blue-300 transition-all hover:scale-105"
           style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.3)" }}>
-          in LinkedIn
+          <span className="text-blue-400 font-bold text-xs">in</span>
+          <span className="hidden sm:inline">LinkedIn</span>
         </a>
         <a href="mailto:tusargoswami0027@gmail.com"
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-300 transition-all hover:scale-105"
+          className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium text-red-300 transition-all hover:scale-105"
           style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}>
-          âœ‰ Email
+          <span>✉</span>
+          <span className="hidden sm:inline">Email</span>
         </a>
       </div>
 
-      {/* â”€â”€ Planet Legend (bottom center) â”€â”€ */}
+      {/* Planet Legend (desktop only) */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-none hidden md:flex gap-3">
         {PLANETS_DATA.map(p => (
           <div key={p.id} className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -1815,23 +1817,25 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
         ))}
       </div>
 
+      {/* Mobile Joystick */}
+      {isMobile && !viewingPlanet && !orbitingPlanet && (
+        <div className="absolute bottom-6 left-5 z-30 pointer-events-auto">
+          <MobileJoystick onMove={handleJoystickMove} />
+          <p className="text-center text-[10px] text-gray-500 mt-1">Move</p>
+        </div>
+      )}
+
       {/* Near planet indicator */}
       <AnimatePresence>
         {nearPlanet && !orbitingPlanet && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="absolute top-32 right-4 md:top-44 md:right-6 pointer-events-none"
-          >
-            <div className="backdrop-blur-md rounded-xl px-4 py-3 border shadow-lg"
-              style={{
-                background: `linear-gradient(135deg, ${nearPlanet.color}22, transparent)`,
-                borderColor: `${nearPlanet.color}55`,
-                boxShadow: `0 0 20px ${nearPlanet.color}33`,
-              }}>
-              <p className="text-gray-400 text-xs uppercase tracking-wider">Approaching</p>
-              <p className="text-white text-lg font-bold">{nearPlanet.name}</p>
-              <p className="text-gray-400 text-xs mt-0.5">{nearPlanet.portfolioType ? typeLabel[nearPlanet.portfolioType] : "Gravity detected"}</p>
+            className="absolute top-14 right-3 md:top-44 md:right-6 pointer-events-none z-20 max-w-[160px] sm:max-w-none">
+            <div className="backdrop-blur-md rounded-xl px-3 sm:px-4 py-2 sm:py-3 border shadow-lg"
+              style={{ background: `linear-gradient(135deg, ${nearPlanet.color}22, transparent)`, borderColor: `${nearPlanet.color}55`, boxShadow: `0 0 20px ${nearPlanet.color}33` }}>
+              <p className="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wider">Approaching</p>
+              <p className="text-white text-sm sm:text-lg font-bold">{nearPlanet.name}</p>
+              <p className="text-gray-400 text-[10px] sm:text-xs mt-0.5">{nearPlanet.portfolioType ? typeLabel[nearPlanet.portfolioType] : "Gravity detected"}</p>
             </div>
           </motion.div>
         )}
@@ -1840,30 +1844,24 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
       {/* Orbiting indicator */}
       <AnimatePresence>
         {orbitingPlanet && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-          >
-            <div className="backdrop-blur-md rounded-2xl px-6 py-5 border shadow-2xl text-center"
-              style={{
-                background: `linear-gradient(135deg, ${orbitingPlanet.color}44, ${orbitingPlanet.color}11)`,
-                borderColor: `${orbitingPlanet.color}66`,
-                boxShadow: `0 0 40px ${orbitingPlanet.color}44`,
-              }}>
-              <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Orbiting</p>
-              <p className="text-white text-2xl font-bold mb-1">{orbitingPlanet.projectTitle || orbitingPlanet.name}</p>
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[85vw] max-w-xs sm:max-w-sm">
+            <div className="backdrop-blur-md rounded-2xl px-4 sm:px-6 py-4 sm:py-5 border shadow-2xl text-center"
+              style={{ background: `linear-gradient(135deg, ${orbitingPlanet.color}44, ${orbitingPlanet.color}11)`, borderColor: `${orbitingPlanet.color}66`, boxShadow: `0 0 40px ${orbitingPlanet.color}44` }}>
+              <p className="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wider mb-1">Orbiting</p>
+              <p className="text-white text-lg sm:text-2xl font-bold mb-1">{orbitingPlanet.projectTitle || orbitingPlanet.name}</p>
               {orbitingPlanet.period && (
                 <p className="text-xs mb-3" style={{ color: `${orbitingPlanet.color}cc` }}>{orbitingPlanet.period}</p>
               )}
-              <button
-                onClick={handleEnterPlanet}
-                className="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:scale-105"
-                style={{ background: orbitingPlanet.color, color: '#000', boxShadow: `0 0 20px ${orbitingPlanet.color}88` }}
-              >
-                {orbitingPlanet.portfolioType === "project" ? "View Projects âš¡" : "Explore â†’"}
+              <button onClick={handleEnterPlanet}
+                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-sm transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
+                style={{ background: orbitingPlanet.color, color: '#000', boxShadow: `0 0 20px ${orbitingPlanet.color}88` }}>
+                {orbitingPlanet.portfolioType === "project" ? "View Projects ⚡" : "Explore →"}
               </button>
-              <p className="text-gray-500 text-xs mt-3">Press WASD / arrows to escape orbit</p>
+              <p className="text-gray-500 text-[10px] sm:text-xs mt-2 sm:mt-3">
+                {isMobile ? "Use joystick to escape orbit" : "Press WASD / arrows to escape orbit"}
+              </p>
             </div>
           </motion.div>
         )}
@@ -1875,8 +1873,9 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
           <PlanetDetail planet={viewingPlanet} onClose={handleClosePlanetView} />
         )}
       </AnimatePresence>
-    </div >
+    </div>
   );
 };
+
 
 export default GalaxyExploration;

@@ -12,7 +12,7 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
 
   useEffect(() => {
     if (isLoading) {
-      const duration = 3000; // 3 seconds loading
+      const duration = 3000;
       const interval = 50;
       const increment = 100 / (duration / interval);
 
@@ -32,13 +32,12 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
     }
   }, [isLoading, onLoadingComplete]);
 
-  // SVG path for the parallelogram border (draw animation)
   const parallelogramPath = "M 40 0 L 260 0 L 220 100 L 0 100 Z";
-  const pathLength = 720; // Approximate path length
+  const pathLength = 720;
 
   return (
     <motion.div
-      className="relative"
+      className="relative flex flex-col items-center gap-6 px-4"
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
@@ -50,15 +49,14 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
           transform: "perspective(1000px) rotateX(5deg) rotateY(-5deg)",
         }}
       >
-        {/* Main frame */}
-        <div className="relative w-[280px] h-[120px]">
+        {/* Main frame - responsive width */}
+        <div className="relative w-[240px] sm:w-[280px] h-[110px] sm:h-[120px]">
           {/* SVG for border draw animation */}
           <svg
             className="absolute inset-0 w-full h-full"
             viewBox="0 0 260 100"
             preserveAspectRatio="none"
           >
-            {/* Outer border */}
             <motion.path
               d={parallelogramPath}
               fill="none"
@@ -72,8 +70,6 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
                 strokeDashoffset: pathLength * (1 - loadingProgress / 100),
               }}
             />
-
-            {/* Inner border (slightly smaller) */}
             <motion.path
               d="M 48 8 L 252 8 L 216 92 L 8 92 Z"
               fill="none"
@@ -100,15 +96,9 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
                 exit={{ opacity: 0 }}
               >
                 <motion.span
-                  className="text-foreground text-xl font-bold tracking-[0.3em] uppercase"
-                  animate={{
-                    opacity: [1, 0.5, 1],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
+                  className="text-foreground text-lg sm:text-xl font-bold tracking-[0.3em] uppercase"
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                 >
                   Loading
                 </motion.span>
@@ -119,7 +109,7 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
             ) : (
               <motion.button
                 onClick={onStart}
-                className="group relative px-8 py-3 text-foreground text-2xl font-bold tracking-[0.4em] uppercase transition-all duration-300 hover:text-accent"
+                className="group relative px-6 sm:px-8 py-3 text-foreground text-xl sm:text-2xl font-bold tracking-[0.4em] uppercase transition-all duration-300 hover:text-accent"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
@@ -127,13 +117,9 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
                 whileTap={{ scale: 0.95 }}
               >
                 <span className="relative z-10">Start</span>
-
-                {/* Glow effect on hover */}
                 <motion.div
                   className="absolute inset-0 bg-accent/0 group-hover:bg-accent/10 transition-colors duration-300"
-                  style={{
-                    clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)",
-                  }}
+                  style={{ clipPath: "polygon(15% 0%, 100% 0%, 85% 100%, 0% 100%)" }}
                 />
               </motion.button>
             )}
@@ -141,27 +127,23 @@ const IsometricFrame = ({ isLoading, onLoadingComplete, onStart }: IsometricFram
         </div>
 
         {/* Corner accents */}
-        <motion.div
-          className="absolute -top-1 left-[15%] w-3 h-3 border-t-2 border-l-2 border-foreground"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: loadingProgress > 20 ? 1 : 0 }}
-        />
-        <motion.div
-          className="absolute -top-1 right-0 w-3 h-3 border-t-2 border-r-2 border-foreground"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: loadingProgress > 40 ? 1 : 0 }}
-        />
-        <motion.div
-          className="absolute -bottom-1 left-0 w-3 h-3 border-b-2 border-l-2 border-foreground"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: loadingProgress > 60 ? 1 : 0 }}
-        />
-        <motion.div
-          className="absolute -bottom-1 right-[15%] w-3 h-3 border-b-2 border-r-2 border-foreground"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: loadingProgress > 80 ? 1 : 0 }}
-        />
+        <motion.div className="absolute -top-1 left-[15%] w-3 h-3 border-t-2 border-l-2 border-foreground" initial={{ opacity: 0 }} animate={{ opacity: loadingProgress > 20 ? 1 : 0 }} />
+        <motion.div className="absolute -top-1 right-0 w-3 h-3 border-t-2 border-r-2 border-foreground" initial={{ opacity: 0 }} animate={{ opacity: loadingProgress > 40 ? 1 : 0 }} />
+        <motion.div className="absolute -bottom-1 left-0 w-3 h-3 border-b-2 border-l-2 border-foreground" initial={{ opacity: 0 }} animate={{ opacity: loadingProgress > 60 ? 1 : 0 }} />
+        <motion.div className="absolute -bottom-1 right-[15%] w-3 h-3 border-b-2 border-r-2 border-foreground" initial={{ opacity: 0 }} animate={{ opacity: loadingProgress > 80 ? 1 : 0 }} />
       </div>
+
+      {/* Mobile tap hint */}
+      {!isLoading && (
+        <motion.p
+          className="text-xs tracking-widest uppercase sm:hidden"
+          style={{ color: "rgba(160,160,200,0.5)" }}
+          animate={{ opacity: [0.4, 0.9, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          Tap to begin
+        </motion.p>
+      )}
     </motion.div>
   );
 };
