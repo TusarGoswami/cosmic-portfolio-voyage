@@ -1660,7 +1660,6 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
   );
 };
 
-// â”€â”€ Mobile Touch Joystick â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface MobileJoystickProps {
   onMove: (dx: number, dy: number) => void;
 }
@@ -1800,7 +1799,7 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
         <a href="mailto:tusargoswami0027@gmail.com"
           className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs font-medium text-red-300 transition-all hover:scale-105"
           style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}>
-          <span>✉</span>
+          <span>📥</span>
           <span className="hidden sm:inline">Email</span>
         </a>
       </div>
