@@ -1561,7 +1561,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                 {isProjectsHub && currentProject ? currentProject.subtitle : planet.projectSubtitle}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                ðŸ“… {isProjectsHub && currentProject ? currentProject.period : planet.period}
+                {isProjectsHub && currentProject ? currentProject.period : planet.period}
               </p>
             </div>
           </div>
@@ -1646,7 +1646,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border transition-all hover:scale-105"
                 style={{ borderColor: displayColor, color: displayColor }}
               >
-                ðŸŒ Live Demo
+                Live Demo
               </a>
             )}
             <button
