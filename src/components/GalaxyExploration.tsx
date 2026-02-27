@@ -40,10 +40,6 @@ interface PlanetData {
   bullets?: string[];
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// TUSAR GOSWAMI'S PORTFOLIO DATA
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
 // Sub-projects inside the Projects Hub planet
 interface ProjectEntry {
   title: string;
@@ -169,11 +165,11 @@ const PLANETS_DATA: PlanetData[] = [
     githubUrl: "https://github.com/TusarGoswami",
     techStack: ["LeetCode", "HackerRank", "CodeChef", "GeeksforGeeks", "NPTEL"],
     bullets: [
-      "🏆 Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
+      "ðŸ† Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
       "⭐ Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks",
-      "📜 ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM - Infosys Springboard (Aug 2025)",
-      "📜 Mobile Application Development Using Flutter - Lovely Professional University (Jul 2025)",
-      "📜 Cloud Computing - NPTEL IIT Kharagpur (Apr 2025)"
+      "ðŸ“œ ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM - Infosys Springboard (Aug 2025)",
+      "ðŸ“œ Mobile Application Development Using Flutter - Lovely Professional University (Jul 2025)",
+      "ðŸ“œ Cloud Computing - NPTEL IIT Kharagpur (Apr 2025)"
     ]
   },
 ];
