@@ -38,6 +38,7 @@ interface PlanetData {
   techStack?: string[];
   period?: string;
   bullets?: string[];
+  skillCategories?: { category: string; skills: string[] }[];
 }
 
 // Sub-projects inside the Projects Hub planet
@@ -126,12 +127,13 @@ const PLANETS_DATA: PlanetData[] = [
     projectTitle: "Technical Skills",
     projectSubtitle: "Languages, Frameworks & Tools",
     period: "2023 - Present",
-    techStack: ["Python", "Java", "C", "C++", "JavaScript", "PHP", "Dart"],
-    bullets: [
-      "Frameworks & Libraries: ReactJS, Redux, NodeJS, ExpressJS, Flutter, Tailwind CSS, RESTful APIs, JWT Authentication",
-      "Tools & Platforms: MySQL, MongoDB, Git, GitHub, Postman, Vercel, Figma",
-      "Core CS Fundamentals: DSA, OOP, DBMS, OS, CN, System Design",
-      "Soft Skills: Problem-Solving, Team Collaboration, Leadership, Adaptability"
+    techStack: [],
+    bullets: [],
+    skillCategories: [
+      { category: "Frameworks & Libraries", skills: ["ReactJS", "Redux", "NodeJS", "ExpressJS", "Flutter", "Tailwind CSS", "RESTful APIs", "JWT Authentication"] },
+      { category: "Tools & Platforms", skills: ["MySQL", "MongoDB", "Git", "GitHub", "Postman", "Vercel", "Figma"] },
+      { category: "Core CS Fundamentals", skills: ["DSA", "OOP", "DBMS", "OS", "CN", "System Design"] },
+      { category: "Programming Languages", skills: ["Python", "Java", "C", "C++", "JavaScript", "PHP", "Dart"] }
     ]
   },
   {
@@ -1541,6 +1543,9 @@ const TECH_LOGOS: Record<string, string> = {
   Git: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
   GitHub: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
   Figma: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",
+  "Tailwind CSS": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg",
+  Postman: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postman/postman-original.svg",
+  Vercel: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg",
 };
 
 const TechBadge = ({ tech, accentColor }: { tech: string; accentColor: string }) => {
@@ -1661,6 +1666,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
   const displayColor = isProjectsHub && currentProject ? currentProject.color : planet.color;
   const displayTechStack = isProjectsHub && currentProject ? currentProject.techStack : (planet.techStack || []);
   const displayBullets = isProjectsHub && currentProject ? currentProject.bullets : (planet.bullets || []);
+  const displaySkillCategories = planet.skillCategories || [];
 
   return (
     <motion.div
@@ -1794,6 +1800,24 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                   <TechBadge key={tech} tech={tech} accentColor={displayColor} />
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Skill Categories with logos */}
+          {displaySkillCategories.length > 0 && (
+            <div className="space-y-4">
+              {displaySkillCategories.map((cat, i) => (
+                <div key={i} className="space-y-2">
+                  <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: displayColor }}>
+                    {cat.category}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {cat.skills.map((skill) => (
+                      <TechBadge key={skill} tech={skill} accentColor={displayColor} />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
