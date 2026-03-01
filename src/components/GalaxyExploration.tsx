@@ -1581,7 +1581,7 @@ const ContactForm = ({ accentColor }: { accentColor: string }) => {
     // Using mailto as fallback (no backend needed)
     const subject = encodeURIComponent('Portfolio Contact: ' + form.name);
     const body = encodeURIComponent('From: ' + form.name + '\nEmail: ' + form.email + '\n\n' + form.message);
-    window.open('mailto:tusargoswami0027@gmail.com?subject=' + subject + '&body=' + body);
+    window.location.href = 'mailto:tusargoswami0027@gmail.com?subject=' + subject + '&body=' + body;
     setTimeout(() => {
       setStatus('sent');
       setForm({ name: '', email: '', message: '' });
