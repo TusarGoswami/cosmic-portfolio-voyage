@@ -221,6 +221,12 @@ const setupKeyboardListeners = () => {
   listenersSetup = true;
 
   const handleKeyDown = (e: KeyboardEvent) => {
+    // If the event is triggered from an input field, do not handle as game controls
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      return;
+    }
+
     const key = e.key.toLowerCase();
     const code = e.code;
 
@@ -1195,8 +1201,8 @@ const GalaxyScene = ({
     const time = state.clock.elapsedTime;
     const delta = Math.min(state.clock.getDelta(), 0.1);
 
-    const acceleration = 5.5;
-    const maxSpeed = 11;
+    const acceleration = 15.0;
+    const maxSpeed = 25;
     const friction = 0.96;
     const rotationSpeed = 0.05;
 
@@ -1374,7 +1380,7 @@ const GalaxyScene = ({
       <ambientLight intensity={0.2} />
       <directionalLight position={[30, 30, 15]} intensity={0.4} />
 
-      <BlinkingStars count={5000} />
+      <BlinkingStars count={1200} />
       <GalaxyCore />
 
       {/* Orbital paths */}
@@ -2023,7 +2029,7 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
         )}
       </AnimatePresence>
 
-      <Canvas camera={{ position: [50, 20, 50], fov: 60 }} gl={{ antialias: true }}>
+      <Canvas camera={{ position: [50, 20, 50], fov: 60 }} gl={{ antialias: true }} dpr={[1, 1.5]}>
         <Suspense fallback={null}>
           {!cinematicDone && <IntroCinematic onComplete={() => setCinematicDone(true)} />}
           <GalaxyScene vehicle={vehicle} onPlanetApproach={setNearPlanet} onOrbitCapture={setOrbitingPlanet}
