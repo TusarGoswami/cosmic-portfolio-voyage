@@ -1578,14 +1578,35 @@ const ContactForm = ({ accentColor }: { accentColor: string }) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
     setStatus('sending');
-    // Using mailto as fallback (no backend needed)
-    const subject = encodeURIComponent('Portfolio Contact: ' + form.name);
-    const body = encodeURIComponent('From: ' + form.name + '\nEmail: ' + form.email + '\n\n' + form.message);
-    window.location.href = 'mailto:tusargoswami0027@gmail.com?subject=' + subject + '&body=' + body;
-    setTimeout(() => {
-      setStatus('sent');
-      setForm({ name: '', email: '', message: '' });
-    }, 500);
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: "c40626ee-4071-43bb-a344-81ea28c5b4a1",
+          name: form.name,
+          email: form.email,
+          message: form.message,
+          subject: "New Portfolio Message: " + form.name,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setStatus('sent');
+        setForm({ name: '', email: '', message: '' });
+      } else {
+        setStatus('error');
+        console.error("Web3Forms error:", result.message);
+      }
+    } catch (error) {
+      setStatus('error');
+      console.error("Form submission failed:", error);
+    }
   };
 
   if (status === 'sent') {
@@ -1594,9 +1615,22 @@ const ContactForm = ({ accentColor }: { accentColor: string }) => {
         className="mt-5 p-5 rounded-xl text-center"
         style={{ background: `${accentColor}15`, border: `1px solid ${accentColor}44` }}>
         <div className="text-3xl mb-2">✅</div>
-        <p className="text-white font-bold">Message sent!</p>
-        <p className="text-gray-400 text-sm mt-1">Your email client should open. I'll get back to you soon!</p>
+        <p className="text-white font-bold">Message Delivered!</p>
+        <p className="text-gray-400 text-sm mt-1">I've received your message and will get back to you soon via email.</p>
         <button onClick={() => setStatus('idle')} className="mt-3 text-xs underline" style={{ color: accentColor }}>Send another</button>
+      </motion.div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+        className="mt-5 p-5 rounded-xl text-center"
+        style={{ background: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.4)' }}>
+        <div className="text-3xl mb-2">❌</div>
+        <p className="text-white font-bold">Transmission Failed!</p>
+        <p className="text-gray-400 text-sm mt-1">Something went wrong while sending your message. Please try again.</p>
+        <button onClick={() => setStatus('idle')} className="mt-3 text-xs underline" style={{ color: '#ff6666' }}>Try again</button>
       </motion.div>
     );
   }
@@ -1634,7 +1668,7 @@ const ContactForm = ({ accentColor }: { accentColor: string }) => {
           className="w-full py-2.5 rounded-lg text-sm font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
           style={{ background: accentColor, color: '#000' }}
         >
-          {status === 'sending' ? 'Opening mail...' : 'Send Message 🚀'}
+          {status === 'sending' ? 'Transmitting... ⏳' : 'Send Message 🚀'}
         </button>
       </form>
     </div>
