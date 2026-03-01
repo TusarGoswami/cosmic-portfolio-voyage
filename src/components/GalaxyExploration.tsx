@@ -1627,7 +1627,7 @@ const ContactForm = ({ accentColor }: { accentColor: string }) => {
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
         className="mt-5 p-5 rounded-xl text-center"
         style={{ background: 'rgba(255, 68, 68, 0.15)', border: '1px solid rgba(255, 68, 68, 0.4)' }}>
-        <div className="text-3xl mb-2">❌</div>
+        <div className="text-3xl mb-2">❎</div>
         <p className="text-white font-bold">Transmission Failed!</p>
         <p className="text-gray-400 text-sm mt-1">Something went wrong while sending your message. Please try again.</p>
         <button onClick={() => setStatus('idle')} className="mt-3 text-xs underline" style={{ color: '#ff6666' }}>Try again</button>
