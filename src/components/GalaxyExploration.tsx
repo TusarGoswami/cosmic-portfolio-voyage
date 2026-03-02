@@ -1771,7 +1771,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
             onClick={onClose}
             className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-lg font-bold transition-all hover:scale-110"
             style={{ background: `${displayColor}33`, color: displayColor }}
-          > ❎
+          > ⚔️
           </button>
 
           <div className="flex items-center gap-4">
