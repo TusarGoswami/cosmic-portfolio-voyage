@@ -30,7 +30,7 @@ interface PlanetData {
   gravityRadius: number;
   orbitCaptureRadius: number;
   // Portfolio fields
-  portfolioType?: "project" | "skills" | "education" | "achievements" | "about";
+  portfolioType?: "project" | "skills" | "education" | "achievements" | "certificates" | "about";
   projectTitle?: string;
   projectSubtitle?: string;
   githubUrl?: string;
@@ -157,25 +157,40 @@ const PLANETS_DATA: PlanetData[] = [
   {
     id: 3, name: "Achievements", orbitRadius: 98, size: 4.5, color: "#ff4488", orbitSpeed: 0.04, rotationSpeed: 0.5,
     spotColor: "#ff77aa", glowColor: "#ff5599", hasRing: true, ringColor: "#cc2266", hasSatellite: true, initialAngle: Math.PI * 0.3,
-    description: "Achievements, Certifications & Competitive Programming milestones.",
+    description: "Achievements & Competitive Programming milestones.",
     facts: ["LeetCode Global Top 15%", "5-star Java & C++ on HackerRank", "300+ problems solved"],
     moons: 0, gravityRadius: 22, orbitCaptureRadius: 11,
     portfolioType: "achievements",
-    projectTitle: "Achievements & Certs",
-    projectSubtitle: "Competitive Programming & Certifications",
+    projectTitle: "Achievements",
+    projectSubtitle: "Competitive Programming",
     period: "2023 - Present",
     githubUrl: "https://github.com/TusarGoswami",
-    techStack: ["LeetCode", "HackerRank", "CodeChef", "GeeksforGeeks", "NPTEL"],
+    techStack: ["LeetCode", "HackerRank", "CodeChef", "GeeksforGeeks"],
     bullets: [
       "Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
-      "Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks",
+      "Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks"
+    ]
+  },
+  {
+    id: 4, name: "Certifications", orbitRadius: 115, size: 4.2, color: "#9b5de5", orbitSpeed: 0.035, rotationSpeed: 0.6,
+    spotColor: "#c28cf7", glowColor: "#7e3cc4", hasRing: false, hasSatellite: true, initialAngle: Math.PI * 1.6,
+    description: "Professional Certifications & Training.",
+    facts: ["ChatGPT-4 Prompt Engineering", "Flutter Dev", "Cloud Computing"],
+    moons: 1, gravityRadius: 21, orbitCaptureRadius: 10,
+    portfolioType: "certificates",
+    projectTitle: "Certifications",
+    projectSubtitle: "Professional Training",
+    period: "2025",
+    githubUrl: "https://github.com/TusarGoswami",
+    techStack: ["Flutter"],
+    bullets: [
       "ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM - Infosys Springboard (Aug 2025)",
       "Mobile Application Development Using Flutter - Lovely Professional University (Jul 2025)",
       "Cloud Computing - NPTEL IIT Kharagpur (Apr 2025)"
     ]
   },
   {
-    id: 4, name: "About Me", orbitRadius: 120, size: 4, color: "#39ff88", orbitSpeed: 0.03, rotationSpeed: 0.7,
+    id: 5, name: "About Me", orbitRadius: 135, size: 4, color: "#39ff88", orbitSpeed: 0.03, rotationSpeed: 0.7,
     spotColor: "#88ffbb", glowColor: "#66ffaa", hasSatellite: true, hasRing: false, initialAngle: Math.PI * 0.9,
     description: "About Tusar Goswami — Full Stack Developer, B.Tech CSE @ LPU.",
     facts: ["Full Stack Developer", "B.Tech CSE @ LPU", "Open to opportunities"],
@@ -1516,6 +1531,7 @@ const typeIcon: Record<string, string> = {
   skills: "⚡",
   education: "🎓",
   achievements: "🏆",
+  certificates: "📜",
   about: "👨‍💻",
 };
 
@@ -1524,6 +1540,7 @@ const typeLabel: Record<string, string> = {
   skills: "SKILLS",
   education: "EDUCATION",
   achievements: "ACHIEVEMENTS",
+  certificates: "CERTIFICATES",
   about: "ABOUT",
 };
 
