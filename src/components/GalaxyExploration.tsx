@@ -149,7 +149,7 @@ const PLANETS_DATA: PlanetData[] = [
     period: "Aug 2023 - Present",
     techStack: ["Flutter", "Dart", "Java", "C++", "Python"],
     bullets: [
-      "Bachelor of Technology - Computer Science and Engineering; CGPA: 7.45 | Lovely Professional University, Punjab",
+      "Bachelor of Technology - Computer Science and Engineering || Lovely Professional University, Punjab",
       "Intermediate: 80.4% | Mandalkuli Netaji Vidyapith, West Bengal (2022-23)",
       "Matriculation: 90.0% | Mandalkuli Netaji Vidyapith, West Bengal (2020-21)"
     ]
