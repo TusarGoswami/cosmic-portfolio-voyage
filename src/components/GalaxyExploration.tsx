@@ -39,6 +39,7 @@ interface PlanetData {
   period?: string;
   bullets?: string[];
   skillCategories?: { category: string; skills: string[] }[];
+  techLinks?: Record<string, string>;
 }
 
 // Sub-projects inside the Projects Hub planet
@@ -166,6 +167,12 @@ const PLANETS_DATA: PlanetData[] = [
     period: "2023 - Present",
     githubUrl: "https://github.com/TusarGoswami",
     techStack: ["LeetCode", "HackerRank", "CodeChef", "GeeksforGeeks"],
+    techLinks: {
+      "LeetCode": "https://leetcode.com/u/TusarGoswami/",
+      "HackerRank": "https://www.hackerrank.com/profile/tusarg937",
+      "CodeChef": "https://www.codechef.com/users/tusar_27",
+      "GeeksforGeeks": "https://www.geeksforgeeks.org/profile/__tusar27"
+    },
     bullets: [
       "Secured Global Top 15% rank in LeetCode Weekly and Biweekly Contests",
       "Earned 5-star ratings in Java & C++ on HackerRank; solved 300+ problems across LeetCode, CodeChef, & GeeksforGeeks"
@@ -1569,13 +1576,17 @@ const TECH_LOGOS: Record<string, string> = {
   "Tailwind CSS": "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/tailwindcss/tailwindcss-original.svg",
   Postman: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postman/postman-original.svg",
   Vercel: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/vercel/vercel-original.svg",
+  LeetCode: "https://upload.wikimedia.org/wikipedia/commons/1/19/LeetCode_logo_black.png",
+  HackerRank: "https://upload.wikimedia.org/wikipedia/commons/4/40/HackerRank_Icon-1000px.png",
+  CodeChef: "https://cdn.iconscout.com/icon/free/png-256/free-codechef-logo-icon-download-in-svg-png-gif-file-formats--technology-social-media-vol-2-pack-logos-icons-2944760.png",
+  GeeksforGeeks: "https://upload.wikimedia.org/wikipedia/commons/4/43/GeeksforGeeks.svg",
 };
 
-const TechBadge = ({ tech, accentColor }: { tech: string; accentColor: string }) => {
+const TechBadge = ({ tech, accentColor, url }: { tech: string; accentColor: string; url?: string }) => {
   const logo = TECH_LOGOS[tech];
-  return (
+  const content = (
     <span
-      className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-medium border"
+      className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-full font-medium border ${url ? 'transition-colors hover:brightness-125 hover:scale-105 cursor-pointer' : ''}`}
       style={{ background: `${accentColor}18`, borderColor: `${accentColor}44`, color: accentColor }}
     >
       {logo && (
@@ -1584,6 +1595,16 @@ const TechBadge = ({ tech, accentColor }: { tech: string; accentColor: string })
       {tech}
     </span>
   );
+
+  if (url) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block">
+        {content}
+      </a>
+    );
+  }
+
+  return content;
 };
 
 // Contact Form component
@@ -1854,7 +1875,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {displayTechStack.map((tech) => (
-                  <TechBadge key={tech} tech={tech} accentColor={displayColor} />
+                  <TechBadge key={tech} tech={tech} accentColor={displayColor} url={isProjectsHub && currentProject ? undefined : planet.techLinks?.[tech]} />
                 ))}
               </div>
             </div>
@@ -1870,7 +1891,7 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {cat.skills.map((skill) => (
-                      <TechBadge key={skill} tech={skill} accentColor={displayColor} />
+                      <TechBadge key={skill} tech={skill} accentColor={displayColor} url={isProjectsHub && currentProject ? undefined : planet.techLinks?.[skill]} />
                     ))}
                   </div>
                 </div>
