@@ -140,7 +140,7 @@ const PLANETS_DATA: PlanetData[] = [
   {
     id: 2, name: "LPU Planet", orbitRadius: 75, size: 5, color: "#66ff88", orbitSpeed: 0.06, rotationSpeed: 0.8,
     spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI * 0.7,
-    description: "Lovely Professional University - B.Tech CSE. CGPA: 7.45.",
+    description: "Lovely Professional University - B.Tech CSE",
     facts: ["B.Tech CSE @ LPU, Punjab", "CGPA: 7.45 | Aug 2023 - Present", "Flutter Training Certification"],
     moons: 2, gravityRadius: 20, orbitCaptureRadius: 10,
     portfolioType: "education",
@@ -150,7 +150,6 @@ const PLANETS_DATA: PlanetData[] = [
     techStack: ["Flutter", "Dart", "Java", "C++", "Python"],
     bullets: [
       "Bachelor of Technology - Computer Science and Engineering; CGPA: 7.45 | Lovely Professional University, Punjab",
-      "Mobile Application Development Using Flutter - LPU Training (Jun-Jul 2025): Designed a university management mobile app.",
       "Intermediate: 80.4% | Mandalkuli Netaji Vidyapith, West Bengal (2022-23)",
       "Matriculation: 90.0% | Mandalkuli Netaji Vidyapith, West Bengal (2020-21)"
     ]
