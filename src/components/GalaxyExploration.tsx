@@ -338,6 +338,62 @@ const useKeyboardControls = () => {
 const useMouseControls = () => {
   useEffect(() => {
     setupKeyboardListeners(); // This also sets up mouse listeners
+
+    // Setup touch look controls for mobile
+    let touchLookId: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        // Only use touches on the right half of screen for looking (left half is for joystick)
+        if (t.clientX > window.innerWidth / 2 && touchLookId === null) {
+          touchLookId = t.identifier;
+          lastX = t.clientX;
+          lastY = t.clientY;
+        }
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (touchLookId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t.identifier === touchLookId) {
+          // Calculate delta. Multiply by a sensitivity factor to feel right on mobile
+          const dx = t.clientX - lastX;
+          const dy = t.clientY - lastY;
+          mouseState.movementX += dx * 2.5;
+          mouseState.movementY += dy * 2.5;
+          lastX = t.clientX;
+          lastY = t.clientY;
+        }
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (touchLookId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t.identifier === touchLookId) {
+          touchLookId = null;
+        }
+      }
+    };
+
+    // Needs to be passive: false if we want to prevent default, but here we just listen
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchcancel', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchcancel', handleTouchEnd);
+    };
   }, []);
 
   const consumeMouseMovement = () => {
@@ -348,7 +404,7 @@ const useMouseControls = () => {
   };
 
   return {
-    isLocked: () => mouseState.isLocked,
+    isLocked: () => mouseState.isLocked || ('ontouchstart' in window), // always allow look on touch devices
     consumeMouseMovement,
     requestPointerLock: (element: HTMLElement) => {
       element.requestPointerLock();

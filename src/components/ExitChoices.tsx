@@ -498,12 +498,15 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           </group>
 
           <OrbitControls
-            enableZoom={false}
+            enableZoom={true}
             enablePan={false}
-            minPolarAngle={Math.PI / 3}
-            maxPolarAngle={Math.PI / 2}
-            maxAzimuthAngle={Math.PI / 4}
-            minAzimuthAngle={-Math.PI / 4}
+            minPolarAngle={Math.PI / 4}
+            maxPolarAngle={Math.PI / 1.5}
+            minAzimuthAngle={-Infinity}
+            maxAzimuthAngle={Infinity}
+            autoRotate={true}
+            autoRotateSpeed={0.5}
+            enableDamping={true}
           />
         </Suspense>
       </Canvas>
