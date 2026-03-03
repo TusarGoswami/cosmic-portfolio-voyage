@@ -237,7 +237,7 @@ const PLANETS_DATA: PlanetData[] = [
   {
     id: 5, name: "About Me", orbitRadius: 135, size: 4, color: "#39ff88", orbitSpeed: 0.03, rotationSpeed: 0.7,
     spotColor: "#88ffbb", glowColor: "#66ffaa", hasSatellite: true, hasRing: false, initialAngle: Math.PI * 0.9,
-    description: "About Tusar Goswami — Full Stack Developer, B.Tech CSE @ LPU.",
+    description: "Engineer by logic, artist by instinct.\n\nA Computer Science undergraduate at Lovely Professional University, passionate about algorithms, competitive programming, hackathons, and AI innovation. I merge analytical precision with creative expression through sketching and classical Tabla — building technology that reflects both structure and soul.",
     facts: ["Full Stack Developer", "B.Tech CSE @ LPU", "Open to opportunities"],
     moons: 1, gravityRadius: 20, orbitCaptureRadius: 10,
     portfolioType: "about",
@@ -245,14 +245,8 @@ const PLANETS_DATA: PlanetData[] = [
     projectSubtitle: "Tusar Goswami — Full Stack Developer",
     period: "2004 - Present",
     githubUrl: "https://github.com/TusarGoswami",
-    techStack: ["ReactJS", "NodeJS", "Python", "Java", "Flutter", "MongoDB", "MySQL"],
-    bullets: [
-      "👋 Hi! I'm Tusar Goswami, a passionate Full Stack Developer and B.Tech CSE student at Lovely Professional University, Punjab.",
-      "💡 I love building scalable web apps, solving competitive programming challenges, and exploring AI/ML.",
-      "🏆 LeetCode Top 15% globally — 300+ problems solved across LeetCode, CodeChef & GeeksforGeeks.",
-      "🚀 Key projects: Head-2-Code (MERN), Velo-Rapido (PHP), LinkedIn Optimizer Pro (AI/Python).",
-      "📍 Based in West Bengal, India. Open to internships & full-time roles in software development.",
-    ]
+    techStack: [],
+    bullets: [],
   },
 ];
 
@@ -1645,6 +1639,44 @@ const TechBadge = ({ tech, accentColor, url }: { tech: string; accentColor: stri
   return content;
 };
 
+// Typewriter Effect Component
+const TypewriterTitles = ({ titles, color }: { titles: string[], color: string }) => {
+  const [titleIdx, setTitleIdx] = useState(0);
+  const [text, setText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const currentTitle = titles[titleIdx];
+    const delay = isDeleting ? 40 : 80;
+
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        if (text.length < currentTitle.length) {
+          setText(currentTitle.slice(0, text.length + 1));
+        } else {
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        if (text.length > 0) {
+          setText(text.slice(0, -1));
+        } else {
+          setIsDeleting(false);
+          setTitleIdx((prev) => (prev + 1) % titles.length);
+        }
+      }
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [text, isDeleting, titleIdx, titles]);
+
+  return (
+    <span style={{ color: color }} className="font-mono text-sm block min-h-[1.25rem]">
+      {text}
+      <span className="animate-pulse">|</span>
+    </span>
+  );
+};
+
 // LeetCode Stats & Fun Fact Component
 const LeetCodeStatsAndFunFact = ({ planetColor }: { planetColor: string }) => {
   const { data, error, isLoading } = useSWR('https://leetcode-stats-api.herokuapp.com/TusarGoswami', fetcher);
@@ -1989,25 +2021,37 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
         <div className="p-6 space-y-5">
           {/* About Me — special bio layout with real photo */}
           {planet.portfolioType === "about" && (
-            <div className="p-4 rounded-xl" style={{ background: "rgba(57,255,136,0.07)", border: "1px solid rgba(57,255,136,0.2)" }}>
-              <div className="flex items-center gap-4 mb-3">
-                <img
-                  src="/tusar.jpg"
-                  alt="Tusar Goswami"
-                  className="w-16 h-16 rounded-full object-cover object-top flex-shrink-0"
-                  style={{ border: "2px solid rgba(57,255,136,0.5)", boxShadow: "0 0 20px rgba(57,255,136,0.3)" }}
-                />
-                <div>
-                  <p className="text-white font-bold text-base">Tusar Goswami</p>
-                  <p className="text-xs" style={{ color: "#39ff8899" }}>Full Stack Developer · B.Tech CSE</p>
-                  <p className="text-xs text-gray-500">Lovely Professional University, Punjab</p>
+            <div className="p-5 sm:p-6 rounded-2xl relative overflow-hidden" style={{ background: "rgba(57,255,136,0.05)", border: "1px solid rgba(57,255,136,0.2)" }}>
+              {/* Subtle background glow */}
+              <div className="absolute top-1/2 left-0 w-32 h-32 bg-[#39ff88] rounded-full mix-blend-screen filter blur-[80px] opacity-20 -translate-y-1/2 pointer-events-none" />
+
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
+                <div className="relative group shrink-0">
+                  <div className="absolute -inset-1 bg-gradient-to-br from-[#39ff88] to-[#00e5ff] rounded-full blur opacity-40 group-hover:opacity-75 transition duration-500"></div>
+                  <img
+                    src="/tusar.jpg"
+                    alt="Tusar Goswami"
+                    className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover object-top"
+                    style={{ border: "3px solid rgba(57,255,136,0.6)", boxShadow: "0 0 30px rgba(57,255,136,0.2)" }}
+                  />
+                </div>
+                <div className="text-center sm:text-left flex-1 mt-2 sm:mt-4">
+                  <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-2">Tusar Goswami</h1>
+                  <TypewriterTitles
+                    titles={["Competitive Programmer", "Full-Stack Developer", "Flutter Enthusiast", "System Design"]}
+                    color={displayColor}
+                  />
+                  <div className="mt-4 flex items-center justify-center sm:justify-start gap-2 text-sm text-gray-400">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="text-[#39ff88]"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Kolkata, West Bengal
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
           {/* Description */}
-          <p className="text-gray-300 text-sm leading-relaxed">
+          <p className="text-gray-300 text-[15px] leading-relaxed whitespace-pre-line p-1">
             {isProjectsHub && currentProject ? currentProject.description : planet.description}
           </p>
 
