@@ -2,8 +2,11 @@
 import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
 import { Line, Html, Text, Billboard } from "@react-three/drei";
 import * as THREE from "three";
+import useSWR from "swr";
 import Particles from "./Particles";
 import { motion, AnimatePresence } from "framer-motion";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface GalaxyExplorationProps {
   vehicle: "rocket" | "astronaut";
@@ -1642,6 +1645,129 @@ const TechBadge = ({ tech, accentColor, url }: { tech: string; accentColor: stri
   return content;
 };
 
+// LeetCode Stats & Fun Fact Component
+const LeetCodeStatsAndFunFact = ({ planetColor }: { planetColor: string }) => {
+  const { data, error, isLoading } = useSWR('https://leetcode-stats-api.herokuapp.com/TusarGoswami', fetcher);
+
+  const totalSolved = data ? data.totalSolved : "300+";
+  const ranking = data ? data.ranking : "Top 15%";
+
+  const easySolved = data ? data.easySolved : 130;
+  const totalEasy = data ? data.totalEasy : 800;
+  const easyPercent = data ? (data.easySolved / data.totalEasy) * 100 : 45;
+
+  const mediumSolved = data ? data.mediumSolved : 115;
+  const totalMedium = data ? data.totalMedium : 1600;
+  const mediumPercent = data ? (data.mediumSolved / data.totalMedium) * 100 : 40;
+
+  const hardSolved = data ? data.hardSolved : 55;
+  const totalHard = data ? data.totalHard : 700;
+  const hardPercent = data ? (data.hardSolved / data.totalHard) * 100 : 15;
+
+  return (
+    <div className="mt-6 space-y-4">
+      {/* LeetCode Card */}
+      <div className="p-4 sm:p-5 rounded-2xl border relative overflow-hidden" style={{ background: "#0a0a0a", borderColor: `${planetColor}33` }}>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" style={{ background: `${planetColor}22` }} />
+        <div className="flex justify-between items-start mb-5 relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black" style={{ background: `${planetColor}22`, color: planetColor }}>
+              &lt;/&gt;
+            </div>
+            <div>
+              <h3 className="text-lg font-bold tracking-wide" style={{ background: `linear-gradient(90deg, #9b5de5, ${planetColor})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                &lt; LeetCode /&gt;
+              </h3>
+              <a href="https://leetcode.com/u/TusarGoswami/" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-500 font-mono hover:text-[#00e5ff] transition-colors line-clamp-1 block">
+                @TusarGoswami
+              </a>
+            </div>
+          </div>
+          <a href="https://leetcode.com/u/TusarGoswami/" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg hover:bg-white/5 transition-colors">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-5 relative z-10">
+          <div className="p-3 rounded-xl border flex flex-col items-center justify-center transition-all" style={{ background: "#111", borderColor: "#222" }}>
+            <div className="flex items-center gap-1.5 text-gray-400 text-[10px] sm:text-xs mb-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+              Problems
+            </div>
+            {isLoading ? <div className="h-6 w-16 bg-white/10 animate-pulse rounded my-1" /> : (
+              <p className="text-2xl sm:text-3xl font-bold text-white mb-0.5">{totalSolved}</p>
+            )}
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Solved</p>
+          </div>
+          <div className="p-3 rounded-xl border flex flex-col items-center justify-center transition-all" style={{ background: "#111", borderColor: "#222" }}>
+            <div className="flex items-center gap-1.5 text-[10px] sm:text-xs mb-1" style={{ color: planetColor }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+              Ranking
+            </div>
+            {isLoading ? <div className="h-6 w-20 bg-white/10 animate-pulse rounded my-1" /> : (
+              <p className="text-2xl sm:text-3xl font-bold text-white mb-0.5" style={{ fontSize: String(ranking).length > 6 ? '1.25rem' : '' }}>
+                {ranking}
+              </p>
+            )}
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest">Global</p>
+          </div>
+        </div>
+
+        <div className="space-y-3 mb-5 relative z-10">
+          <p className="font-mono text-xs text-[#666]">{'// Difficulty breakdown'}</p>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#00b8a3] w-12 font-medium tracking-wide">Easy</span>
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "#1a1a1a" }}>
+              <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ background: "#00b8a3", width: `${easyPercent}%` }} />
+            </div>
+            <span className="text-xs text-white font-bold w-6 text-right">
+              {isLoading ? <span className="inline-block w-4 h-3 bg-white/20 animate-pulse rounded" /> : easySolved}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#ffc01e] w-12 font-medium tracking-wide">Medium</span>
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "#1a1a1a" }}>
+              <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ background: "#ffc01e", width: `${mediumPercent}%` }} />
+            </div>
+            <span className="text-xs text-white font-bold w-6 text-right">
+              {isLoading ? <span className="inline-block w-4 h-3 bg-white/20 animate-pulse rounded" /> : mediumSolved}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#ff375f] w-12 font-medium tracking-wide">Hard</span>
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "#1a1a1a" }}>
+              <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ background: "#ff375f", width: `${hardPercent}%` }} />
+            </div>
+            <span className="text-xs text-white font-bold w-6 text-right">
+              {isLoading ? <span className="inline-block w-4 h-3 bg-white/20 animate-pulse rounded" /> : hardSolved}
+            </span>
+          </div>
+        </div>
+
+        <div className="px-3 sm:px-4 py-2.5 rounded-lg border flex items-center gap-3 relative z-10" style={{ background: `linear-gradient(90deg, ${planetColor}15, transparent)`, borderColor: `${planetColor}33` }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={planetColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+          <span className="text-xs sm:text-sm font-medium" style={{ color: planetColor }}>
+            Biweekly Contest 146: <span className="text-white">Rank 746 / 30.7k+</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Fun Fact Card */}
+      <div className="p-4 sm:p-5 rounded-xl border" style={{ background: "#0a0a0a", borderLeft: `3px solid ${planetColor}`, borderColor: "#222" }}>
+        <p className="font-mono text-xs mb-2" style={{ color: planetColor }}>{'// Fun Fact'}</p>
+        <p className="text-gray-300 text-sm leading-relaxed font-mono whitespace-pre-line">
+          When I’m not coding, I actively participate in hackathons and continuously sharpen my competitive programming skills.
+
+          Beyond tech, I’ve represented myself in district-level photography competitions and have a strong command of Tabla, reflecting my creative and artistic side.
+        </p>
+      </div>
+    </div>
+  );
+};
+
 // Contact Form component
 const ContactForm = ({ accentColor }: { accentColor: string }) => {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
@@ -1717,7 +1843,7 @@ const ContactForm = ({ accentColor }: { accentColor: string }) => {
             type="text" placeholder="Your Name" value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
             className="w-full px-3 py-2 rounded-lg text-xs text-white placeholder-gray-500 outline-none focus:ring-1"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", focusRingColor: accentColor }}
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", '--tw-ring-color': accentColor } as React.CSSProperties}
             required
           />
           <input
@@ -1970,6 +2096,11 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* About Me Extras: LeetCode & Fun Fact */}
+          {planet.portfolioType === "about" && (
+            <LeetCodeStatsAndFunFact planetColor={displayColor} />
           )}
 
           {/* Contact Form — only for About planet */}
