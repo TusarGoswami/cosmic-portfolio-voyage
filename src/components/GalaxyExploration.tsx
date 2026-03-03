@@ -242,8 +242,6 @@ const PLANETS_DATA: PlanetData[] = [
     moons: 1, gravityRadius: 20, orbitCaptureRadius: 10,
     portfolioType: "about",
     projectTitle: "About Me",
-    projectSubtitle: "Tusar Goswami — Full Stack Developer",
-    period: "2004 - Present",
     githubUrl: "https://github.com/TusarGoswami",
     techStack: [],
     bullets: [],
