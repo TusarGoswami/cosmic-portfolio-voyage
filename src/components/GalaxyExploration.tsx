@@ -40,6 +40,16 @@ interface PlanetData {
   bullets?: string[];
   skillCategories?: { category: string; skills: string[] }[];
   techLinks?: Record<string, string>;
+  certificates?: CertificateEntry[];
+}
+
+// Certificate Entry for Certificates planet
+interface CertificateEntry {
+  title: string;
+  issuer: string;
+  date: string;
+  image: string;
+  link: string;
 }
 
 // Sub-projects inside the Projects Hub planet
@@ -181,18 +191,44 @@ const PLANETS_DATA: PlanetData[] = [
     id: 4, name: "Certifications", orbitRadius: 115, size: 4.2, color: "#9b5de5", orbitSpeed: 0.035, rotationSpeed: 0.6,
     spotColor: "#c28cf7", glowColor: "#7e3cc4", hasRing: false, hasSatellite: true, initialAngle: Math.PI * 1.6,
     description: "Professional Certifications & Training.",
-    facts: ["ChatGPT-4 Prompt Engineering", "Flutter Dev", "Cloud Computing"],
+    facts: ["ChatGPT-4 Prompt Engineering", "Flutter Dev", "Cloud Computing", "Computer Communications"],
     moons: 1, gravityRadius: 21, orbitCaptureRadius: 10,
     portfolioType: "certificates",
     projectTitle: "Certifications",
     projectSubtitle: "Professional Training",
-    period: "2025",
+    period: "2024 - 2025",
     githubUrl: "https://github.com/TusarGoswami",
     techStack: ["Flutter"],
-    bullets: [
-      "ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM - Infosys Springboard (Aug 2025)",
-      "Mobile Application Development Using Flutter - Lovely Professional University (Jul 2025)",
-      "Cloud Computing - NPTEL IIT Kharagpur (Apr 2025)"
+    bullets: [],
+    certificates: [
+      {
+        title: "Computer Communications",
+        issuer: "Coursera (University of Colorado)",
+        date: "Dec 2024",
+        image: "/cert_coursera.png",
+        link: "https://www.coursera.org/account/accomplishments/specialization/IAP9BOZ6TFFF"
+      },
+      {
+        title: "Mobile Application Development Using Flutter",
+        issuer: "Lovely Professional University",
+        date: "Jul 2025",
+        image: "/cert_flutter.png",
+        link: "https://drive.google.com/file/d/163aiBlwwxBriK3vbJJ76zAYahYwbBUeg/view?usp=drive_link"
+      },
+      {
+        title: "ChatGPT-4 Prompt Engineering: ChatGPT, Generative AI & LLM",
+        issuer: "Infosys Springboard",
+        date: "Aug 2025",
+        image: "/cert_chatgpt.png",
+        link: "https://drive.google.com/file/d/1y88z8CmDNRb6k-VV2HNohHdYL9Btgl1I/view?usp=drive_link"
+      },
+      {
+        title: "Cloud Computing",
+        issuer: "NPTEL IIT Kharagpur",
+        date: "Apr 2025",
+        image: "/cert_cloud.png",
+        link: "https://drive.google.com/file/d/1mQy22KJBtTiqR_qrZ_FMtm0F_P2p8sFd/view"
+      }
     ]
   },
   {
@@ -1892,6 +1928,44 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                     {cat.skills.map((skill) => (
                       <TechBadge key={skill} tech={skill} accentColor={displayColor} url={isProjectsHub && currentProject ? undefined : planet.techLinks?.[skill]} />
                     ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Certifications with Images */}
+          {planet.portfolioType === "certificates" && planet.certificates && planet.certificates.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {planet.certificates.map((cert, i) => (
+                <div key={i} className="rounded-xl overflow-hidden border transition-transform hover:scale-[1.02]" style={{ background: "rgba(0,0,0,0.3)", borderColor: `${displayColor}33` }}>
+                  <div className="w-full relative pt-[60%] bg-[rgba(255,255,255,0.02)] border-b" style={{ borderColor: `${displayColor}22` }}>
+                    <img
+                      src={cert.image}
+                      alt={cert.title}
+                      className="absolute inset-0 w-full h-full object-contain p-2"
+                      style={{ filter: "drop-shadow(0 0 10px rgba(0,0,0,0.3))" }}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
+                  <div className="p-3" style={{ background: `linear-gradient(to bottom, ${displayColor}11, transparent)` }}>
+                    <h4 className="text-white font-bold text-sm mb-1 leading-tight line-clamp-2" title={cert.title}>{cert.title}</h4>
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-gray-400 text-[10px] sm:text-xs font-medium truncate pr-2">{cert.issuer}</span>
+                      <span className="px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider flex-shrink-0" style={{ background: `${displayColor}22`, color: displayColor }}>{cert.date}</span>
+                    </div>
+                    <a
+                      href={cert.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-bold transition-all hover:brightness-110 active:scale-95"
+                      style={{ background: displayColor, color: "#000" }}
+                    >
+                      <svg viewBox="0 0 1024 1024" width="14" height="14"><path d="M512 0C229.232 0 0 229.232 0 512c0 282.784 229.232 512 512 512 282.784 0 512-229.216 512-512C1024 229.232 794.784 0 512 0z" fill="#000000"></path><path d="M447.856 754.272a27.184 27.184 0 0 1-19.168-7.92l-180.352-179.312a27.152 27.152 0 1 1 38.256-38.48l161.056 160.112 301.776-318.576a27.168 27.168 0 0 1 39.52 37.472l-321.728 339.696a27.12 27.12 0 0 1-19.36 7.008z" fill="#ffffff"></path></svg>
+                      Verify
+                    </a>
                   </div>
                 </div>
               ))}
