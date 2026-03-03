@@ -2029,8 +2029,8 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
                   <img
                     src="/tusar.jpg"
                     alt="Tusar Goswami"
-                    className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover object-top"
-                    style={{ border: "3px solid rgba(57,255,136,0.6)", boxShadow: "0 0 30px rgba(57,255,136,0.2)" }}
+                    className="relative w-40 h-40 sm:w-52 sm:h-52 lg:w-64 lg:h-64 rounded-full object-cover object-top"
+                    style={{ border: "4px solid rgba(57,255,136,0.6)", boxShadow: "0 0 40px rgba(57,255,136,0.3)" }}
                   />
                 </div>
                 <div className="text-center sm:text-left flex-1 mt-2 sm:mt-4">
