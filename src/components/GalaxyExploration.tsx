@@ -153,7 +153,7 @@ const PLANETS_DATA: PlanetData[] = [
   {
     id: 2, name: "LPU Planet", orbitRadius: 75, size: 5, color: "#66ff88", orbitSpeed: 0.06, rotationSpeed: 0.8,
     spotColor: "#99ffaa", glowColor: "#88ffaa", hasSatellite: true, initialAngle: Math.PI * 0.7,
-    description: "Lovely Professional University - B.Tech CSE",
+    description: "Lovely Professional University - B.Tech CSE @ LPU, Punjab",
     facts: ["B.Tech CSE @ LPU, Punjab", "CGPA: 7.45 | Aug 2023 - Present", "Flutter Training Certification"],
     moons: 2, gravityRadius: 20, orbitCaptureRadius: 10,
     portfolioType: "education",
