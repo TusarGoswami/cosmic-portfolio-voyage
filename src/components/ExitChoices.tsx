@@ -516,7 +516,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         className="absolute top-14 sm:top-6 inset-x-0 flex flex-col items-center pointer-events-none z-20 px-4"
       >
         <motion.h1
-          className="text-base sm:text-xl md:text-2xl font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-center"
+          className="text-base sm:text-xl md:text-xl font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-center"
           style={{
             background: "linear-gradient(90deg, #00e5ff, #ffffff, #a855f7)",
             WebkitBackgroundClip: "text",
@@ -525,7 +525,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
             filter: "drop-shadow(0 0 12px rgba(0,229,255,0.5))",
           }}
         >
-          ✦ Choose Your Path ✦
+          Navigate Your Own Constellation
         </motion.h1>
 
         <motion.div
@@ -535,16 +535,6 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           animate={{ scaleX: 1 }}
           transition={{ duration: 1, delay: 0.3 }}
         />
-
-        <motion.p
-          className="mt-1 sm:mt-2 text-xs tracking-[0.15em] sm:tracking-[0.25em] uppercase"
-          style={{ color: "rgba(160,160,200,0.7)" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 1 }}
-        >
-          through the cosmos
-        </motion.p>
       </motion.div>
 
       {/* Corner decorative elements — hide on very small screens */}
