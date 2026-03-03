@@ -198,7 +198,7 @@ const PLANETS_DATA: PlanetData[] = [
     projectSubtitle: "Professional Training",
     period: "2024 - 2025",
     githubUrl: "https://github.com/TusarGoswami",
-    techStack: ["Flutter"],
+    techStack: [],
     bullets: [],
     certificates: [
       {
