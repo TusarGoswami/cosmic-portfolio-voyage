@@ -42,12 +42,13 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
   }), []);
 
   const suitMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#f8f8f8"),
-    metalness: 0.1,
-    roughness: 0.7,
-    clearcoat: 0.1,
-    sheen: 0.3,
-    sheenRoughness: 0.8,
+    color: new THREE.Color("#f0f0f0"),
+    metalness: 0.15,
+    roughness: 0.55,          // lower = catches more light from scene
+    clearcoat: 0.25,
+    clearcoatRoughness: 0.3,
+    sheen: 0.5,
+    sheenRoughness: 0.6,
     sheenColor: new THREE.Color("#aaccff"),
   }), []);
 
@@ -56,21 +57,23 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
     metalness: 1,
     roughness: 0.02,
     clearcoat: 1,
-    clearcoatRoughness: 0.05,
+    clearcoatRoughness: 0.02,
     reflectivity: 1,
-    envMapIntensity: 2,
+    envMapIntensity: 3,
+    emissive: new THREE.Color("#ff8800"),
+    emissiveIntensity: 0.18,  // visor glows softly even in shadow
   }), []);
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-    
+
     if (rocketRef.current) {
       const targetScale = hovered === "rocket" ? 1.15 : 1;
       rocketRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.08);
       rocketRef.current.position.y = Math.sin(time * 1.2) * 0.15;
       rocketRef.current.rotation.y = time * 0.2;
     }
-    
+
     if (astronautRef.current) {
       const targetScale = hovered === "astronaut" ? 1.15 : 1;
       astronautRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.08);
@@ -112,9 +115,9 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
         {/* Glow ring */}
         <mesh position={[0, -2.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[1, 1.5, 32]} />
-          <meshBasicMaterial 
-            color="#ff6600" 
-            transparent 
+          <meshBasicMaterial
+            color="#ff6600"
+            transparent
             opacity={hovered === "rocket" ? 0.7 : 0.25}
           />
         </mesh>
@@ -124,7 +127,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <cylinderGeometry args={[0.5, 0.7, 3, 32]} />
           <primitive object={rocketBodyMaterial} attach="material" />
         </mesh>
-        
+
         {/* Body details - rivets/panels */}
         {[0, 60, 120, 180, 240, 300].map((angle, i) => (
           <mesh
@@ -139,7 +142,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
             <meshStandardMaterial color="#888888" metalness={1} roughness={0.3} />
           </mesh>
         ))}
-        
+
         {/* Accent stripe band */}
         <mesh position={[0, 1, 0]}>
           <cylinderGeometry args={[0.52, 0.52, 0.25, 32]} />
@@ -166,9 +169,9 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <group key={`window-${i}`} rotation={[0, (angle * Math.PI) / 180, 0]}>
             <mesh position={[0, 1.3, 0.48]}>
               <circleGeometry args={[0.15, 32]} />
-              <meshPhysicalMaterial 
-                color="#88ddff" 
-                metalness={0.3} 
+              <meshPhysicalMaterial
+                color="#88ddff"
+                metalness={0.3}
                 roughness={0.1}
                 emissive="#44aaff"
                 emissiveIntensity={0.5}
@@ -189,9 +192,9 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <group key={`fin-${i}`} rotation={[0, (angle * Math.PI) / 180, 0]}>
             <mesh position={[0.65, -0.5, 0]} rotation={[0, 0, 0.15]}>
               <boxGeometry args={[0.4, 0.8, 0.06]} />
-              <meshStandardMaterial 
-                color={hovered === "rocket" ? "#00e5ff" : "#ffd700"} 
-                metalness={0.85} 
+              <meshStandardMaterial
+                color={hovered === "rocket" ? "#00e5ff" : "#ffd700"}
+                metalness={0.85}
                 roughness={0.2}
                 emissive={hovered === "rocket" ? "#00e5ff" : "#ff9500"}
                 emissiveIntensity={0.2}
@@ -210,7 +213,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <cylinderGeometry args={[0.55, 0.7, 0.4, 32]} />
           <meshStandardMaterial color="#222222" metalness={0.95} roughness={0.1} />
         </mesh>
-        
+
         {/* Engine nozzle - bell shape */}
         <mesh position={[0, -1.3, 0]}>
           <cylinderGeometry args={[0.35, 0.55, 0.5, 32]} />
@@ -270,8 +273,10 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           />
         )}
 
-        <pointLight position={[0, -1, 0]} color="#ff6600" intensity={hovered === "rocket" ? 5 : 2.5} distance={6} />
-        <pointLight position={[0, 1, 1]} color="#ffffff" intensity={0.5} distance={3} />
+        {/* Rocket per-model lights */}
+        <pointLight position={[0, -1, 0]} color="#ff6600" intensity={hovered === "rocket" ? 7 : 3.5} distance={8} decay={2} />
+        <pointLight position={[0, 2, 2]} color="#d0e8ff" intensity={2.0} distance={6} decay={2} />
+        <pointLight position={[0, 1, -2]} color="#66ddff" intensity={1.0} distance={5} decay={2} />
       </group>
 
       {/* Astronaut */}
@@ -291,9 +296,9 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
         {/* Glow ring */}
         <mesh position={[0, -2.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[1, 1.5, 32]} />
-          <meshBasicMaterial 
-            color="#66ccff" 
-            transparent 
+          <meshBasicMaterial
+            color="#66ccff"
+            transparent
             opacity={hovered === "astronaut" ? 0.7 : 0.25}
           />
         </mesh>
@@ -303,7 +308,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <sphereGeometry args={[0.7, 64, 64]} />
           <primitive object={suitMaterial} attach="material" />
         </mesh>
-        
+
         {/* Gold visor - reflective */}
         <mesh position={[0, 1.55, 0.45]} rotation={[-0.2, 0, 0]}>
           <sphereGeometry args={[0.5, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
@@ -436,14 +441,14 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           {/* Glove */}
           <mesh position={[-0.55, -0.5, 0]}>
             <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial 
-              color={hovered === "astronaut" ? "#ffbb00" : "#ff7700"} 
-              metalness={0.4} 
-              roughness={0.5} 
+            <meshStandardMaterial
+              color={hovered === "astronaut" ? "#ffbb00" : "#ff7700"}
+              metalness={0.4}
+              roughness={0.5}
             />
           </mesh>
         </group>
-        
+
         <group position={[0.75, 0.35, 0]}>
           <mesh rotation={[0, 0, -Math.PI / 4.5]}>
             <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
@@ -459,10 +464,10 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           </mesh>
           <mesh position={[0.55, -0.5, 0]}>
             <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial 
-              color={hovered === "astronaut" ? "#ffbb00" : "#ff7700"} 
-              metalness={0.4} 
-              roughness={0.5} 
+            <meshStandardMaterial
+              color={hovered === "astronaut" ? "#ffbb00" : "#ff7700"}
+              metalness={0.4}
+              roughness={0.5}
             />
           </mesh>
         </group>
@@ -476,7 +481,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
           <primitive object={suitMaterial} attach="material" />
         </mesh>
-        
+
         {/* Knee joints */}
         <mesh position={[-0.25, -0.95, 0.05]}>
           <sphereGeometry args={[0.12, 16, 16]} />
@@ -496,7 +501,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <capsuleGeometry args={[0.16, 0.4, 8, 16]} />
           <primitive object={suitMaterial} attach="material" />
         </mesh>
-        
+
         {/* Boots - larger and more detailed */}
         <mesh position={[-0.25, -1.75, 0.08]}>
           <boxGeometry args={[0.25, 0.25, 0.4]} />
@@ -516,8 +521,15 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
           <meshStandardMaterial color="#111111" metalness={0.6} roughness={0.4} />
         </mesh>
 
-        <pointLight position={[0, 1.2, 1]} color="#66ccff" intensity={hovered === "astronaut" ? 4 : 1.5} distance={6} />
-        <pointLight position={[0, 0, 1]} color="#ffffff" intensity={0.3} distance={3} />
+        {/* ── Astronaut 4-light studio rig ──────────────────────────── */}
+        {/* Key light: warm white from front-top */}
+        <pointLight position={[0, 4, 3]} color="#fff8e8" intensity={9} distance={12} decay={1.5} />
+        {/* Fill light: soft blue from left — prevents total shadow */}
+        <pointLight position={[-4, 2, 2]} color="#aac8ff" intensity={4.5} distance={10} decay={2} />
+        {/* Rim / back light — creates silhouette glow from behind */}
+        <pointLight position={[0, 0.5, -4]} color="#66ddff" intensity={hovered === "astronaut" ? 7 : 3.5} distance={8} decay={2} />
+        {/* Visor glow: warm gold close to the helmet */}
+        <pointLight position={[0, 2, 2]} color="#ffcc44" intensity={3} distance={4} decay={2} />
       </group>
     </group>
   );

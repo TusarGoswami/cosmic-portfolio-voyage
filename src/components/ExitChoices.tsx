@@ -491,13 +491,8 @@ const StationInterior = () => {
         <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
       </mesh>
 
-      {/* Vertical corner pillars */}
-      {[[-10, -10], [10, -10], [-10, 10], [10, 10]].map(([x, z], i) => (
-        <mesh key={`pillar-${i}`} position={[x, 2.25, z]}>
-          <boxGeometry args={[0.2, 11.5, 0.2]} />
-          <meshStandardMaterial color="#1a1a2e" metalness={0.9} roughness={0.2} />
-        </mesh>
-      ))}
+
+
 
       {/* LED strips on floor edges */}
       <mesh position={[-9.9, -3.4, 0]}>
@@ -546,12 +541,21 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
 
       <Canvas camera={{ position: [0, 2, 12], fov: 60 }} gl={{ antialias: true, alpha: true }}>
         <Suspense fallback={null}>
-          {/* Enhanced Lighting */}
-          <ambientLight intensity={0.2} />
-          <directionalLight position={[5, 10, 5]} intensity={0.8} color="#ffffff" />
-          <pointLight position={[0, 8, 0]} intensity={0.6} color="#4fc3f7" />
-          <pointLight position={[-5, 3, 5]} intensity={0.4} color="#00ffaa" />
-          <pointLight position={[5, 3, 5]} intensity={0.4} color="#ff6699" />
+          {/* ── Interior Station Lighting ─────────────────────────────── */}
+          {/* Base ambient — enough to see into dark areas of the models */}
+          <ambientLight intensity={0.5} color="#1a2840" />
+          {/* Hemisphere: cool blue sky from above, deep void from below */}
+          <hemisphereLight args={["#3a5080", "#050510", 0.8]} />
+          {/* Main overhead fill — simulates station ceiling panels */}
+          <directionalLight position={[0, 12, 6]} color="#d0e8ff" intensity={1.8} />
+          {/* Warm accent from front-left — separates rocket fins & suit texture */}
+          <directionalLight position={[-8, 5, 10]} color="#ffe8cc" intensity={1.1} />
+          {/* Cool accent from front-right — rim for astronaut right side */}
+          <directionalLight position={[8, 4, 8]} color="#cce4ff" intensity={0.9} />
+          {/* Station atmosphere point lights (LED strips / corner ambience) */}
+          <pointLight position={[0, 8, 0]} intensity={0.8} color="#4fc3f7" distance={20} />
+          <pointLight position={[-5, 3, 5]} intensity={0.5} color="#00ffaa" distance={14} />
+          <pointLight position={[5, 3, 5]} intensity={0.5} color="#ff6699" distance={14} />
 
           {/* Fog for depth — far-plane extended so galaxy stays visible */}
           <fog attach="fog" args={["#0a0a1a", 15, 200]} />
