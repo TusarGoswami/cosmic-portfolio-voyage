@@ -98,7 +98,7 @@ const BlinkingStars = ({ count = 2000 }: { count?: number }) => {
 
 // Procedural sun texture (shared with GalaxyExploration style)
 const buildSunTexture = (): THREE.CanvasTexture => {
-  const w = 1024, h = 512;
+  const w = 512, h = 256;
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext("2d")!;
@@ -160,23 +160,23 @@ const GalaxyCore = () => {
   return (
     <group>
       <mesh ref={sunRef}>
-        <sphereGeometry args={[8, 128, 128]} />
+        <sphereGeometry args={[8, 64, 32]} />
         <meshStandardMaterial map={sunTexture} emissiveMap={sunTexture} emissive={new THREE.Color("#ff9900")} emissiveIntensity={1.8} roughnessMap={roughMap} roughness={0.05} metalness={0} />
       </mesh>
       <mesh ref={glowRef}>
-        <sphereGeometry args={[9.2, 64, 64]} />
+        <sphereGeometry args={[9.2, 32, 16]} />
         <meshBasicMaterial color="#ffcc00" transparent opacity={0.45} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <mesh ref={glow2Ref}>
-        <sphereGeometry args={[11, 64, 64]} />
+        <sphereGeometry args={[11, 32, 16]} />
         <meshBasicMaterial color="#ff8800" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <mesh ref={coronaRef}>
-        <sphereGeometry args={[14, 48, 48]} />
+        <sphereGeometry args={[14, 24, 12]} />
         <meshBasicMaterial color="#ff5500" transparent opacity={0.12} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <mesh>
-        <sphereGeometry args={[20, 32, 32]} />
+        <sphereGeometry args={[20, 16, 8]} />
         <meshBasicMaterial color="#ff3300" transparent opacity={0.055} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <pointLight color="#fff5cc" intensity={12} distance={350} decay={1.5} />
@@ -244,7 +244,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
   const atmo2Ref = useRef<THREE.Mesh>(null);
 
   const { diffuseMap, roughnessMap } = useMemo(() => {
-    const w = 1024, h = 512;
+    const w = 512, h = 256;
     const canvas = document.createElement("canvas");
     canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext("2d")!;
@@ -329,7 +329,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
   return (
     <group ref={groupRef}>
       <mesh ref={planetRef}>
-        <sphereGeometry args={[planet.size, 128, 128]} />
+        <sphereGeometry args={[planet.size, 64, 32]} />
         <meshStandardMaterial
           map={diffuseMap}
           roughnessMap={roughnessMap}
@@ -342,28 +342,28 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
 
       {/* Inner atmosphere limb glow */}
       <mesh ref={atmosphereRef}>
-        <sphereGeometry args={[planet.size * 1.04, 64, 64]} />
+        <sphereGeometry args={[planet.size * 1.04, 32, 16]} />
         <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.18} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.BackSide} />
       </mesh>
       {/* Mid atmosphere haze */}
       <mesh ref={atmo2Ref}>
-        <sphereGeometry args={[planet.size * 1.10, 48, 48]} />
+        <sphereGeometry args={[planet.size * 1.10, 24, 12]} />
         <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.08} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.BackSide} />
       </mesh>
       {/* Outer glow halo */}
       <mesh>
-        <sphereGeometry args={[planet.size * 1.22, 32, 32]} />
+        <sphereGeometry args={[planet.size * 1.22, 16, 8]} />
         <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.04} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.BackSide} />
       </mesh>
 
       {planet.hasRing && (
         <>
           <mesh rotation={[Math.PI / 2.8, 0.1, 0]}>
-            <ringGeometry args={[planet.size * 1.5, planet.size * 2.2, 128]} />
+            <ringGeometry args={[planet.size * 1.5, planet.size * 2.2, 64]} />
             <meshBasicMaterial color={planet.ringColor || planet.color} transparent opacity={0.6} side={THREE.DoubleSide} />
           </mesh>
           <mesh rotation={[Math.PI / 2.8, 0.1, 0]}>
-            <ringGeometry args={[planet.size * 2.2, planet.size * 2.5, 128]} />
+            <ringGeometry args={[planet.size * 2.2, planet.size * 2.5, 64]} />
             <meshBasicMaterial color={planet.ringColor || planet.color} transparent opacity={0.3} side={THREE.DoubleSide} />
           </mesh>
         </>
@@ -567,7 +567,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           <StationInterior />
 
           {/* Blinking stars background - matching GalaxyExploration */}
-          <BlinkingStars count={5000} />
+          <BlinkingStars count={1500} />
 
           {/* Vehicle selection models */}
           <group position={[0, -2, 0]}>
