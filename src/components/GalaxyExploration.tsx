@@ -423,15 +423,17 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
     const colors = new Float32Array(count * 3);
 
     const starColors = [
-      [1, 1, 1],
-      [1, 0.9, 0.8],
-      [0.8, 0.9, 1],
-      [1, 0.8, 0.6],
-      [0.9, 0.95, 1],
+      [1.0, 1.0, 1.0],
+      [1.0, 0.92, 0.82],  // warm white
+      [0.75, 0.88, 1.0],  // cool blue-white
+      [1.0, 0.78, 0.55],  // orange giant
+      [0.92, 0.96, 1.0],  // near-white
+      [0.65, 0.75, 1.0],  // blue dwarf
+      [1.0, 0.95, 0.70],  // yellow-white
     ];
 
     for (let i = 0; i < count; i++) {
-      const radius = 150 + Math.random() * 350;
+      const radius = 150 + Math.random() * 450;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
 
@@ -439,7 +441,9 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
 
-      sizes[i] = Math.random() * 3 + 1;
+      // Varied star sizes — a few bright ones, many dim ones
+      const roll = Math.random();
+      sizes[i] = roll > 0.97 ? Math.random() * 5 + 4 : Math.random() * 3 + 0.8;
       phases[i] = Math.random() * Math.PI * 2;
 
       const colorIdx = Math.floor(Math.random() * starColors.length);
@@ -457,8 +461,8 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
       const sizesAttr = starsRef.current.geometry.attributes.size as THREE.BufferAttribute;
 
       for (let i = 0; i < count; i++) {
-        const blink = Math.sin(time * (0.5 + (i % 10) * 0.1) + phases[i]) * 0.5 + 0.5;
-        sizesAttr.array[i] = sizes[i] * (0.4 + blink * 0.6);
+        const blink = Math.sin(time * (0.4 + (i % 13) * 0.07) + phases[i]) * 0.5 + 0.5;
+        sizesAttr.array[i] = sizes[i] * (0.35 + blink * 0.65);
       }
       sizesAttr.needsUpdate = true;
     }
@@ -472,15 +476,82 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
       </bufferGeometry>
       <pointsMaterial
-        size={2}
+        size={2.2}
         vertexColors
         transparent
-        opacity={0.9}
+        opacity={0.95}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
+        depthWrite={false}
       />
     </points>
   );
+};
+
+// Procedural sun surface texture generator
+const buildSunTexture = (): THREE.CanvasTexture => {
+  const w = 1024, h = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+
+  // Base radial gradient — hot white core to deep orange edge
+  const base = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+  base.addColorStop(0.0, "#fffde0");
+  base.addColorStop(0.2, "#ffe560");
+  base.addColorStop(0.5, "#ffb830");
+  base.addColorStop(0.8, "#ff7800");
+  base.addColorStop(1.0, "#cc3300");
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, w, h);
+
+  // Solar granulation — thousands of convection cells
+  for (let i = 0; i < 2200; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    const r = Math.random() * 18 + 4;
+    const bright = Math.random() > 0.5;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, bright ? "rgba(255,255,200,0.45)" : "rgba(160,60,0,0.35)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * (0.5 + Math.random() * 0.5), Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Solar filaments / prominences
+  ctx.strokeStyle = "rgba(255,200,50,0.25)";
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 30; i++) {
+    const x = Math.random() * w;
+    const y = Math.random() * h;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x + Math.random() * 80 - 40, y + Math.random() * 40 - 20,
+      x + Math.random() * 80 - 40, y + Math.random() * 40 - 20,
+      x + Math.random() * 100 - 50, y + Math.random() * 60 - 30);
+    ctx.stroke();
+  }
+
+  // Sunspots
+  for (let i = 0; i < 8; i++) {
+    const x = 80 + Math.random() * (w - 160);
+    const y = 60 + Math.random() * (h - 120);
+    const r1 = Math.random() * 20 + 10;
+    const sp = ctx.createRadialGradient(x, y, 0, x, y, r1);
+    sp.addColorStop(0, "rgba(40,10,0,0.85)");
+    sp.addColorStop(0.5, "rgba(100,30,0,0.5)");
+    sp.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = sp;
+    ctx.beginPath();
+    ctx.arc(x, y, r1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  return tex;
 };
 
 // Central Sun/Galaxy Core
@@ -488,51 +559,82 @@ const GalaxyCore = () => {
   const sunRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   const glow2Ref = useRef<THREE.Mesh>(null);
+  const coronaRef = useRef<THREE.Mesh>(null);
+
+  const sunTexture = useMemo(() => buildSunTexture(), []);
+  const sunRoughnessMap = useMemo(() => {
+    // Simple dark roughness map so emissive is more visible
+    const c = document.createElement("canvas"); c.width = 64; c.height = 64;
+    const cx = c.getContext("2d")!;
+    cx.fillStyle = "#111"; cx.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }, []);
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
-
     if (sunRef.current) {
-      sunRef.current.rotation.y = time * 0.08;
+      sunRef.current.rotation.y = time * 0.06;
+      sunRef.current.rotation.x = Math.sin(time * 0.03) * 0.05;
     }
     if (glowRef.current) {
-      glowRef.current.scale.setScalar(1 + Math.sin(time * 1.5) * 0.08);
+      glowRef.current.scale.setScalar(1 + Math.sin(time * 1.2) * 0.07);
     }
     if (glow2Ref.current) {
-      glow2Ref.current.scale.setScalar(1 + Math.sin(time * 2 + 1) * 0.05);
-      glow2Ref.current.rotation.y = time * 0.02;
+      glow2Ref.current.scale.setScalar(1 + Math.sin(time * 0.8 + 1) * 0.05);
+      glow2Ref.current.rotation.y = time * 0.015;
+    }
+    if (coronaRef.current) {
+      coronaRef.current.scale.setScalar(1 + Math.sin(time * 0.5 + 2) * 0.04);
+      coronaRef.current.rotation.z = time * 0.008;
     }
   });
 
   return (
     <group>
+      {/* Sun body — realistic emissive textured surface */}
       <mesh ref={sunRef}>
-        <sphereGeometry args={[8, 64, 64]} />
-        <meshBasicMaterial color="#ffee66" />
+        <sphereGeometry args={[8, 128, 128]} />
+        <meshStandardMaterial
+          map={sunTexture}
+          emissiveMap={sunTexture}
+          emissive={new THREE.Color("#ff9900")}
+          emissiveIntensity={1.8}
+          roughnessMap={sunRoughnessMap}
+          roughness={0.05}
+          metalness={0}
+        />
       </mesh>
 
+      {/* Inner corona — tight orange halo */}
       <mesh ref={glowRef}>
-        <sphereGeometry args={[9, 32, 32]} />
-        <meshBasicMaterial color="#ffcc00" transparent opacity={0.5} />
+        <sphereGeometry args={[9.2, 64, 64]} />
+        <meshBasicMaterial color="#ffcc00" transparent opacity={0.45} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
 
+      {/* Mid corona */}
       <mesh ref={glow2Ref}>
-        <sphereGeometry args={[10.5, 32, 32]} />
-        <meshBasicMaterial color="#ff9900" transparent opacity={0.3} />
+        <sphereGeometry args={[11, 64, 64]} />
+        <meshBasicMaterial color="#ff8800" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
 
+      {/* Outer corona */}
+      <mesh ref={coronaRef}>
+        <sphereGeometry args={[14, 48, 48]} />
+        <meshBasicMaterial color="#ff5500" transparent opacity={0.12} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </mesh>
+
+      {/* Distant halo */}
       <mesh>
-        <sphereGeometry args={[13, 32, 32]} />
-        <meshBasicMaterial color="#ff6600" transparent opacity={0.15} />
+        <sphereGeometry args={[20, 32, 32]} />
+        <meshBasicMaterial color="#ff3300" transparent opacity={0.055} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
 
-      <mesh>
-        <sphereGeometry args={[18, 32, 32]} />
-        <meshBasicMaterial color="#ff4400" transparent opacity={0.08} />
-      </mesh>
-
-      <pointLight color="#ffdd44" intensity={5} distance={200} />
-      <pointLight color="#ff8800" intensity={2} distance={100} />
+      {/* Primary sun light illuminating all planets */}
+      <pointLight color="#fff5cc" intensity={12} distance={350} decay={1.5} castShadow />
+      {/* Warm fill light */}
+      <pointLight color="#ff8800" intensity={4} distance={150} decay={2} />
+      {/* Cool blue rim from "space" side */}
+      <pointLight color="#aaddff" intensity={1.2} distance={250} decay={2} position={[-60, 20, -60]} />
     </group>
   );
 };
@@ -599,56 +701,118 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
   const groupRef = useRef<THREE.Group>(null);
   const planetRef = useRef<THREE.Mesh>(null);
   const atmosphereRef = useRef<THREE.Mesh>(null);
+  const atmo2Ref = useRef<THREE.Mesh>(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  const spotTexture = useMemo(() => {
+  // Rich procedural diffuse texture with continent-like patches, cloud bands, polar caps
+  const { diffuseMap, roughnessMap } = useMemo(() => {
+    const w = 1024, h = 512;
     const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 256;
-    const ctx = canvas.getContext("2d");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
 
-    if (ctx) {
-      const gradient = ctx.createLinearGradient(0, 0, 512, 256);
-      gradient.addColorStop(0, planet.color);
-      gradient.addColorStop(0.3, planet.spotColor || planet.color);
-      gradient.addColorStop(0.7, planet.color);
-      gradient.addColorStop(1, planet.spotColor || planet.color);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 512, 256);
+    // --- Base gradient (day/night side simulation) ---
+    const base = ctx.createLinearGradient(0, 0, w, 0);
+    base.addColorStop(0, planet.color);
+    base.addColorStop(0.35, planet.spotColor || planet.color);
+    base.addColorStop(0.65, planet.color);
+    base.addColorStop(1, planet.spotColor || planet.color);
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
 
-      ctx.fillStyle = planet.spotColor || "rgba(255,255,255,0.25)";
-      for (let i = 0; i < 15; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 256;
-        const r = Math.random() * 40 + 15;
-        ctx.beginPath();
-        ctx.ellipse(x, y, r, r * 0.5, Math.random() * Math.PI, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    // --- Equatorial darker band ---
+    const eqGrad = ctx.createLinearGradient(0, h * 0.35, 0, h * 0.65);
+    const c = new THREE.Color(planet.color);
+    eqGrad.addColorStop(0, "rgba(0,0,0,0)");
+    eqGrad.addColorStop(0.5, `rgba(${Math.round(c.r * 30)},${Math.round(c.g * 30)},${Math.round(c.b * 30)},0.35)`);
+    eqGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = eqGrad;
+    ctx.fillRect(0, 0, w, h);
 
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
-      for (let i = 0; i < 5; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 256;
-        ctx.beginPath();
-        ctx.ellipse(x, y, 25, 15, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.strokeStyle = "rgba(255,255,255,0.1)";
-      ctx.lineWidth = 8;
-      for (let i = 0; i < 6; i++) {
-        const y = 30 + i * 40 + Math.random() * 15;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.bezierCurveTo(128, y + 10, 384, y - 10, 512, y);
-        ctx.stroke();
-      }
+    // --- Atmospheric band stripes ---
+    for (let band = 0; band < 8; band++) {
+      const cy = (band / 8) * h + h * 0.05;
+      const bw = 12 + Math.random() * 30;
+      const alpha = 0.06 + Math.random() * 0.14;
+      const bandGrad = ctx.createLinearGradient(0, cy - bw, 0, cy + bw);
+      bandGrad.addColorStop(0, "rgba(0,0,0,0)");
+      bandGrad.addColorStop(0.5, `rgba(255,255,255,${alpha})`);
+      bandGrad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bandGrad;
+      ctx.fillRect(0, cy - bw, w, bw * 2);
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = THREE.RepeatWrapping;
-    return texture;
+    // --- Continental masses (large irregular patches) ---
+    const spotC = planet.spotColor || "rgba(255,255,255,0.3)";
+    ctx.fillStyle = spotC;
+    for (let i = 0; i < 18; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const rx = Math.random() * 80 + 25;
+      const ry = Math.random() * 40 + 10;
+      const g2 = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
+      g2.addColorStop(0, `${spotC.startsWith("#") ? spotC : spotC}`);
+      g2.addColorStop(0.6, `${spotC.startsWith("#") ? spotC + "99" : "rgba(200,200,200,0.2)"}`);
+      g2.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g2;
+      ctx.beginPath();
+      ctx.ellipse(x, y, rx, ry, Math.random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // --- Craters / surface detail (small dark circles) ---
+    for (let i = 0; i < 40; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      const r = Math.random() * 12 + 3;
+      const cr = ctx.createRadialGradient(x, y, 0, x, y, r);
+      cr.addColorStop(0, "rgba(0,0,0,0.35)");
+      cr.addColorStop(0.7, "rgba(0,0,0,0.1)");
+      cr.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = cr;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // --- Polar cap (white top/bottom) ---
+    const topCap = ctx.createLinearGradient(0, 0, 0, h * 0.2);
+    topCap.addColorStop(0, "rgba(240,248,255,0.85)");
+    topCap.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = topCap;
+    ctx.fillRect(0, 0, w, h * 0.2);
+    const botCap = ctx.createLinearGradient(0, h * 0.8, 0, h);
+    botCap.addColorStop(0, "rgba(0,0,0,0)");
+    botCap.addColorStop(1, "rgba(240,248,255,0.75)");
+    ctx.fillStyle = botCap;
+    ctx.fillRect(0, h * 0.8, w, h * 0.2);
+
+    const diffuseMap = new THREE.CanvasTexture(canvas);
+    diffuseMap.wrapS = THREE.RepeatWrapping;
+    diffuseMap.anisotropy = 8;
+
+    // --- Roughness map (dark = shiny water-like, bright = rough land) ---
+    const rc = document.createElement("canvas");
+    rc.width = 512; rc.height = 256;
+    const rx2 = rc.getContext("2d")!;
+    rx2.fillStyle = "#888"; rx2.fillRect(0, 0, 512, 256);
+    // Add rough "land" patches matching continent positions above
+    for (let i = 0; i < 12; i++) {
+      const x2 = Math.random() * 512;
+      const y2 = Math.random() * 256;
+      const rRad = Math.random() * 60 + 20;
+      const rg = rx2.createRadialGradient(x2, y2, 0, x2, y2, rRad);
+      rg.addColorStop(0, "#ddd");
+      rg.addColorStop(1, "rgba(0,0,0,0)");
+      rx2.fillStyle = rg;
+      rx2.beginPath();
+      rx2.ellipse(x2, y2, rRad, rRad * 0.6, Math.random() * Math.PI, 0, Math.PI * 2);
+      rx2.fill();
+    }
+    const roughnessMap = new THREE.CanvasTexture(rc);
+    roughnessMap.wrapS = THREE.RepeatWrapping;
+
+    return { diffuseMap, roughnessMap };
   }, [planet.color, planet.spotColor]);
 
   useFrame((state) => {
@@ -672,6 +836,9 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
 
     if (atmosphereRef.current) {
       atmosphereRef.current.rotation.y = time * planet.rotationSpeed * 0.5;
+    }
+    if (atmo2Ref.current) {
+      atmo2Ref.current.rotation.y = -time * planet.rotationSpeed * 0.3;
     }
   });
 
@@ -700,25 +867,57 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
         onClick={handleClick}
+        castShadow
+        receiveShadow
       >
-        <sphereGeometry args={[planet.size, 64, 64]} />
+        <sphereGeometry args={[planet.size, 128, 128]} />
         <meshStandardMaterial
-          map={spotTexture}
-          emissive={planet.color}
-          emissiveIntensity={isHovered ? 0.4 : 0.15}
-          metalness={0.15}
-          roughness={0.75}
+          map={diffuseMap}
+          roughnessMap={roughnessMap}
+          emissive={new THREE.Color(planet.color)}
+          emissiveIntensity={isHovered ? 0.25 : 0.06}
+          metalness={0.05}
+          roughness={0.82}
         />
       </mesh>
 
+      {/* Inner atmosphere — thin limb glow */}
       <mesh ref={atmosphereRef}>
-        <sphereGeometry args={[planet.size * 1.05, 32, 32]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={isHovered ? 0.4 : 0.2} />
+        <sphereGeometry args={[planet.size * 1.04, 64, 64]} />
+        <meshBasicMaterial
+          color={planet.glowColor || planet.color}
+          transparent
+          opacity={isHovered ? 0.38 : 0.18}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.BackSide}
+        />
       </mesh>
 
+      {/* Mid atmosphere haze */}
+      <mesh ref={atmo2Ref}>
+        <sphereGeometry args={[planet.size * 1.10, 48, 48]} />
+        <meshBasicMaterial
+          color={planet.glowColor || planet.color}
+          transparent
+          opacity={isHovered ? 0.18 : 0.08}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Outer glow halo */}
       <mesh>
-        <sphereGeometry args={[planet.size * 1.15, 32, 32]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={isHovered ? 0.25 : 0.1} />
+        <sphereGeometry args={[planet.size * 1.22, 32, 32]} />
+        <meshBasicMaterial
+          color={planet.glowColor || planet.color}
+          transparent
+          opacity={isHovered ? 0.1 : 0.04}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.BackSide}
+        />
       </mesh>
 
       {/* Hover ring indicator */}
@@ -820,12 +1019,13 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
   }), []);
 
   const suitMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color("#f8f8f8"),
-    metalness: 0.1,
-    roughness: 0.7,
-    clearcoat: 0.1,
-    sheen: 0.3,
-    sheenRoughness: 0.8,
+    color: new THREE.Color("#f0f0f0"),
+    metalness: 0.15,
+    roughness: 0.55,       // lower = catches more light
+    clearcoat: 0.25,
+    clearcoatRoughness: 0.3,
+    sheen: 0.5,
+    sheenRoughness: 0.6,
     sheenColor: new THREE.Color("#aaccff"),
   }), []);
 
@@ -834,9 +1034,11 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
     metalness: 1,
     roughness: 0.02,
     clearcoat: 1,
-    clearcoatRoughness: 0.05,
+    clearcoatRoughness: 0.02,
     reflectivity: 1,
-    envMapIntensity: 2,
+    envMapIntensity: 3,
+    emissive: new THREE.Color("#ff8800"),
+    emissiveIntensity: 0.15,   // slight self-lit glow so it's never pitch black
   }), []);
 
   useFrame((state) => {
@@ -852,159 +1054,148 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
   if (vehicle === "astronaut") {
     return (
       <group ref={shipRef} scale={1.8}>
-        {/* Helmet - larger and more detailed */}
-        <mesh position={[0, 1.5, 0]}>
+        {/* ── Astronaut Lighting Trio ────────────────────────────────── */}
+        {/* Key light: warm white from front-top — primary illumination */}
+        <pointLight position={[0, 3, 2.5]} color="#fff8e8" intensity={8} distance={14} decay={1.5} />
+        {/* Fill light: soft blue from left — prevents total shadow on one side */}
+        <pointLight position={[-3, 1, 1]} color="#aac8ff" intensity={4} distance={12} decay={2} />
+        {/* Rim/back light: blue-white from behind — creates silhouette separation */}
+        <pointLight position={[0, 0.5, -3]} color="#66ddff" intensity={isMoving ? 6 : 3} distance={8} decay={2} />
+        {/* Visor glow: warm gold fill on helmet */}
+        <pointLight position={[0, 1.6, 1.5]} color="#ffcc44" intensity={2.5} distance={4} decay={2} />
+
+        {/* Helmet */}
+        <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
           <sphereGeometry args={[0.7, 64, 64]} />
           <primitive object={suitMaterial} attach="material" />
         </mesh>
 
-        {/* Gold visor - reflective */}
-        <mesh position={[0, 1.55, 0.45]} rotation={[-0.2, 0, 0]}>
+        {/* Gold visor */}
+        <mesh position={[0, 1.55, 0.45]} rotation={[-0.2, 0, 0]} castShadow>
           <sphereGeometry args={[0.5, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
           <primitive object={visorMaterial} attach="material" />
         </mesh>
 
         {/* Helmet rim/collar */}
-        <mesh position={[0, 0.9, 0]}>
+        <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
           <torusGeometry args={[0.6, 0.1, 16, 64]} />
           <meshStandardMaterial color="#aaaaaa" metalness={0.9} roughness={0.15} />
         </mesh>
 
         {/* Neck ring */}
-        <mesh position={[0, 0.75, 0]}>
+        <mesh position={[0, 0.75, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[0.5, 0.55, 0.15, 32]} />
           <meshStandardMaterial color="#888888" metalness={0.85} roughness={0.2} />
         </mesh>
 
-        {/* Torso - more realistic shape */}
-        <mesh position={[0, 0.15, 0]}>
+        {/* Torso */}
+        <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
           <capsuleGeometry args={[0.55, 0.7, 16, 32]} />
           <primitive object={suitMaterial} attach="material" />
         </mesh>
 
         {/* Chest control unit */}
-        <mesh position={[0, 0.35, 0.52]}>
+        <mesh position={[0, 0.35, 0.52]} castShadow receiveShadow>
           <boxGeometry args={[0.45, 0.5, 0.12]} />
           <meshStandardMaterial color="#1a1a1a" metalness={0.95} roughness={0.1} />
         </mesh>
-        {/* Control buttons/lights */}
+        {/* Control indicator lights — emissive so always visible */}
         <mesh position={[-0.12, 0.5, 0.59]}>
           <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
-          <meshBasicMaterial color="#00ff00" />
+          <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={2} />
         </mesh>
         <mesh position={[0.12, 0.5, 0.59]}>
           <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
-          <meshBasicMaterial color="#ff0000" />
+          <meshStandardMaterial color="#ff3300" emissive="#ff3300" emissiveIntensity={2} />
         </mesh>
         <mesh position={[0, 0.38, 0.59]}>
           <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
-          <meshBasicMaterial color="#0088ff" />
+          <meshStandardMaterial color="#0088ff" emissive="#0088ff" emissiveIntensity={2} />
         </mesh>
 
-        {/* Life support backpack - larger */}
-        <mesh position={[0, 0.2, -0.55]}>
+        {/* Life support backpack */}
+        <mesh position={[0, 0.2, -0.55]} castShadow receiveShadow>
           <boxGeometry args={[0.75, 0.95, 0.35]} />
           <meshStandardMaterial color="#555555" metalness={0.7} roughness={0.35} />
         </mesh>
-        {/* Backpack details */}
-        <mesh position={[0, 0.55, -0.75]}>
+        <mesh position={[0, 0.55, -0.75]} castShadow>
           <cylinderGeometry args={[0.1, 0.1, 0.25, 16]} />
           <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.15} />
         </mesh>
 
         {/* Jetpack thrusters */}
-        <mesh position={[-0.22, -0.25, -0.65]}>
+        <mesh position={[-0.22, -0.25, -0.65]} castShadow>
           <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
           <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
         </mesh>
-        <mesh position={[0.22, -0.25, -0.65]}>
+        <mesh position={[0.22, -0.25, -0.65]} castShadow>
           <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
           <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
         </mesh>
 
         {/* Jetpack flames */}
-        <Particles
-          position={[-0.22, -0.4, -0.65]}
-          count={40}
-          color="#66ddff"
-          size={0.05}
-          spread={0.1}
-          speed={isMoving ? 3 : 1.2}
-          type="flame"
-          active={true}
-        />
-        <Particles
-          position={[0.22, -0.4, -0.65]}
-          count={40}
-          color="#66ddff"
-          size={0.05}
-          spread={0.1}
-          speed={isMoving ? 3 : 1.2}
-          type="flame"
-          active={true}
-        />
+        <Particles position={[-0.22, -0.4, -0.65]} count={40} color="#66ddff" size={0.05} spread={0.1} speed={isMoving ? 3 : 1.2} type="flame" active={true} />
+        <Particles position={[0.22, -0.4, -0.65]} count={40} color="#66ddff" size={0.05} spread={0.1} speed={isMoving ? 3 : 1.2} type="flame" active={true} />
 
-        {/* Arms */}
+        {/* Left arm */}
         <group position={[-0.75, 0.35, 0]}>
-          <mesh rotation={[0, 0, Math.PI / 4.5]}>
+          <mesh rotation={[0, 0, Math.PI / 4.5]} castShadow receiveShadow>
             <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[-0.25, -0.15, 0]}>
+          <mesh position={[-0.25, -0.15, 0]} castShadow receiveShadow>
             <sphereGeometry args={[0.14, 16, 16]} />
             <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
           </mesh>
-          <mesh position={[-0.4, -0.35, 0]} rotation={[0, 0, Math.PI / 6]}>
+          <mesh position={[-0.4, -0.35, 0]} rotation={[0, 0, Math.PI / 6]} castShadow receiveShadow>
             <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[-0.55, -0.5, 0]}>
+          <mesh position={[-0.55, -0.5, 0]} castShadow>
             <sphereGeometry args={[0.15, 16, 16]} />
             <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
           </mesh>
         </group>
 
+        {/* Right arm */}
         <group position={[0.75, 0.35, 0]}>
-          <mesh rotation={[0, 0, -Math.PI / 4.5]}>
+          <mesh rotation={[0, 0, -Math.PI / 4.5]} castShadow receiveShadow>
             <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[0.25, -0.15, 0]}>
+          <mesh position={[0.25, -0.15, 0]} castShadow receiveShadow>
             <sphereGeometry args={[0.14, 16, 16]} />
             <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
           </mesh>
-          <mesh position={[0.4, -0.35, 0]} rotation={[0, 0, -Math.PI / 6]}>
+          <mesh position={[0.4, -0.35, 0]} rotation={[0, 0, -Math.PI / 6]} castShadow receiveShadow>
             <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[0.55, -0.5, 0]}>
+          <mesh position={[0.55, -0.5, 0]} castShadow>
             <sphereGeometry args={[0.15, 16, 16]} />
             <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
           </mesh>
         </group>
 
         {/* Legs */}
-        <mesh position={[-0.25, -0.8, 0]}>
+        <mesh position={[-0.25, -0.8, 0]} castShadow receiveShadow>
           <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
           <primitive object={suitMaterial} attach="material" />
         </mesh>
-        <mesh position={[0.25, -0.8, 0]}>
+        <mesh position={[0.25, -0.8, 0]} castShadow receiveShadow>
           <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
           <primitive object={suitMaterial} attach="material" />
         </mesh>
 
         {/* Boots */}
-        <mesh position={[-0.25, -1.35, 0.08]}>
+        <mesh position={[-0.25, -1.35, 0.08]} castShadow receiveShadow>
           <boxGeometry args={[0.22, 0.18, 0.35]} />
           <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
         </mesh>
-        <mesh position={[0.25, -1.35, 0.08]}>
+        <mesh position={[0.25, -1.35, 0.08]} castShadow receiveShadow>
           <boxGeometry args={[0.22, 0.18, 0.35]} />
           <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
         </mesh>
-
-        <pointLight position={[0, 0, 1]} color="#ffffff" intensity={0.5} distance={4} />
-        <pointLight position={[0, -0.5, -0.8]} color="#66ddff" intensity={isMoving ? 2 : 0.5} distance={4} />
       </group>
     );
   }
@@ -1485,8 +1676,25 @@ const GalaxyScene = ({
 
   return (
     <>
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[30, 30, 15]} intensity={0.4} />
+      {/* Scene base lighting */}
+      <ambientLight intensity={0.35} color="#1a2840" />
+      {/* Sky/ground hemisphere for natural bounce light */}
+      <hemisphereLight args={["#334466", "#000510", 0.6]} />
+      {/* Sun directional light angled to illuminate the scene from the core */}
+      <directionalLight
+        position={[50, 40, 80]}
+        color="#fff5cc"
+        intensity={2.0}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-near={1}
+        shadow-camera-far={600}
+        shadow-camera-left={-200}
+        shadow-camera-right={200}
+        shadow-camera-top={200}
+        shadow-camera-bottom={-200}
+      />
 
       <BlinkingStars count={1200} />
       <GalaxyCore />
@@ -2403,7 +2611,12 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
         )}
       </AnimatePresence>
 
-      <Canvas camera={{ position: [50, 20, 50], fov: 60 }} gl={{ antialias: true }} dpr={[1, 1.5]}>
+      <Canvas
+        camera={{ position: [50, 20, 50], fov: 60 }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.9 }}
+        shadows
+        dpr={[1, 1.5]}
+      >
         <Suspense fallback={null}>
           {!cinematicDone && <IntroCinematic onComplete={() => setCinematicDone(true)} />}
           <GalaxyScene vehicle={vehicle} onPlanetApproach={setNearPlanet} onOrbitCapture={setOrbitingPlanet}
@@ -2463,42 +2676,121 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
         </div>
       )}
 
-      {/* Near planet indicator */}
+      {/* Near planet approaching indicator — compact corner badge */}
       <AnimatePresence>
         {nearPlanet && !orbitingPlanet && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="absolute top-14 right-3 md:top-44 md:right-6 pointer-events-none z-20 max-w-[160px] sm:max-w-none">
-            <div className="backdrop-blur-md rounded-xl px-3 sm:px-4 py-2 sm:py-3 border shadow-lg"
-              style={{ background: `linear-gradient(135deg, ${nearPlanet.color}22, transparent)`, borderColor: `${nearPlanet.color}55`, boxShadow: `0 0 20px ${nearPlanet.color}33` }}>
-              <p className="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wider">Approaching</p>
-              <p className="text-white text-sm sm:text-lg font-bold">{nearPlanet.name}</p>
-              <p className="text-gray-400 text-[10px] sm:text-xs mt-0.5">{nearPlanet.portfolioType ? typeLabel[nearPlanet.portfolioType] : "Gravity detected"}</p>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.25 }}
+            className="absolute bottom-16 right-3 md:bottom-10 md:right-5 pointer-events-none z-20"
+          >
+            <div
+              style={{
+                background: `linear-gradient(135deg, ${nearPlanet.color}22, rgba(5,5,20,0.75))`,
+                border: `1px solid ${nearPlanet.color}44`,
+                boxShadow: `0 0 14px ${nearPlanet.color}22`,
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                borderRadius: 10,
+                padding: "6px 10px",
+              }}
+            >
+              <p style={{ fontSize: 8, letterSpacing: "0.15em", color: `${nearPlanet.color}bb`, textTransform: "uppercase", marginBottom: 1 }}>
+                Approaching
+              </p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
+                {nearPlanet.name}
+              </p>
+              {nearPlanet.portfolioType && (
+                <p style={{ fontSize: 9, color: "rgba(180,185,200,0.6)", marginTop: 1 }}>
+                  {typeLabel[nearPlanet.portfolioType]}
+                </p>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Orbiting indicator */}
+      {/* Orbit notification — compact centered HUD */}
       <AnimatePresence>
         {orbitingPlanet && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-[85vw] max-w-xs sm:max-w-sm">
-            <div className="backdrop-blur-md rounded-2xl px-4 sm:px-6 py-4 sm:py-5 border shadow-2xl text-center"
-              style={{ background: `linear-gradient(135deg, ${orbitingPlanet.color}44, ${orbitingPlanet.color}11)`, borderColor: `${orbitingPlanet.color}66`, boxShadow: `0 0 40px ${orbitingPlanet.color}44` }}>
-              <p className="text-gray-400 text-[10px] sm:text-xs uppercase tracking-wider mb-1">Orbiting</p>
-              <p className="text-white text-lg sm:text-2xl font-bold mb-1">{orbitingPlanet.projectTitle || orbitingPlanet.name}</p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.85, y: 8 }}
+            transition={{ type: "spring", stiffness: 320, damping: 28 }}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 20,
+              pointerEvents: "auto",
+            }}
+          >
+            <div
+              style={{
+                background: `linear-gradient(135deg, ${orbitingPlanet.color}28, rgba(5,5,20,0.82))`,
+                border: `1px solid ${orbitingPlanet.color}55`,
+                boxShadow: `0 0 24px ${orbitingPlanet.color}33, inset 0 1px 0 rgba(255,255,255,0.06)`,
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                borderRadius: "14px",
+                padding: "10px 14px",
+                minWidth: "180px",
+                maxWidth: "260px",
+                textAlign: "center",
+              }}
+            >
+              {/* Planet color accent bar */}
+              <div style={{ height: 2, borderRadius: 99, background: orbitingPlanet.color, marginBottom: 8, opacity: 0.7 }} />
+
+              {/* Status tag */}
+              <p style={{ fontSize: 9, letterSpacing: "0.18em", color: `${orbitingPlanet.color}cc`, textTransform: "uppercase", marginBottom: 2 }}>
+                ⬤ Orbiting
+              </p>
+
+              {/* Planet name */}
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1.2, marginBottom: 2 }}>
+                {orbitingPlanet.projectTitle || orbitingPlanet.name}
+              </p>
+
+              {/* Optional period */}
               {orbitingPlanet.period && (
-                <p className="text-xs mb-3" style={{ color: `${orbitingPlanet.color}cc` }}>{orbitingPlanet.period}</p>
+                <p style={{ fontSize: 10, color: "rgba(200,200,220,0.55)", marginBottom: 6 }}>
+                  {orbitingPlanet.period}
+                </p>
               )}
-              <button onClick={handleEnterPlanet}
-                className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-semibold text-sm transition-all hover:scale-105 active:scale-95 w-full sm:w-auto"
-                style={{ background: orbitingPlanet.color, color: '#000', boxShadow: `0 0 20px ${orbitingPlanet.color}88` }}>
+
+              {/* Explore button */}
+              <button
+                onClick={handleEnterPlanet}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "6px 14px",
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  fontSize: 12,
+                  background: orbitingPlanet.color,
+                  color: "#000",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: `0 0 12px ${orbitingPlanet.color}66`,
+                  transition: "transform 0.15s, box-shadow 0.15s",
+                  marginBottom: 6,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.04)")}
+                onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+              >
                 {orbitingPlanet.portfolioType === "project" ? "View Projects ⚡" : "Explore →"}
               </button>
-              <p className="text-gray-500 text-[10px] sm:text-xs mt-2 sm:mt-3">
-                {isMobile ? "Use joystick to escape orbit" : "Press WASD / arrows to escape orbit"}
+
+              {/* Escape hint */}
+              <p style={{ fontSize: 9, color: "rgba(150,160,180,0.6)", letterSpacing: "0.05em" }}>
+                {isMobile ? "Joystick to escape" : "WASD / ↑↓←→ to escape"}
               </p>
             </div>
           </motion.div>
