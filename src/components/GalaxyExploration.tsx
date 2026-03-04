@@ -488,9 +488,14 @@ const BlinkingStars = ({ count = 4000 }: { count?: number }) => {
   );
 };
 
+// Global cache for sun texture
+let cachedSunTexture: THREE.CanvasTexture | null = null;
+
 // Procedural sun surface texture generator
 const buildSunTexture = (): THREE.CanvasTexture => {
-  const w = 1024, h = 512;
+  if (cachedSunTexture) return cachedSunTexture;
+
+  const w = 512, h = 256;
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext("2d")!;
@@ -505,11 +510,11 @@ const buildSunTexture = (): THREE.CanvasTexture => {
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, w, h);
 
-  // Solar granulation — thousands of convection cells
-  for (let i = 0; i < 2200; i++) {
+  // Solar granulation — fewer cells, scaled appropriately
+  for (let i = 0; i < 600; i++) {
     const x = Math.random() * w;
     const y = Math.random() * h;
-    const r = Math.random() * 18 + 4;
+    const r = Math.random() * 10 + 2;
     const bright = Math.random() > 0.5;
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, bright ? "rgba(255,255,200,0.45)" : "rgba(160,60,0,0.35)");
@@ -523,22 +528,22 @@ const buildSunTexture = (): THREE.CanvasTexture => {
   // Solar filaments / prominences
   ctx.strokeStyle = "rgba(255,200,50,0.25)";
   ctx.lineWidth = 3;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 15; i++) {
     const x = Math.random() * w;
     const y = Math.random() * h;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.bezierCurveTo(x + Math.random() * 80 - 40, y + Math.random() * 40 - 20,
-      x + Math.random() * 80 - 40, y + Math.random() * 40 - 20,
-      x + Math.random() * 100 - 50, y + Math.random() * 60 - 30);
+    ctx.bezierCurveTo(x + Math.random() * 40 - 20, y + Math.random() * 20 - 10,
+      x + Math.random() * 40 - 20, y + Math.random() * 20 - 10,
+      x + Math.random() * 50 - 25, y + Math.random() * 30 - 15);
     ctx.stroke();
   }
 
-  // Sunspots
-  for (let i = 0; i < 8; i++) {
-    const x = 80 + Math.random() * (w - 160);
-    const y = 60 + Math.random() * (h - 120);
-    const r1 = Math.random() * 20 + 10;
+  // Sunspots — large magnetic fields
+  for (let i = 0; i < 6; i++) {
+    const x = 40 + Math.random() * (w - 80);
+    const y = 30 + Math.random() * (h - 60);
+    const r1 = Math.random() * 10 + 5;
     const sp = ctx.createRadialGradient(x, y, 0, x, y, r1);
     sp.addColorStop(0, "rgba(40,10,0,0.85)");
     sp.addColorStop(0.5, "rgba(100,30,0,0.5)");
@@ -551,6 +556,8 @@ const buildSunTexture = (): THREE.CanvasTexture => {
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
+
+  cachedSunTexture = tex;
   return tex;
 };
 
@@ -697,6 +704,9 @@ interface PlanetProps {
   onPlanetHover?: (planet: PlanetData | null) => void;
 }
 
+// Global cache to prevent re-generating textures when re-mounting
+const planetTextureCache = new Map<string, { diffuseMap: THREE.CanvasTexture, roughnessMap: THREE.CanvasTexture }>();
+
 const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: PlanetProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const planetRef = useRef<THREE.Mesh>(null);
@@ -706,7 +716,12 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
 
   // Rich procedural diffuse texture with continent-like patches, cloud bands, polar caps
   const { diffuseMap, roughnessMap } = useMemo(() => {
-    const w = 1024, h = 512;
+    const cacheKey = `explore-${planet.color}-${planet.spotColor}`;
+    if (planetTextureCache.has(cacheKey)) {
+      return planetTextureCache.get(cacheKey)!;
+    }
+
+    const w = 256, h = 128;
     const canvas = document.createElement("canvas");
     canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext("2d")!;
@@ -730,9 +745,9 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
     ctx.fillRect(0, 0, w, h);
 
     // --- Atmospheric band stripes ---
-    for (let band = 0; band < 8; band++) {
-      const cy = (band / 8) * h + h * 0.05;
-      const bw = 12 + Math.random() * 30;
+    for (let band = 0; band < 5; band++) {
+      const cy = (band / 5) * h + h * 0.05;
+      const bw = 8 + Math.random() * 20;
       const alpha = 0.06 + Math.random() * 0.14;
       const bandGrad = ctx.createLinearGradient(0, cy - bw, 0, cy + bw);
       bandGrad.addColorStop(0, "rgba(0,0,0,0)");
@@ -745,11 +760,11 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
     // --- Continental masses (large irregular patches) ---
     const spotC = planet.spotColor || "rgba(255,255,255,0.3)";
     ctx.fillStyle = spotC;
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 8; i++) {
       const x = Math.random() * w;
       const y = Math.random() * h;
-      const rx = Math.random() * 80 + 25;
-      const ry = Math.random() * 40 + 10;
+      const rx = Math.random() * 40 + 15;
+      const ry = Math.random() * 20 + 5;
       const g2 = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
       g2.addColorStop(0, `${spotC.startsWith("#") ? spotC : spotC}`);
       g2.addColorStop(0.6, `${spotC.startsWith("#") ? spotC + "99" : "rgba(200,200,200,0.2)"}`);
@@ -761,10 +776,10 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
     }
 
     // --- Craters / surface detail (small dark circles) ---
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 15; i++) {
       const x = Math.random() * w;
       const y = Math.random() * h;
-      const r = Math.random() * 12 + 3;
+      const r = Math.random() * 6 + 2;
       const cr = ctx.createRadialGradient(x, y, 0, x, y, r);
       cr.addColorStop(0, "rgba(0,0,0,0.35)");
       cr.addColorStop(0.7, "rgba(0,0,0,0.1)");
@@ -787,20 +802,20 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
     ctx.fillStyle = botCap;
     ctx.fillRect(0, h * 0.8, w, h * 0.2);
 
-    const diffuseMap = new THREE.CanvasTexture(canvas);
-    diffuseMap.wrapS = THREE.RepeatWrapping;
-    diffuseMap.anisotropy = 8;
+    const diffuseTex = new THREE.CanvasTexture(canvas);
+    diffuseTex.wrapS = THREE.RepeatWrapping;
+    diffuseTex.anisotropy = 2;
 
     // --- Roughness map (dark = shiny water-like, bright = rough land) ---
     const rc = document.createElement("canvas");
-    rc.width = 512; rc.height = 256;
+    rc.width = 128; rc.height = 64;
     const rx2 = rc.getContext("2d")!;
-    rx2.fillStyle = "#888"; rx2.fillRect(0, 0, 512, 256);
+    rx2.fillStyle = "#888"; rx2.fillRect(0, 0, 128, 64);
     // Add rough "land" patches matching continent positions above
-    for (let i = 0; i < 12; i++) {
-      const x2 = Math.random() * 512;
-      const y2 = Math.random() * 256;
-      const rRad = Math.random() * 60 + 20;
+    for (let i = 0; i < 6; i++) {
+      const x2 = Math.random() * 128;
+      const y2 = Math.random() * 64;
+      const rRad = Math.random() * 30 + 10;
       const rg = rx2.createRadialGradient(x2, y2, 0, x2, y2, rRad);
       rg.addColorStop(0, "#ddd");
       rg.addColorStop(1, "rgba(0,0,0,0)");
@@ -809,10 +824,11 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
       rx2.ellipse(x2, y2, rRad, rRad * 0.6, Math.random() * Math.PI, 0, Math.PI * 2);
       rx2.fill();
     }
-    const roughnessMap = new THREE.CanvasTexture(rc);
-    roughnessMap.wrapS = THREE.RepeatWrapping;
+    const roughnessTex = new THREE.CanvasTexture(rc);
+    roughnessTex.wrapS = THREE.RepeatWrapping;
 
-    return { diffuseMap, roughnessMap };
+    planetTextureCache.set(cacheKey, { diffuseMap: diffuseTex, roughnessMap: roughnessTex });
+    return { diffuseMap: diffuseTex, roughnessMap: roughnessTex };
   }, [planet.color, planet.spotColor]);
 
   useFrame((state) => {

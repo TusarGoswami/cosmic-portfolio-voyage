@@ -237,6 +237,9 @@ const Satellite = ({ orbitRadius, speed, size = 0.3 }: { orbitRadius: number; sp
 };
 
 // Planet Component
+// Global cache to prevent re-generating textures when switching between scenes
+const planetTextureCache = new Map<string, { diffuseMap: THREE.CanvasTexture, roughnessMap: THREE.CanvasTexture }>();
+
 const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
   const groupRef = useRef<THREE.Group>(null);
   const planetRef = useRef<THREE.Mesh>(null);
@@ -244,7 +247,12 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
   const atmo2Ref = useRef<THREE.Mesh>(null);
 
   const { diffuseMap, roughnessMap } = useMemo(() => {
-    const w = 512, h = 256;
+    const cacheKey = `exit-${planet.color}-${planet.spotColor}`;
+    if (planetTextureCache.has(cacheKey)) {
+      return planetTextureCache.get(cacheKey)!;
+    }
+
+    const w = 256, h = 128;
     const canvas = document.createElement("canvas");
     canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext("2d")!;
@@ -262,9 +270,9 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
     eqGrad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = eqGrad; ctx.fillRect(0, 0, w, h);
     // Atmospheric band stripes
-    for (let band = 0; band < 8; band++) {
-      const cy = (band / 8) * h + h * 0.05;
-      const bw = 12 + Math.random() * 30;
+    for (let band = 0; band < 5; band++) {
+      const cy = (band / 5) * h + h * 0.05;
+      const bw = 8 + Math.random() * 20;
       const alpha = 0.06 + Math.random() * 0.14;
       const bg = ctx.createLinearGradient(0, cy - bw, 0, cy + bw);
       bg.addColorStop(0, "rgba(0,0,0,0)");
@@ -274,9 +282,9 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
     }
     // Continental patches
     const spotC = planet.spotColor || "rgba(255,255,255,0.3)";
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 8; i++) {
       const x = Math.random() * w, y = Math.random() * h;
-      const rx = Math.random() * 80 + 25, ry = Math.random() * 40 + 10;
+      const rx = Math.random() * 40 + 15, ry = Math.random() * 20 + 5;
       const g2 = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
       g2.addColorStop(0, spotC);
       g2.addColorStop(0.6, spotC.startsWith("#") ? spotC + "99" : "rgba(200,200,200,0.2)");
@@ -285,8 +293,8 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
       ctx.beginPath(); ctx.ellipse(x, y, rx, ry, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
     }
     // Craters
-    for (let i = 0; i < 40; i++) {
-      const x = Math.random() * w, y = Math.random() * h, r = Math.random() * 12 + 3;
+    for (let i = 0; i < 15; i++) {
+      const x = Math.random() * w, y = Math.random() * h, r = Math.random() * 6 + 2;
       const cr = ctx.createRadialGradient(x, y, 0, x, y, r);
       cr.addColorStop(0, "rgba(0,0,0,0.35)"); cr.addColorStop(0.7, "rgba(0,0,0,0.1)"); cr.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = cr;
@@ -299,19 +307,21 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
     const botCap = ctx.createLinearGradient(0, h * 0.8, 0, h);
     botCap.addColorStop(0, "rgba(0,0,0,0)"); botCap.addColorStop(1, "rgba(240,248,255,0.75)");
     ctx.fillStyle = botCap; ctx.fillRect(0, h * 0.8, w, h * 0.2);
-    const diffuseMap = new THREE.CanvasTexture(canvas);
-    diffuseMap.wrapS = THREE.RepeatWrapping; diffuseMap.anisotropy = 8;
+    const diffuseTex = new THREE.CanvasTexture(canvas);
+    diffuseTex.wrapS = THREE.RepeatWrapping; diffuseTex.anisotropy = 2;
     // Roughness map
-    const rc = document.createElement("canvas"); rc.width = 512; rc.height = 256;
-    const rx2 = rc.getContext("2d")!; rx2.fillStyle = "#888"; rx2.fillRect(0, 0, 512, 256);
-    for (let i = 0; i < 12; i++) {
-      const x2 = Math.random() * 512, y2 = Math.random() * 256, rRad = Math.random() * 60 + 20;
+    const rc = document.createElement("canvas"); rc.width = 128; rc.height = 64;
+    const rx2 = rc.getContext("2d")!; rx2.fillStyle = "#888"; rx2.fillRect(0, 0, 128, 64);
+    for (let i = 0; i < 6; i++) {
+      const x2 = Math.random() * 128, y2 = Math.random() * 64, rRad = Math.random() * 30 + 10;
       const rg = rx2.createRadialGradient(x2, y2, 0, x2, y2, rRad);
       rg.addColorStop(0, "#ddd"); rg.addColorStop(1, "rgba(0,0,0,0)");
       rx2.fillStyle = rg; rx2.beginPath(); rx2.ellipse(x2, y2, rRad, rRad * 0.6, Math.random() * Math.PI, 0, Math.PI * 2); rx2.fill();
     }
-    const roughnessMap = new THREE.CanvasTexture(rc); roughnessMap.wrapS = THREE.RepeatWrapping;
-    return { diffuseMap, roughnessMap };
+    const roughnessTex = new THREE.CanvasTexture(rc); roughnessTex.wrapS = THREE.RepeatWrapping;
+
+    planetTextureCache.set(cacheKey, { diffuseMap: diffuseTex, roughnessMap: roughnessTex });
+    return { diffuseMap: diffuseTex, roughnessMap: roughnessTex };
   }, [planet.color, planet.spotColor]);
 
   useFrame((state) => {

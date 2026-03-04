@@ -4,8 +4,9 @@ import StarField from "@/components/StarField";
 import CustomCursor from "@/components/CustomCursor";
 import IsometricFrame from "@/components/IsometricFrame";
 import { useParallax } from "@/hooks/useParallax";
-import ExitChoices from "@/components/ExitChoices";
-import GalaxyExploration from "@/components/GalaxyExploration";
+import { lazy, Suspense } from "react";
+const ExitChoices = lazy(() => import("@/components/ExitChoices"));
+const GalaxyExploration = lazy(() => import("@/components/GalaxyExploration"));
 import LaunchTransition from "@/components/LaunchTransition";
 
 type GamePhase = "loading" | "start" | "choose" | "launching" | "space";
@@ -140,7 +141,9 @@ const Index = () => {
             >
               ← Back
             </button>
-            <ExitChoices onSelect={handleSelect} />
+            <Suspense fallback={<div className="flex w-full h-full items-center justify-center text-white"><div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent animate-spin rounded-full"></div></div>}>
+              <ExitChoices onSelect={handleSelect} />
+            </Suspense>
           </motion.div>
         )}
 
@@ -157,7 +160,9 @@ const Index = () => {
             key="space"
             className="relative z-10 w-full h-screen"
           >
-            <GalaxyExploration vehicle={selectedVehicle} onBack={handleBackToChoose} />
+            <Suspense fallback={<div className="flex w-full h-full items-center justify-center text-white"><div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent animate-spin rounded-full"></div></div>}>
+              <GalaxyExploration vehicle={selectedVehicle} onBack={handleBackToChoose} />
+            </Suspense>
           </div>
         )}
       </AnimatePresence>
