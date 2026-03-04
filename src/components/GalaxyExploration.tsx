@@ -1541,8 +1541,8 @@ const GalaxyScene = ({
     const time = state.clock.elapsedTime;
     const delta = Math.min(state.clock.getDelta(), 0.1);
 
-    const acceleration = 15.0;
-    const maxSpeed = 25;
+    const acceleration = 18.5;
+    const maxSpeed = 30;
     const friction = 0.96;
     const rotationSpeed = 0.05;
 
@@ -1629,23 +1629,20 @@ const GalaxyScene = ({
       }
 
       // Apply movement input
-      if (keys.current.forward) {
-        shipVelocity.current.add(forward.clone().multiplyScalar(acceleration * delta * 60));
-      }
-      if (keys.current.backward) {
-        shipVelocity.current.add(forward.clone().multiplyScalar(-acceleration * 0.5 * delta * 60));
-      }
-      if (keys.current.left) {
-        shipVelocity.current.add(right.clone().multiplyScalar(-acceleration * delta * 60));
-      }
-      if (keys.current.right) {
-        shipVelocity.current.add(right.clone().multiplyScalar(acceleration * delta * 60));
-      }
-      if (keys.current.up) {
-        shipVelocity.current.y += acceleration * 1.2 * delta * 60;
-      }
-      if (keys.current.down) {
-        shipVelocity.current.y -= acceleration * 1.2 * delta * 60;
+      const moveDir = new THREE.Vector3();
+
+      if (keys.current.forward) moveDir.add(forward);
+      if (keys.current.backward) moveDir.sub(forward);
+      if (keys.current.left) moveDir.sub(right);
+      if (keys.current.right) moveDir.add(right);
+      if (keys.current.up) moveDir.y += 1;
+      if (keys.current.down) moveDir.y -= 1;
+
+      if (moveDir.lengthSq() > 0) {
+        moveDir.normalize();
+        // Use Math.SQRT2 to match the diagonal speed that felt "correct"
+        const currentAcceleration = acceleration * Math.SQRT2;
+        shipVelocity.current.add(moveDir.multiplyScalar(currentAcceleration * delta * 60));
       }
 
       // Clamp speed
