@@ -2720,11 +2720,18 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
       {/* Help Toggle Button */}
       <button
         onClick={() => setShowInstructions(prev => !prev)}
-        className="absolute bottom-4 left-4 z-30 flex items-center justify-center w-10 h-10 rounded-full text-white/80 transition-all hover:text-white hover:scale-105 hover:bg-white/10"
-        style={{ background: "rgba(20, 20, 40, 0.6)", border: "1px solid rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}
+        className="absolute bottom-4 left-4 sm:left-4 z-30 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full text-white/80 transition-all hover:text-white hover:scale-105 hover:bg-white/10"
+        style={{
+          background: "rgba(20, 20, 40, 0.6)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          backdropFilter: "blur(8px)",
+          left: isMobile ? 'auto' : '1rem',
+          right: isMobile ? '1rem' : 'auto',
+          bottom: isMobile ? '1rem' : '1rem'
+        }}
         title="Show Controls"
       >
-        <span className="text-lg font-bold">?</span>
+        <span className="text-base sm:text-lg font-bold">?</span>
       </button>
 
       {/* Controls Instructions Overlay */}
@@ -2743,53 +2750,70 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
                 background: "linear-gradient(145deg, rgba(15,20,35,0.85), rgba(5,10,20,0.9))",
                 border: "1px solid rgba(100,150,255,0.2)",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-                backdropFilter: "blur(12px)"
+                backdropFilter: "blur(12px)",
+                left: isMobile ? 'auto' : '0',
+                right: isMobile ? '0' : 'auto'
               }}
             >
               <h3 className="text-cyan-400 font-bold mb-3 uppercase tracking-wider text-xs border-b border-cyan-500/30 pb-1">Controls</h3>
 
               <div className="flex flex-col gap-2.5 text-gray-300">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1">
-                    <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">W</span>
-                    <span className="text-gray-500">/</span>
-                    <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">↑</span>
-                  </div>
-                  <span className="text-xs">Move Forward</span>
-                </div>
+                {isMobile ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <span className="w-10 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-[10px] border border-white/20">Joystick</span>
+                      <span className="text-xs">Move / Strafe</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="w-10 h-6 flex items-center justify-center bg-cyan-900/50 rounded font-mono text-[10px] border border-cyan-500/30">Touch Area</span>
+                      <span className="text-xs">Drag right side to Look</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">W</span>
+                        <span className="text-gray-500">/</span>
+                        <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">↑</span>
+                      </div>
+                      <span className="text-xs">Move Forward</span>
+                    </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1">
-                    <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">S</span>
-                    <span className="text-gray-500">/</span>
-                    <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">↓</span>
-                  </div>
-                  <span className="text-xs">Move Backward</span>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">S</span>
+                        <span className="text-gray-500">/</span>
+                        <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs border border-white/20">↓</span>
+                      </div>
+                      <span className="text-xs">Move Backward</span>
+                    </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1">
-                    <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs text-transparent" style={{ textShadow: "0 0 0 transparent" }}>·</span>
-                    <span className="text-transparent">/</span>
-                    <span className="px-2 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-[10px] border border-white/20 whitespace-nowrap">A D ← →</span>
-                  </div>
-                  <span className="text-xs">Strafe Left / Right</span>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <span className="w-6 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-xs text-transparent" style={{ textShadow: "0 0 0 transparent" }}>·</span>
+                        <span className="text-transparent">/</span>
+                        <span className="px-2 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-[10px] border border-white/20 whitespace-nowrap">A D ← →</span>
+                      </div>
+                      <span className="text-xs">Strafe Left / Right</span>
+                    </div>
 
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="px-3 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-[10px] border border-white/20">Space</span>
-                  <span className="text-xs">Move Up</span>
-                </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="px-3 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-[10px] border border-white/20">Space</span>
+                      <span className="text-xs">Move Up</span>
+                    </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="px-3 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-[10px] border border-white/20">Shift</span>
-                  <span className="text-xs">Move Down</span>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 h-6 flex items-center justify-center bg-white/10 rounded font-mono text-[10px] border border-white/20">Shift</span>
+                      <span className="text-xs">Move Down</span>
+                    </div>
 
-                <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/10">
-                  <span className="px-2 h-6 flex items-center justify-center bg-cyan-900/50 rounded font-mono text-[10px] border border-cyan-500/30 text-cyan-200">Mouse</span>
-                  <span className="text-xs text-cyan-100">Click background to Look</span>
-                </div>
+                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/10">
+                      <span className="px-2 h-6 flex items-center justify-center bg-cyan-900/50 rounded font-mono text-[10px] border border-cyan-500/30 text-cyan-200">Mouse</span>
+                      <span className="text-xs text-cyan-100">Click background to Look</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
@@ -2810,7 +2834,6 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
           <span className="text-blue-400 font-bold text-xs">in</span>
           <span className="hidden sm:inline">LinkedIn</span>
         </a>
-
       </div>
 
       {/* Planet Legend (desktop only) */}
