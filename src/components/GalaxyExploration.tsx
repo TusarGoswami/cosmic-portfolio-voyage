@@ -948,11 +948,13 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
       {/* 3D Planet Name Label - Always faces camera */}
       <Billboard position={[0, planet.size + 2.5, 0]}>
         <Text
+          font="/audiowide.woff"
           fontSize={1.8}
           color={planet.color}
           anchorX="center"
           anchorY="bottom"
-          outlineWidth={0.06}
+          letterSpacing={0.08}
+          outlineWidth={0.07}
           outlineColor="#000000"
         >
           {planet.portfolioType ? planet.portfolioType.toUpperCase() : planet.name.toUpperCase()}
@@ -2744,13 +2746,13 @@ const GalaxyExploration = ({ vehicle, onBack }: GalaxyExplorationProps) => {
       <AnimatePresence>
         {orbitingPlanet && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 8 }}
+            initial={{ opacity: 0, scale: 0.88, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.85, y: 8 }}
+            exit={{ opacity: 0, scale: 0.88, y: 16 }}
             transition={{ type: "spring", stiffness: 320, damping: 28 }}
             style={{
               position: "absolute",
-              top: "50%",
+              top: "68%",
               left: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 20,
