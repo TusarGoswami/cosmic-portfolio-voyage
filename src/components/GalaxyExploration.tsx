@@ -1613,12 +1613,19 @@ const GalaxyScene = ({
       );
 
       // Update ship rotation to face movement direction (smooth)
-      if (keys.current.forward || keys.current.backward) {
-        const targetRotation = keys.current.forward ? cameraState.yaw : cameraState.yaw + Math.PI;
+      let moveX = 0;
+      let moveZ = 0;
+      if (keys.current.left) moveX -= 1;
+      if (keys.current.right) moveX += 1;
+      if (keys.current.forward) moveZ -= 1;
+      if (keys.current.backward) moveZ += 1;
+
+      if (moveX !== 0 || moveZ !== 0) {
+        const targetRotation = cameraState.yaw + Math.atan2(moveX, moveZ);
         const angleDiff = targetRotation - shipRotation.current.y;
         // Normalize angle difference
         const normalizedDiff = Math.atan2(Math.sin(angleDiff), Math.cos(angleDiff));
-        shipRotation.current.y += normalizedDiff * 0.1;
+        shipRotation.current.y += normalizedDiff * 0.15;
       }
 
       // Apply movement input
