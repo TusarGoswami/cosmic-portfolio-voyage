@@ -957,19 +957,6 @@ const Planet = ({ planet, getPlanetPosition, onPlanetClick, onPlanetHover }: Pla
         >
           {planet.portfolioType ? planet.portfolioType.toUpperCase() : planet.name.toUpperCase()}
         </Text>
-        {planet.projectTitle && (
-          <Text
-            position={[0, -0.8, 0]}
-            fontSize={0.8}
-            color="#ffffff"
-            anchorX="center"
-            anchorY="top"
-            outlineWidth={0.04}
-            outlineColor="#000000"
-          >
-            {planet.projectTitle}
-          </Text>
-        )}
       </Billboard>
 
       <pointLight color={planet.color} intensity={isHovered ? 0.8 : 0.3} distance={planet.size * 5} />
@@ -1041,10 +1028,51 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
     emissiveIntensity: 0.15,   // slight self-lit glow so it's never pitch black
   }), []);
 
-  useFrame((state) => {
-    if (shipRef.current) {
-      shipRef.current.position.copy(positionRef.current);
-      shipRef.current.rotation.copy(rotationRef.current);
+  // Smoothed tilt values (persisted between frames via refs)
+  const tiltX = useRef(0); // forward/back tilt (rotation.x)
+  const tiltZ = useRef(0); // left/right tilt  (rotation.z)
+  const bodyTiltRef = useRef<THREE.Group>(null); // astronaut body tilt group
+
+  useFrame((_, delta) => {
+    if (!shipRef.current) return;
+
+    // ── 1. Base position + yaw from ship movement system ──────────────
+    shipRef.current.position.copy(positionRef.current);
+    shipRef.current.rotation.copy(rotationRef.current);
+
+    // ── 2. Compute target tilt from live key input ─────────────────────
+    const MAX_TILT = 0.22; // ~12.5 degrees — realistic, not too wild
+    const LERP_IN = Math.min(1, delta * 7);  // fast response when key held
+    const LERP_OUT = Math.min(1, delta * 5);  // slightly slower return
+
+    // If orbiting, smoothly zero out tilt
+    if (isOrbiting) {
+      tiltX.current += (0 - tiltX.current) * LERP_OUT;
+      tiltZ.current += (0 - tiltZ.current) * LERP_OUT;
+    } else {
+      const targetX = keyState.forward ? MAX_TILT
+        : keyState.backward ? -MAX_TILT
+          : 0;
+      const targetZ = keyState.right ? MAX_TILT   // lean right
+        : keyState.left ? -MAX_TILT   // lean left
+          : 0;
+
+      const factor = (targetX !== 0 || targetZ !== 0) ? LERP_IN : LERP_OUT;
+      tiltX.current += (targetX - tiltX.current) * factor;
+      tiltZ.current += (targetZ - tiltZ.current) * factor;
+    }
+
+    // ── 3. Apply tilt ON TOP of base rotation ─────────────────────────
+    // For rocket: tilt the whole shipRef group additional axes
+    if (vehicle === "rocket") {
+      shipRef.current.rotation.x += tiltX.current;
+      shipRef.current.rotation.z -= tiltZ.current;
+    }
+
+    // For astronaut: tilt a separate body group so lights don't move
+    if (vehicle === "astronaut" && bodyTiltRef.current) {
+      bodyTiltRef.current.rotation.x = tiltX.current;
+      bodyTiltRef.current.rotation.z = -tiltZ.current;
     }
   });
 
@@ -1054,148 +1082,147 @@ const Spaceship = ({ positionRef, rotationRef, velocityRef, isOrbiting, vehicle 
   if (vehicle === "astronaut") {
     return (
       <group ref={shipRef} scale={1.8}>
-        {/* ── Astronaut Lighting Trio ────────────────────────────────── */}
-        {/* Key light: warm white from front-top — primary illumination */}
+        {/* ── Astronaut Lights (world-stable, outside tilt group) ──────── */}
         <pointLight position={[0, 3, 2.5]} color="#fff8e8" intensity={8} distance={14} decay={1.5} />
-        {/* Fill light: soft blue from left — prevents total shadow on one side */}
         <pointLight position={[-3, 1, 1]} color="#aac8ff" intensity={4} distance={12} decay={2} />
-        {/* Rim/back light: blue-white from behind — creates silhouette separation */}
         <pointLight position={[0, 0.5, -3]} color="#66ddff" intensity={isMoving ? 6 : 3} distance={8} decay={2} />
-        {/* Visor glow: warm gold fill on helmet */}
         <pointLight position={[0, 1.6, 1.5]} color="#ffcc44" intensity={2.5} distance={4} decay={2} />
 
-        {/* Helmet */}
-        <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-          <sphereGeometry args={[0.7, 64, 64]} />
-          <primitive object={suitMaterial} attach="material" />
-        </mesh>
-
-        {/* Gold visor */}
-        <mesh position={[0, 1.55, 0.45]} rotation={[-0.2, 0, 0]} castShadow>
-          <sphereGeometry args={[0.5, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <primitive object={visorMaterial} attach="material" />
-        </mesh>
-
-        {/* Helmet rim/collar */}
-        <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
-          <torusGeometry args={[0.6, 0.1, 16, 64]} />
-          <meshStandardMaterial color="#aaaaaa" metalness={0.9} roughness={0.15} />
-        </mesh>
-
-        {/* Neck ring */}
-        <mesh position={[0, 0.75, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.5, 0.55, 0.15, 32]} />
-          <meshStandardMaterial color="#888888" metalness={0.85} roughness={0.2} />
-        </mesh>
-
-        {/* Torso */}
-        <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
-          <capsuleGeometry args={[0.55, 0.7, 16, 32]} />
-          <primitive object={suitMaterial} attach="material" />
-        </mesh>
-
-        {/* Chest control unit */}
-        <mesh position={[0, 0.35, 0.52]} castShadow receiveShadow>
-          <boxGeometry args={[0.45, 0.5, 0.12]} />
-          <meshStandardMaterial color="#1a1a1a" metalness={0.95} roughness={0.1} />
-        </mesh>
-        {/* Control indicator lights — emissive so always visible */}
-        <mesh position={[-0.12, 0.5, 0.59]}>
-          <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
-          <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={2} />
-        </mesh>
-        <mesh position={[0.12, 0.5, 0.59]}>
-          <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
-          <meshStandardMaterial color="#ff3300" emissive="#ff3300" emissiveIntensity={2} />
-        </mesh>
-        <mesh position={[0, 0.38, 0.59]}>
-          <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
-          <meshStandardMaterial color="#0088ff" emissive="#0088ff" emissiveIntensity={2} />
-        </mesh>
-
-        {/* Life support backpack */}
-        <mesh position={[0, 0.2, -0.55]} castShadow receiveShadow>
-          <boxGeometry args={[0.75, 0.95, 0.35]} />
-          <meshStandardMaterial color="#555555" metalness={0.7} roughness={0.35} />
-        </mesh>
-        <mesh position={[0, 0.55, -0.75]} castShadow>
-          <cylinderGeometry args={[0.1, 0.1, 0.25, 16]} />
-          <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.15} />
-        </mesh>
-
-        {/* Jetpack thrusters */}
-        <mesh position={[-0.22, -0.25, -0.65]} castShadow>
-          <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
-          <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
-        </mesh>
-        <mesh position={[0.22, -0.25, -0.65]} castShadow>
-          <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
-          <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
-        </mesh>
-
-        {/* Jetpack flames */}
-        <Particles position={[-0.22, -0.4, -0.65]} count={40} color="#66ddff" size={0.05} spread={0.1} speed={isMoving ? 3 : 1.2} type="flame" active={true} />
-        <Particles position={[0.22, -0.4, -0.65]} count={40} color="#66ddff" size={0.05} spread={0.1} speed={isMoving ? 3 : 1.2} type="flame" active={true} />
-
-        {/* Left arm */}
-        <group position={[-0.75, 0.35, 0]}>
-          <mesh rotation={[0, 0, Math.PI / 4.5]} castShadow receiveShadow>
-            <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
+        {/* ── Tilt group — all body geometry leans on movement ────────── */}
+        <group ref={bodyTiltRef}>
+          {/* Helmet */}
+          <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
+            <sphereGeometry args={[0.7, 64, 64]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[-0.25, -0.15, 0]} castShadow receiveShadow>
-            <sphereGeometry args={[0.14, 16, 16]} />
-            <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
+
+          {/* Gold visor */}
+          <mesh position={[0, 1.55, 0.45]} rotation={[-0.2, 0, 0]} castShadow>
+            <sphereGeometry args={[0.5, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <primitive object={visorMaterial} attach="material" />
           </mesh>
-          <mesh position={[-0.4, -0.35, 0]} rotation={[0, 0, Math.PI / 6]} castShadow receiveShadow>
-            <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
+
+          {/* Helmet rim/collar */}
+          <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
+            <torusGeometry args={[0.6, 0.1, 16, 64]} />
+            <meshStandardMaterial color="#aaaaaa" metalness={0.9} roughness={0.15} />
+          </mesh>
+
+          {/* Neck ring */}
+          <mesh position={[0, 0.75, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[0.5, 0.55, 0.15, 32]} />
+            <meshStandardMaterial color="#888888" metalness={0.85} roughness={0.2} />
+          </mesh>
+
+          {/* Torso */}
+          <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
+            <capsuleGeometry args={[0.55, 0.7, 16, 32]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[-0.55, -0.5, 0]} castShadow>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
-          </mesh>
-        </group>
 
-        {/* Right arm */}
-        <group position={[0.75, 0.35, 0]}>
-          <mesh rotation={[0, 0, -Math.PI / 4.5]} castShadow receiveShadow>
-            <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
+          {/* Chest control unit */}
+          <mesh position={[0, 0.35, 0.52]} castShadow receiveShadow>
+            <boxGeometry args={[0.45, 0.5, 0.12]} />
+            <meshStandardMaterial color="#1a1a1a" metalness={0.95} roughness={0.1} />
+          </mesh>
+          {/* Control indicator lights — emissive so always visible */}
+          <mesh position={[-0.12, 0.5, 0.59]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+            <meshStandardMaterial color="#00ff00" emissive="#00ff00" emissiveIntensity={2} />
+          </mesh>
+          <mesh position={[0.12, 0.5, 0.59]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+            <meshStandardMaterial color="#ff3300" emissive="#ff3300" emissiveIntensity={2} />
+          </mesh>
+          <mesh position={[0, 0.38, 0.59]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.02, 16]} />
+            <meshStandardMaterial color="#0088ff" emissive="#0088ff" emissiveIntensity={2} />
+          </mesh>
+
+          {/* Life support backpack */}
+          <mesh position={[0, 0.2, -0.55]} castShadow receiveShadow>
+            <boxGeometry args={[0.75, 0.95, 0.35]} />
+            <meshStandardMaterial color="#555555" metalness={0.7} roughness={0.35} />
+          </mesh>
+          <mesh position={[0, 0.55, -0.75]} castShadow>
+            <cylinderGeometry args={[0.1, 0.1, 0.25, 16]} />
+            <meshStandardMaterial color="#333333" metalness={0.9} roughness={0.15} />
+          </mesh>
+
+          {/* Jetpack thrusters */}
+          <mesh position={[-0.22, -0.25, -0.65]} castShadow>
+            <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
+            <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
+          </mesh>
+          <mesh position={[0.22, -0.25, -0.65]} castShadow>
+            <cylinderGeometry args={[0.08, 0.12, 0.2, 16]} />
+            <meshStandardMaterial color="#2a2a2a" metalness={0.95} roughness={0.08} />
+          </mesh>
+
+          {/* Jetpack flames */}
+          <Particles position={[-0.22, -0.4, -0.65]} count={40} color="#66ddff" size={0.05} spread={0.1} speed={isMoving ? 3 : 1.2} type="flame" active={true} />
+          <Particles position={[0.22, -0.4, -0.65]} count={40} color="#66ddff" size={0.05} spread={0.1} speed={isMoving ? 3 : 1.2} type="flame" active={true} />
+
+          {/* Left arm */}
+          <group position={[-0.75, 0.35, 0]}>
+            <mesh rotation={[0, 0, Math.PI / 4.5]} castShadow receiveShadow>
+              <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
+              <primitive object={suitMaterial} attach="material" />
+            </mesh>
+            <mesh position={[-0.25, -0.15, 0]} castShadow receiveShadow>
+              <sphereGeometry args={[0.14, 16, 16]} />
+              <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
+            </mesh>
+            <mesh position={[-0.4, -0.35, 0]} rotation={[0, 0, Math.PI / 6]} castShadow receiveShadow>
+              <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
+              <primitive object={suitMaterial} attach="material" />
+            </mesh>
+            <mesh position={[-0.55, -0.5, 0]} castShadow>
+              <sphereGeometry args={[0.15, 16, 16]} />
+              <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
+            </mesh>
+          </group>
+
+          {/* Right arm */}
+          <group position={[0.75, 0.35, 0]}>
+            <mesh rotation={[0, 0, -Math.PI / 4.5]} castShadow receiveShadow>
+              <capsuleGeometry args={[0.16, 0.35, 8, 16]} />
+              <primitive object={suitMaterial} attach="material" />
+            </mesh>
+            <mesh position={[0.25, -0.15, 0]} castShadow receiveShadow>
+              <sphereGeometry args={[0.14, 16, 16]} />
+              <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
+            </mesh>
+            <mesh position={[0.4, -0.35, 0]} rotation={[0, 0, -Math.PI / 6]} castShadow receiveShadow>
+              <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
+              <primitive object={suitMaterial} attach="material" />
+            </mesh>
+            <mesh position={[0.55, -0.5, 0]} castShadow>
+              <sphereGeometry args={[0.15, 16, 16]} />
+              <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
+            </mesh>
+          </group>
+
+          {/* Legs */}
+          <mesh position={[-0.25, -0.8, 0]} castShadow receiveShadow>
+            <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[0.25, -0.15, 0]} castShadow receiveShadow>
-            <sphereGeometry args={[0.14, 16, 16]} />
-            <meshStandardMaterial color="#888888" metalness={0.8} roughness={0.2} />
-          </mesh>
-          <mesh position={[0.4, -0.35, 0]} rotation={[0, 0, -Math.PI / 6]} castShadow receiveShadow>
-            <capsuleGeometry args={[0.14, 0.3, 8, 16]} />
+          <mesh position={[0.25, -0.8, 0]} castShadow receiveShadow>
+            <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
             <primitive object={suitMaterial} attach="material" />
           </mesh>
-          <mesh position={[0.55, -0.5, 0]} castShadow>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#ff7700" metalness={0.4} roughness={0.5} />
+
+          {/* Boots */}
+          <mesh position={[-0.25, -1.35, 0.08]} castShadow receiveShadow>
+            <boxGeometry args={[0.22, 0.18, 0.35]} />
+            <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
           </mesh>
-        </group>
-
-        {/* Legs */}
-        <mesh position={[-0.25, -0.8, 0]} castShadow receiveShadow>
-          <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
-          <primitive object={suitMaterial} attach="material" />
-        </mesh>
-        <mesh position={[0.25, -0.8, 0]} castShadow receiveShadow>
-          <capsuleGeometry args={[0.18, 0.65, 8, 16]} />
-          <primitive object={suitMaterial} attach="material" />
-        </mesh>
-
-        {/* Boots */}
-        <mesh position={[-0.25, -1.35, 0.08]} castShadow receiveShadow>
-          <boxGeometry args={[0.22, 0.18, 0.35]} />
-          <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
-        </mesh>
-        <mesh position={[0.25, -1.35, 0.08]} castShadow receiveShadow>
-          <boxGeometry args={[0.22, 0.18, 0.35]} />
-          <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
-        </mesh>
+          <mesh position={[0.25, -1.35, 0.08]} castShadow receiveShadow>
+            <boxGeometry args={[0.22, 0.18, 0.35]} />
+            <meshStandardMaterial color="#333333" metalness={0.85} roughness={0.2} />
+          </mesh>
+        </group>{/* end bodyTiltRef */}
       </group>
     );
   }
@@ -1837,7 +1864,7 @@ const typeIcon: Record<string, string> = {
 };
 
 const typeLabel: Record<string, string> = {
-  project: "PROJECT",
+  project: "PROJECTS",
   skills: "SKILLS",
   education: "EDUCATION",
   achievements: "ACHIEVEMENTS",
