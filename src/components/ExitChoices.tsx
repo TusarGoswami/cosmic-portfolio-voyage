@@ -381,7 +381,7 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
 // Galaxy Scene matching GalaxyExploration
 const GalaxyScene = () => {
   return (
-    <group position={[0, 5, -60]}>
+    <group position={[0, 15, -125]}>
       {/* Central Galaxy Core/Sun */}
       <GalaxyCore />
 
@@ -553,8 +553,8 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           <pointLight position={[-5, 3, 5]} intensity={0.4} color="#00ffaa" />
           <pointLight position={[5, 3, 5]} intensity={0.4} color="#ff6699" />
 
-          {/* Fog for depth */}
-          <fog attach="fog" args={["#0a0a1a", 15, 80]} />
+          {/* Fog for depth — far-plane extended so galaxy stays visible */}
+          <fog attach="fog" args={["#0a0a1a", 15, 200]} />
 
           {/* Galaxy Scene matching GalaxyExploration */}
           <GalaxyScene />
