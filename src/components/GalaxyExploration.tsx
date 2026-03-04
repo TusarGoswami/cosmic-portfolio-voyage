@@ -2487,12 +2487,13 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
             )}
             {planet.portfolioType === "about" && (
               <a
-                href="/resume.pdf"
-                download="Tusar_Goswami_Resume.pdf"
+                href="https://drive.google.com/file/d/1x52wasItykb2rDwZ-5wxV8zEbeORwtAv/view?usp=drive_link"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105"
                 style={{ background: displayColor, color: '#000', boxShadow: `0 0 20px ${displayColor}66` }}
               >
-                📄 Download Resume
+                📄 Resume
               </a>
             )}
             <button
