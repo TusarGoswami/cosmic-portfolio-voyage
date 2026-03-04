@@ -1,5 +1,5 @@
 import { useRef, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import Particles from "./Particles";
 
@@ -12,6 +12,13 @@ interface ExitModelsProps {
 const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
   const rocketRef = useRef<THREE.Group>(null);
   const astronautRef = useRef<THREE.Group>(null);
+  const { viewport } = useThree();
+
+  // Responsive scale based on viewport width
+  // Default desktop viewport width at z=12 is ~25
+  const isMobile = viewport.width < 10;
+  const isTablet = viewport.width >= 10 && viewport.width < 16;
+  const baseScale = isMobile ? 0.6 : isTablet ? 0.85 : 1.1;
 
   // Create attractive rocket materials - vibrant teal/gold theme
   const rocketBodyMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
@@ -83,7 +90,7 @@ const ExitModels = ({ onSelect, hovered, setHovered }: ExitModelsProps) => {
   });
 
   return (
-    <group scale={1.1}>
+    <group scale={baseScale}>
       {/* Platform */}
       <mesh position={[0, -2.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[8, 64]} />

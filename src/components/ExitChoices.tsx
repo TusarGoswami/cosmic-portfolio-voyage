@@ -606,7 +606,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         className="absolute top-14 sm:top-6 inset-x-0 flex flex-col items-center pointer-events-none z-20 px-4"
       >
         <motion.h1
-          className="text-base sm:text-xl md:text-xl font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-center"
+          className="text-sm sm:text-xl md:text-2xl font-bold tracking-[0.15em] sm:tracking-[0.3em] uppercase text-center max-w-[95vw] leading-relaxed mx-auto"
           style={{
             background: "linear-gradient(90deg, #00e5ff, #ffffff, #a855f7)",
             WebkitBackgroundClip: "text",
@@ -674,7 +674,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
       </AnimatePresence>
 
       {/* Mobile tap labels — shown only on small screens */}
-      <div className="sm:hidden absolute bottom-28 inset-x-0 flex justify-around px-6 pointer-events-none z-20">
+      <div className="sm:hidden absolute bottom-24 inset-x-0 flex justify-between px-10 pointer-events-none z-20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -702,7 +702,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row gap-1 sm:gap-8 text-muted-foreground text-xs sm:text-sm pointer-events-none z-20 items-center"
+        className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col sm:flex-row gap-1 sm:gap-8 text-muted-foreground text-[10px] sm:text-sm pointer-events-none z-20 items-center w-[90vw] justify-center text-center"
       >
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />

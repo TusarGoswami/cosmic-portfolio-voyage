@@ -136,7 +136,7 @@ const Index = () => {
             {/* Back arrow button for choose screen */}
             <button
               onClick={handleBackToStart}
-              className="absolute top-4 left-4 z-30 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:scale-105 pointer-events-auto"
+              className="absolute top-4 left-4 sm:top-6 sm:left-6 z-30 flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-semibold text-white transition-all hover:scale-105 pointer-events-auto"
               style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(8px)" }}
             >
               ← Back
