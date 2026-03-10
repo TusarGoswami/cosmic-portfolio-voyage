@@ -110,6 +110,20 @@ const PROJECTS: ProjectEntry[] = [
     githubUrl: "https://github.com/TusarGoswami/AI_chatbot_Linkedln_Profile_Optimizer",
     color: "#aa44ff",
   },
+  {
+    title: "Zarvis – Tusar Edition",
+    subtitle: "AI Voice Assistant with Biometric Security",
+    period: "Feb 2026 - Mar 2026",
+    description: "A Python-powered AI assistant that enables voice-controlled system automation with facial and voice authentication.",
+    techStack: ["Python", "Eel", "OpenCV", "SpeechRecognition", "pyttsx3", "Selenium", "JavaScript", "HTML", "CSS"],
+    bullets: [
+      "Architected a voice-driven automation system using Python, OpenCV, and SpeechRecognition for secure hands-free interaction.",
+      "Implemented dual-layer biometric security with face authentication and voice verification to restrict system access.",
+      "Developed automation features for web navigation, developer workflows, and communication tools including YouTube control, Google search, and WhatsApp actions.",
+    ],
+    githubUrl: "https://github.com/TusarGoswami/zarvis-tusar-edition",
+    color: "#ff0055",
+  },
 ];
 
 const PLANETS_DATA: PlanetData[] = [
@@ -117,15 +131,16 @@ const PLANETS_DATA: PlanetData[] = [
     id: 0, name: "Projects Hub", orbitRadius: 30, size: 4.5, color: "#00e5ff", orbitSpeed: 0.18, rotationSpeed: 1.5,
     spotColor: "#88f5ff", glowColor: "#00c8e0", hasSatellite: true, hasRing: true, ringColor: "#0088aa", initialAngle: 0,
     description: "Explore all of Tusar's software projects - MERN platforms, PHP systems & AI tools.",
-    facts: ["3 projects: MERN, PHP, Python", "Judge0 API & real-time features", "Full-stack & AI-powered"],
-    moons: 3, gravityRadius: 16, orbitCaptureRadius: 8,
+    facts: ["4 projects: MERN, PHP, Python", "Judge0 API & real-time features", "Full-stack & AI-powered"],
+    moons: 4, gravityRadius: 16, orbitCaptureRadius: 8,
     portfolioType: "project",
     projectTitle: "Projects Hub",
     projectSubtitle: "All Software Projects",
     githubUrl: "https://github.com/TusarGoswami",
     period: "2025 - 2026",
-    techStack: ["ReactJS", "NodeJS", "Python", "PHP", "MongoDB", "MySQL", "JavaScript"],
+    techStack: ["ReactJS", "NodeJS", "Python", "PHP", "MongoDB", "MySQL", "JavaScript", "OpenCV", "Selenium"],
     bullets: [
+      "Zarvis – Tusar Edition: AI voice assistant with biometric security and system automation.",
       "Head-2-Code: MERN competitive coding platform with Judge0 API and real-time 1v1 battles.",
       "Velo-Rapido: Premium bike rental system with PHP/MySQL admin control hub.",
       "LinkedIn Optimizer Pro: AI-powered profile diagnostics with Python/Flask chatbot.",
