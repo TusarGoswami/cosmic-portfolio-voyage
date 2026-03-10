@@ -156,13 +156,20 @@ const PLANETS_DATA: PlanetData[] = [
     projectTitle: "Technical Skills",
     projectSubtitle: "Languages, Frameworks & Tools",
     period: "2023 - Present",
-    techStack: [],
+    techStack: [
+      "Java", "Python", "C", "C++", "JavaScript", "TypeScript", "PHP", "Dart",
+      "ReactJS", "Redux", "Tailwind CSS", "Flutter", "Bootstrap",
+      "NodeJS", "ExpressJS", "NestJS", "REST APIs",
+      "MySQL", "MongoDB", "PostgreSQL", "Redis", "Firebase", "Supabase",
+      "Git", "GitHub", "VS Code", "Linux", "Ubuntu", "Docker", "Kubernetes", "AWS", "Postman", "Vercel", "Netlify", "Figma"
+    ],
     bullets: [],
     skillCategories: [
-      { category: "Frameworks & Libraries", skills: ["ReactJS", "Redux", "NodeJS", "ExpressJS", "Flutter", "Tailwind CSS", "RESTful APIs", "JWT Authentication"] },
-      { category: "Tools & Platforms", skills: ["MySQL", "MongoDB", "Git", "GitHub", "Postman", "Vercel", "Figma"] },
-      { category: "Core CS Fundamentals", skills: ["DSA", "OOP", "DBMS", "OS", "CN", "System Design"] },
-      { category: "Programming Languages", skills: ["Python", "Java", "C", "C++", "JavaScript", "PHP", "Dart"] }
+      { category: "Programming Languages", skills: ["Java", "Python", "C", "C++", "JavaScript", "TypeScript", "PHP", "Dart"] },
+      { category: "Frontend", skills: ["ReactJS", "Redux", "Tailwind CSS", "Flutter", "Bootstrap"] },
+      { category: "Backend", skills: ["NodeJS", "ExpressJS", "NestJS", "REST APIs"] },
+      { category: "Database", skills: ["MySQL", "MongoDB", "PostgreSQL", "Redis", "Firebase", "Supabase"] },
+      { category: "Tools & Platforms", skills: ["Git", "GitHub", "VS Code", "Linux", "Ubuntu", "Docker", "Kubernetes", "AWS", "Postman", "Vercel", "Netlify", "Figma"] }
     ]
   },
   {
@@ -1934,7 +1941,71 @@ const TECH_LOGOS: Record<string, string> = {
   HackerRank: "https://upload.wikimedia.org/wikipedia/commons/4/40/HackerRank_Icon-1000px.png",
   CodeChef: "https://cdn.iconscout.com/icon/free/png-256/free-codechef-logo-icon-download-in-svg-png-gif-file-formats--technology-social-media-vol-2-pack-logos-icons-2944760.png",
   GeeksforGeeks: "https://upload.wikimedia.org/wikipedia/commons/4/43/GeeksforGeeks.svg",
+  TypeScript: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg",
+  Bootstrap: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bootstrap/bootstrap-original.svg",
+  NestJS: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nestjs/nestjs-original.svg",
+  "REST APIs": "https://img.icons8.com/color/512/api-settings.png",
+  "JWT Authentication": "https://img.icons8.com/color/512/json-web-token.png",
+  PostgreSQL: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg",
+  Redis: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/redis/redis-original.svg",
+  Firebase: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/firebase/firebase-original.svg",
+  Supabase: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/supabase/supabase-original.svg",
+  "VS Code": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg",
+  Linux: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg",
+  Ubuntu: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ubuntu/ubuntu-plain.svg",
+  Docker: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+  Kubernetes: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kubernetes/kubernetes-plain.svg",
+  AWS: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
+  Netlify: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/netlify/netlify-original.svg",
 };
+
+const CircularSkillBadge = ({ tech, logo, index = 0, accentColor = "#ffffff" }: { tech: string; logo?: string; index?: number; accentColor?: string }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px" }}
+      transition={{ duration: 0.4, delay: index * 0.03, ease: "easeOut" }}
+      className="group relative flex flex-col items-center justify-start cursor-default w-[68px] sm:w-[80px]"
+    >
+      <div
+        className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5"
+        style={{
+          background: `linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02))`,
+          border: `1px solid rgba(255, 255, 255, 0.15)`,
+          boxShadow: `0 8px 16px rgba(0,0,0,0.4), inset 0 0 12px rgba(255,255,255,0.05)`
+        }}
+      >
+        <div
+          className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          style={{
+            boxShadow: `0 0 25px ${accentColor}44, inset 0 0 15px ${accentColor}33`,
+            border: `1px solid ${accentColor}`
+          }}
+        />
+        {logo ? (
+          <div className="relative z-10 w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+            <img
+              src={logo}
+              alt={tech}
+              className="w-full h-full object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+              style={{ padding: "1px" }}
+            />
+          </div>
+        ) : (
+          <span className="relative z-10 text-[9px] font-bold text-gray-200 text-center leading-none px-1">
+            {tech}
+          </span>
+        )}
+      </div>
+
+      <span className="mt-2.5 text-[10px] sm:text-[11px] font-semibold text-gray-300 group-hover:text-white transition-colors duration-300 text-center leading-tight">
+        {tech}
+      </span>
+    </motion.div>
+  );
+};
+
 
 const TechBadge = ({ tech, accentColor, url }: { tech: string; accentColor: string; url?: string }) => {
   const logo = TECH_LOGOS[tech];
@@ -2394,33 +2465,58 @@ const PlanetDetail = ({ planet, onClose }: PlanetDetailProps) => {
             </div>
           )}
 
-          {/* Tech Stack with logos */}
+          {/* Tech Stack / All Skills */}
           {displayTechStack.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: displayColor }}>
-                Tech Stack
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {displayTechStack.map((tech) => (
-                  <TechBadge key={tech} tech={tech} accentColor={displayColor} url={isProjectsHub && currentProject ? undefined : planet.techLinks?.[tech]} />
-                ))}
+            <div className={`space-y-4 ${planet.portfolioType === "skills" ? "bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent p-5 rounded-3xl border border-white/10 shadow-lg" : ""}`}>
+              <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: `${displayColor}33` }}>
+                {planet.portfolioType === "skills" && <span className="text-xl font-black animate-pulse" style={{ color: displayColor }}>⚡</span>}
+                <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: displayColor }}>
+                  {planet.portfolioType === "skills" ? "All Skills" : "Tech Stack"}
+                </h3>
               </div>
+
+              {planet.portfolioType === "skills" ? (
+                <div className="flex flex-wrap justify-center gap-y-6 gap-x-1 sm:gap-x-2 py-4 relative z-10">
+                  {displayTechStack.map((tech, idx) => (
+                    <CircularSkillBadge key={`all-${tech}`} tech={tech} logo={TECH_LOGOS[tech]} index={idx} accentColor={displayColor} />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {displayTechStack.map((tech) => (
+                    <TechBadge key={tech} tech={tech} accentColor={displayColor} url={isProjectsHub && currentProject ? undefined : planet.techLinks?.[tech]} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {/* Skill Categories with logos */}
           {displaySkillCategories.length > 0 && (
-            <div className="space-y-4">
+            <div className={`space-y-6 ${planet.portfolioType === "skills" ? "mt-8" : ""}`}>
               {displaySkillCategories.map((cat, i) => (
-                <div key={i} className="space-y-2">
-                  <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: displayColor }}>
+                <div
+                  key={cat.category}
+                  className={`space-y-4 ${planet.portfolioType === "skills" ? "p-5 sm:p-6 rounded-3xl border shadow-lg" : ""}`}
+                  style={planet.portfolioType === "skills" ? { background: "rgba(0,0,0,0.2)", borderColor: "rgba(255,255,255,0.05)" } : {}}
+                >
+                  <h3 className={`text-xs font-bold uppercase tracking-widest ${planet.portfolioType === "skills" ? "border-b pb-2" : ""}`} style={{ color: displayColor, borderColor: `${displayColor}33` }}>
                     {cat.category}
                   </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {cat.skills.map((skill) => (
-                      <TechBadge key={skill} tech={skill} accentColor={displayColor} url={isProjectsHub && currentProject ? undefined : planet.techLinks?.[skill]} />
-                    ))}
-                  </div>
+
+                  {planet.portfolioType === "skills" ? (
+                    <div className="flex flex-wrap justify-center sm:justify-start gap-y-6 gap-x-1 sm:gap-x-2 py-2">
+                      {cat.skills.map((skill, idx) => (
+                        <CircularSkillBadge key={`cat-${skill}`} tech={skill} logo={TECH_LOGOS[skill]} index={idx} accentColor={displayColor} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {cat.skills.map((skill) => (
+                        <TechBadge key={skill} tech={skill} accentColor={displayColor} url={isProjectsHub && currentProject ? undefined : planet.techLinks?.[skill]} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
