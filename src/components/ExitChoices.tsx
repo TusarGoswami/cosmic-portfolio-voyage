@@ -22,23 +22,22 @@ const PLANETS_DATA = [
 ];
 
 // Blinking Stars Background
-const BlinkingStars = ({ count = 2000 }: { count?: number }) => {
+// Blinking Stars Background — pure GPU-rendered stars
+const BlinkingStars = ({ count = 300 }: { count?: number }) => {
   const starsRef = useRef<THREE.Points>(null);
 
-  const { positions, sizes, phases, colors } = useMemo(() => {
+  const { positions, sizes, colors } = useMemo(() => {
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
-    const phases = new Float32Array(count);
     const colors = new Float32Array(count * 3);
 
     const starColors = [
       [1.0, 1.0, 1.0],
-      [1.0, 0.92, 0.82],  // warm white
-      [0.75, 0.88, 1.0],  // cool blue-white
-      [1.0, 0.78, 0.55],  // orange giant
-      [0.92, 0.96, 1.0],  // near-white
-      [0.65, 0.75, 1.0],  // blue dwarf
-      [1.0, 0.95, 0.70],  // yellow-white
+      [1.0, 0.92, 0.82],
+      [0.75, 0.88, 1.0],
+      [1.0, 0.78, 0.55],
+      [0.65, 0.75, 1.0],
+      [1.0, 0.95, 0.70],
     ];
 
     for (let i = 0; i < count; i++) {
@@ -50,9 +49,7 @@ const BlinkingStars = ({ count = 2000 }: { count?: number }) => {
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
 
-      const roll = Math.random();
-      sizes[i] = roll > 0.97 ? Math.random() * 5 + 4 : Math.random() * 3 + 0.8;
-      phases[i] = Math.random() * Math.PI * 2;
+      sizes[i] = Math.random() * 3.5 + 1.2;
 
       const colorIdx = Math.floor(Math.random() * starColors.length);
       colors[i * 3] = starColors[colorIdx][0];
@@ -60,19 +57,13 @@ const BlinkingStars = ({ count = 2000 }: { count?: number }) => {
       colors[i * 3 + 2] = starColors[colorIdx][2];
     }
 
-    return { positions, sizes, phases, colors };
+    return { positions, sizes, colors };
   }, [count]);
 
+  // Gentle starry rotation — 0 CPU buffer modifications per frame
   useFrame((state) => {
     if (starsRef.current) {
-      const time = state.clock.elapsedTime;
-      const sizesAttr = starsRef.current.geometry.attributes.size as THREE.BufferAttribute;
-
-      for (let i = 0; i < count; i++) {
-        const blink = Math.sin(time * (0.4 + (i % 13) * 0.07) + phases[i]) * 0.5 + 0.5;
-        sizesAttr.array[i] = sizes[i] * (0.35 + blink * 0.65);
-      }
-      sizesAttr.needsUpdate = true;
+      starsRef.current.rotation.y = state.clock.elapsedTime * 0.015;
     }
   });
 
@@ -87,7 +78,7 @@ const BlinkingStars = ({ count = 2000 }: { count?: number }) => {
         size={2.2}
         vertexColors
         transparent
-        opacity={0.95}
+        opacity={0.9}
         sizeAttenuation
         blending={THREE.AdditiveBlending}
         depthWrite={false}
@@ -96,9 +87,9 @@ const BlinkingStars = ({ count = 2000 }: { count?: number }) => {
   );
 };
 
-// Procedural sun texture (shared with GalaxyExploration style)
+// Procedural sun texture — fast generation
 const buildSunTexture = (): THREE.CanvasTexture => {
-  const w = 512, h = 256;
+  const w = 128, h = 64;
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext("2d")!;
@@ -109,27 +100,17 @@ const buildSunTexture = (): THREE.CanvasTexture => {
   base.addColorStop(0.8, "#ff7800");
   base.addColorStop(1.0, "#cc3300");
   ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
-  for (let i = 0; i < 2200; i++) {
+
+  for (let i = 0; i < 20; i++) {
     const x = Math.random() * w, y = Math.random() * h;
-    const r = Math.random() * 18 + 4;
-    const bright = Math.random() > 0.5;
+    const r = Math.random() * 12 + 4;
     const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, bright ? "rgba(255,255,200,0.45)" : "rgba(160,60,0,0.35)");
+    g.addColorStop(0, "rgba(255,255,200,0.4)");
     g.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.ellipse(x, y, r, r * (0.5 + Math.random() * 0.5), Math.random() * Math.PI, 0, Math.PI * 2);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
-  }
-  for (let i = 0; i < 8; i++) {
-    const x = 80 + Math.random() * (w - 160), y = 60 + Math.random() * (h - 120);
-    const r1 = Math.random() * 20 + 10;
-    const sp = ctx.createRadialGradient(x, y, 0, x, y, r1);
-    sp.addColorStop(0, "rgba(40,10,0,0.85)");
-    sp.addColorStop(0.5, "rgba(100,30,0,0.5)");
-    sp.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = sp;
-    ctx.beginPath(); ctx.arc(x, y, r1, 0, Math.PI * 2); ctx.fill();
   }
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
@@ -143,11 +124,6 @@ const GalaxyCore = () => {
   const glow2Ref = useRef<THREE.Mesh>(null);
   const coronaRef = useRef<THREE.Mesh>(null);
   const sunTexture = useMemo(() => buildSunTexture(), []);
-  const roughMap = useMemo(() => {
-    const c = document.createElement("canvas"); c.width = 64; c.height = 64;
-    const cx = c.getContext("2d")!; cx.fillStyle = "#111"; cx.fillRect(0, 0, 64, 64);
-    return new THREE.CanvasTexture(c);
-  }, []);
 
   useFrame((state) => {
     const time = state.clock.elapsedTime;
@@ -160,28 +136,22 @@ const GalaxyCore = () => {
   return (
     <group>
       <mesh ref={sunRef}>
-        <sphereGeometry args={[8, 64, 32]} />
-        <meshStandardMaterial map={sunTexture} emissiveMap={sunTexture} emissive={new THREE.Color("#ff9900")} emissiveIntensity={1.8} roughnessMap={roughMap} roughness={0.05} metalness={0} />
+        <sphereGeometry args={[8, 24, 16]} />
+        <meshStandardMaterial map={sunTexture} emissiveMap={sunTexture} emissive={new THREE.Color("#ff9900")} emissiveIntensity={1.8} roughness={0.1} metalness={0} />
       </mesh>
       <mesh ref={glowRef}>
-        <sphereGeometry args={[9.2, 32, 16]} />
+        <sphereGeometry args={[9.2, 16, 8]} />
         <meshBasicMaterial color="#ffcc00" transparent opacity={0.45} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <mesh ref={glow2Ref}>
-        <sphereGeometry args={[11, 32, 16]} />
+        <sphereGeometry args={[11, 16, 8]} />
         <meshBasicMaterial color="#ff8800" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
       <mesh ref={coronaRef}>
-        <sphereGeometry args={[14, 24, 12]} />
+        <sphereGeometry args={[14, 16, 8]} />
         <meshBasicMaterial color="#ff5500" transparent opacity={0.12} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
-      <mesh>
-        <sphereGeometry args={[20, 16, 8]} />
-        <meshBasicMaterial color="#ff3300" transparent opacity={0.055} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </mesh>
-      <pointLight color="#fff5cc" intensity={12} distance={350} decay={1.5} />
-      <pointLight color="#ff8800" intensity={4} distance={150} decay={2} />
-      <pointLight color="#aaddff" intensity={1.2} distance={250} decay={2} position={[-60, 20, -60]} />
+      <pointLight color="#fff5cc" intensity={8} distance={300} decay={1.5} />
     </group>
   );
 };
@@ -190,8 +160,8 @@ const GalaxyCore = () => {
 const OrbitalPath = ({ radius, color = "#ffffff" }: { radius: number; color?: string }) => {
   const points = useMemo(() => {
     const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= 128; i++) {
-      const angle = (i / 128) * Math.PI * 2;
+    for (let i = 0; i <= 64; i++) {
+      const angle = (i / 64) * Math.PI * 2;
       pts.push(new THREE.Vector3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius));
     }
     return pts;
@@ -201,9 +171,9 @@ const OrbitalPath = ({ radius, color = "#ffffff" }: { radius: number; color?: st
     <Line
       points={points}
       color={color}
-      lineWidth={1.5}
+      lineWidth={1.2}
       transparent
-      opacity={0.25}
+      opacity={0.2}
     />
   );
 };
@@ -217,111 +187,51 @@ const Satellite = ({ orbitRadius, speed, size = 0.3 }: { orbitRadius: number; sp
       const time = state.clock.elapsedTime * speed;
       satelliteRef.current.position.x = Math.cos(time) * orbitRadius;
       satelliteRef.current.position.z = Math.sin(time) * orbitRadius;
-      satelliteRef.current.position.y = Math.sin(time * 2) * 0.5;
     }
   });
 
   return (
     <group ref={satelliteRef}>
       <mesh>
-        <sphereGeometry args={[size, 16, 16]} />
+        <sphereGeometry args={[size, 12, 12]} />
         <meshStandardMaterial color="#cccccc" metalness={0.6} roughness={0.4} />
       </mesh>
-      <mesh>
-        <sphereGeometry args={[size * 1.3, 16, 16]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.2} />
-      </mesh>
-      <pointLight color="#ffffff" intensity={0.5} distance={4} />
     </group>
   );
 };
 
 // Planet Component
-// Global cache to prevent re-generating textures when switching between scenes
-const planetTextureCache = new Map<string, { diffuseMap: THREE.CanvasTexture, roughnessMap: THREE.CanvasTexture }>();
+const planetTextureCache = new Map<string, THREE.CanvasTexture>();
+
+const getPlanetTexture = (color: string, spotColor: string): THREE.CanvasTexture => {
+  const cacheKey = `exit-${color}-${spotColor}`;
+  if (planetTextureCache.has(cacheKey)) {
+    return planetTextureCache.get(cacheKey)!;
+  }
+
+  const w = 64, h = 32;
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  const base = ctx.createLinearGradient(0, 0, w, 0);
+  base.addColorStop(0, color);
+  base.addColorStop(0.5, spotColor || color);
+  base.addColorStop(1, color);
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, w, h);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  planetTextureCache.set(cacheKey, tex);
+  return tex;
+};
 
 const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
   const groupRef = useRef<THREE.Group>(null);
   const planetRef = useRef<THREE.Mesh>(null);
-  const atmosphereRef = useRef<THREE.Mesh>(null);
-  const atmo2Ref = useRef<THREE.Mesh>(null);
 
-  const { diffuseMap, roughnessMap } = useMemo(() => {
-    const cacheKey = `exit-${planet.color}-${planet.spotColor}`;
-    if (planetTextureCache.has(cacheKey)) {
-      return planetTextureCache.get(cacheKey)!;
-    }
-
-    const w = 256, h = 128;
-    const canvas = document.createElement("canvas");
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext("2d")!;
-    const base = ctx.createLinearGradient(0, 0, w, 0);
-    base.addColorStop(0, planet.color);
-    base.addColorStop(0.35, planet.spotColor || planet.color);
-    base.addColorStop(0.65, planet.color);
-    base.addColorStop(1, planet.spotColor || planet.color);
-    ctx.fillStyle = base; ctx.fillRect(0, 0, w, h);
-    // Equatorial darker band
-    const eqGrad = ctx.createLinearGradient(0, h * 0.35, 0, h * 0.65);
-    const cObj = new THREE.Color(planet.color);
-    eqGrad.addColorStop(0, "rgba(0,0,0,0)");
-    eqGrad.addColorStop(0.5, `rgba(${Math.round(cObj.r * 30)},${Math.round(cObj.g * 30)},${Math.round(cObj.b * 30)},0.35)`);
-    eqGrad.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = eqGrad; ctx.fillRect(0, 0, w, h);
-    // Atmospheric band stripes
-    for (let band = 0; band < 5; band++) {
-      const cy = (band / 5) * h + h * 0.05;
-      const bw = 8 + Math.random() * 20;
-      const alpha = 0.06 + Math.random() * 0.14;
-      const bg = ctx.createLinearGradient(0, cy - bw, 0, cy + bw);
-      bg.addColorStop(0, "rgba(0,0,0,0)");
-      bg.addColorStop(0.5, `rgba(255,255,255,${alpha})`);
-      bg.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = bg; ctx.fillRect(0, cy - bw, w, bw * 2);
-    }
-    // Continental patches
-    const spotC = planet.spotColor || "rgba(255,255,255,0.3)";
-    for (let i = 0; i < 8; i++) {
-      const x = Math.random() * w, y = Math.random() * h;
-      const rx = Math.random() * 40 + 15, ry = Math.random() * 20 + 5;
-      const g2 = ctx.createRadialGradient(x, y, 0, x, y, Math.max(rx, ry));
-      g2.addColorStop(0, spotC);
-      g2.addColorStop(0.6, spotC.startsWith("#") ? spotC + "99" : "rgba(200,200,200,0.2)");
-      g2.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = g2;
-      ctx.beginPath(); ctx.ellipse(x, y, rx, ry, Math.random() * Math.PI, 0, Math.PI * 2); ctx.fill();
-    }
-    // Craters
-    for (let i = 0; i < 15; i++) {
-      const x = Math.random() * w, y = Math.random() * h, r = Math.random() * 6 + 2;
-      const cr = ctx.createRadialGradient(x, y, 0, x, y, r);
-      cr.addColorStop(0, "rgba(0,0,0,0.35)"); cr.addColorStop(0.7, "rgba(0,0,0,0.1)"); cr.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = cr;
-      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    }
-    // Polar caps
-    const topCap = ctx.createLinearGradient(0, 0, 0, h * 0.2);
-    topCap.addColorStop(0, "rgba(240,248,255,0.85)"); topCap.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = topCap; ctx.fillRect(0, 0, w, h * 0.2);
-    const botCap = ctx.createLinearGradient(0, h * 0.8, 0, h);
-    botCap.addColorStop(0, "rgba(0,0,0,0)"); botCap.addColorStop(1, "rgba(240,248,255,0.75)");
-    ctx.fillStyle = botCap; ctx.fillRect(0, h * 0.8, w, h * 0.2);
-    const diffuseTex = new THREE.CanvasTexture(canvas);
-    diffuseTex.wrapS = THREE.RepeatWrapping; diffuseTex.anisotropy = 2;
-    // Roughness map
-    const rc = document.createElement("canvas"); rc.width = 128; rc.height = 64;
-    const rx2 = rc.getContext("2d")!; rx2.fillStyle = "#888"; rx2.fillRect(0, 0, 128, 64);
-    for (let i = 0; i < 6; i++) {
-      const x2 = Math.random() * 128, y2 = Math.random() * 64, rRad = Math.random() * 30 + 10;
-      const rg = rx2.createRadialGradient(x2, y2, 0, x2, y2, rRad);
-      rg.addColorStop(0, "#ddd"); rg.addColorStop(1, "rgba(0,0,0,0)");
-      rx2.fillStyle = rg; rx2.beginPath(); rx2.ellipse(x2, y2, rRad, rRad * 0.6, Math.random() * Math.PI, 0, Math.PI * 2); rx2.fill();
-    }
-    const roughnessTex = new THREE.CanvasTexture(rc); roughnessTex.wrapS = THREE.RepeatWrapping;
-
-    planetTextureCache.set(cacheKey, { diffuseMap: diffuseTex, roughnessMap: roughnessTex });
-    return { diffuseMap: diffuseTex, roughnessMap: roughnessTex };
+  const diffuseMap = useMemo(() => {
+    return getPlanetTexture(planet.color, planet.spotColor);
   }, [planet.color, planet.spotColor]);
 
   useFrame((state) => {
@@ -332,38 +242,26 @@ const GalaxyPlanet = ({ planet }: { planet: typeof PLANETS_DATA[0] }) => {
       groupRef.current.position.z = Math.sin(angle) * planet.orbitRadius;
     }
     if (planetRef.current) planetRef.current.rotation.y = time * planet.rotationSpeed;
-    if (atmosphereRef.current) atmosphereRef.current.rotation.y = time * planet.rotationSpeed * 0.5;
-    if (atmo2Ref.current) atmo2Ref.current.rotation.y = -time * planet.rotationSpeed * 0.3;
   });
 
   return (
     <group ref={groupRef}>
       <mesh ref={planetRef}>
-        <sphereGeometry args={[planet.size, 64, 32]} />
+        <sphereGeometry args={[planet.size, 20, 12]} />
         <meshStandardMaterial
           map={diffuseMap}
-          roughnessMap={roughnessMap}
+          color={planet.color}
           emissive={new THREE.Color(planet.color)}
-          emissiveIntensity={0.06}
+          emissiveIntensity={0.08}
           metalness={0.05}
-          roughness={0.82}
+          roughness={0.7}
         />
       </mesh>
 
-      {/* Inner atmosphere limb glow */}
-      <mesh ref={atmosphereRef}>
-        <sphereGeometry args={[planet.size * 1.04, 32, 16]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.18} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.BackSide} />
-      </mesh>
-      {/* Mid atmosphere haze */}
-      <mesh ref={atmo2Ref}>
-        <sphereGeometry args={[planet.size * 1.10, 24, 12]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.08} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.BackSide} />
-      </mesh>
-      {/* Outer glow halo */}
+      {/* Atmospheric glow */}
       <mesh>
-        <sphereGeometry args={[planet.size * 1.22, 16, 8]} />
-        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.04} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.BackSide} />
+        <sphereGeometry args={[planet.size * 1.08, 14, 8]} />
+        <meshBasicMaterial color={planet.glowColor || planet.color} transparent opacity={0.2} blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.BackSide} />
       </mesh>
 
       {planet.hasRing && (
@@ -429,19 +327,10 @@ const StationInterior = () => {
         <meshStandardMaterial color="#0a0a15" transparent opacity={0.6} metalness={0.7} roughness={0.3} />
       </mesh>
 
-      {/* LEFT WALL - Transparent glass */}
+      {/* LEFT WALL - Transparent glass (lightweight) */}
       <mesh position={[-10, 2, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshPhysicalMaterial
-          color="#1a2a4a"
-          transparent
-          opacity={0.1}
-          metalness={0.1}
-          roughness={0.05}
-          transmission={0.9}
-          thickness={0.5}
-          side={THREE.DoubleSide}
-        />
+        <meshBasicMaterial color="#1a2a4a" transparent opacity={0.06} side={THREE.DoubleSide} />
       </mesh>
       {/* Left wall frame edges */}
       <mesh position={[-10, -3.5, 0]}>
@@ -453,19 +342,10 @@ const StationInterior = () => {
         <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
       </mesh>
 
-      {/* RIGHT WALL - Transparent glass */}
+      {/* RIGHT WALL - Transparent glass (lightweight) */}
       <mesh position={[10, 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[20, 12]} />
-        <meshPhysicalMaterial
-          color="#1a2a4a"
-          transparent
-          opacity={0.1}
-          metalness={0.1}
-          roughness={0.05}
-          transmission={0.9}
-          thickness={0.5}
-          side={THREE.DoubleSide}
-        />
+        <meshBasicMaterial color="#1a2a4a" transparent opacity={0.06} side={THREE.DoubleSide} />
       </mesh>
       {/* Right wall frame edges */}
       <mesh position={[10, -3.5, 0]}>
@@ -477,19 +357,10 @@ const StationInterior = () => {
         <meshStandardMaterial color="#4fc3f7" emissive="#4fc3f7" emissiveIntensity={0.5} />
       </mesh>
 
-      {/* BACK WALL - Transparent glass */}
+      {/* BACK WALL - Transparent glass (lightweight) */}
       <mesh position={[0, 2, -10]}>
         <planeGeometry args={[20, 12]} />
-        <meshPhysicalMaterial
-          color="#1a2a4a"
-          transparent
-          opacity={0.1}
-          metalness={0.1}
-          roughness={0.05}
-          transmission={0.9}
-          thickness={0.5}
-          side={THREE.DoubleSide}
-        />
+        <meshBasicMaterial color="#1a2a4a" transparent opacity={0.06} side={THREE.DoubleSide} />
       </mesh>
       {/* Back wall frame edges */}
       <mesh position={[0, -3.5, -10]}>
@@ -518,22 +389,8 @@ const StationInterior = () => {
         <meshBasicMaterial color="#ffe066" transparent opacity={0.9} />
       </mesh>
 
-      {/* Ceiling lights - point lights only */}
-      {Array.from({ length: 3 }).map((_, i) => (
-        <pointLight
-          key={`ceiling-light-${i}`}
-          position={[0, 7.5, -6 + i * 6]}
-          color="#ffffff"
-          intensity={0.6}
-          distance={12}
-        />
-      ))}
-
-      {/* Corner accent lights */}
-      <pointLight position={[-9, -2, -9]} color="#4fc3f7" intensity={0.5} distance={8} />
-      <pointLight position={[9, -2, -9]} color="#4fc3f7" intensity={0.5} distance={8} />
-      <pointLight position={[-9, -2, 9]} color="#ff6699" intensity={0.4} distance={8} />
-      <pointLight position={[9, -2, 9]} color="#ff6699" intensity={0.4} distance={8} />
+      {/* Single ceiling light — reduced from 7 point lights to 1 */}
+      <pointLight position={[0, 7.5, 0]} color="#ffffff" intensity={1.2} distance={18} />
     </group>
   );
 };
@@ -577,7 +434,7 @@ const ExitChoices = ({ onSelect }: ExitChoicesProps) => {
           <StationInterior />
 
           {/* Blinking stars background - matching GalaxyExploration */}
-          <BlinkingStars count={1500} />
+          <BlinkingStars count={400} />
 
           {/* Vehicle selection models */}
           <group position={[0, -2, 0]}>
