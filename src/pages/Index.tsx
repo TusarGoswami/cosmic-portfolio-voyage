@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import StarField from "@/components/StarField";
 import CustomCursor from "@/components/CustomCursor";
@@ -11,11 +11,26 @@ import LaunchTransition from "@/components/LaunchTransition";
 
 type GamePhase = "loading" | "start" | "choose" | "launching" | "space";
 
+// Preload heavy route chunks in the background
+const preloadComponents = () => {
+  import("@/components/ExitChoices");
+  import("@/components/GalaxyExploration");
+};
+
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [phase, setPhase] = useState<GamePhase>("loading");
   const [selectedVehicle, setSelectedVehicle] = useState<"rocket" | "astronaut" | null>(null);
   const parallax = useParallax(15);
+
+  useEffect(() => {
+    // Preload next screens during idle time while user is on start screen
+    if ("requestIdleCallback" in window) {
+      (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(preloadComponents);
+    } else {
+      setTimeout(preloadComponents, 800);
+    }
+  }, []);
 
   const handleLoadingComplete = useCallback(() => {
     setIsLoading(false);
