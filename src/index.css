@@ -161,3 +161,20 @@ canvas {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Star twinkling — pure CSS, runs on compositor thread */
+@keyframes star-twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+.star-twinkle {
+  animation: star-twinkle ease-in-out infinite;
+  will-change: opacity, transform;
+}
